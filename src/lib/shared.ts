@@ -1,4 +1,4 @@
-export const appName = 'Rimz';
+export const appName = 'RimZ';
 export const appDescription = 'The control room for your coding agents';
 
 function normalizeBasePath(value: string | undefined) {
@@ -31,8 +31,10 @@ export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
 
-export const gitConfig = {
-  user: 'rimio',
-  repo: 'rimz',
+export const docsGitConfig = {
+  user: 'rimio-ai',
+  repo: 'rimz-docs',
   branch: 'main',
 };
+
+export const productGitHubUrl = 'https://github.com/rimio-ai/rimz';
