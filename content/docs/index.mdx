@@ -1,0 +1,61 @@
+---
+title: "Introduction"
+description: "Rimz is the control room for your coding agents."
+---
+
+Rimz is a realtime dashboard for harnessing agentic coding: one human and tens of agents working together in one zellij or tmux room, where everything about every agent reads at a glance. Every agent gets a live card with state, task, context health, live cost, and provider pace, and the sidebar routes your attention to whichever one needs you.
+
+![A Rimz room: the sidebar triaging a fleet of coding agents beside their panes](/rimz-full.png)
+
+Rimz is also the substrate for harness and loop engineering: one uniform interface across Claude Code, Codex, Pi, and OpenCode, a durable message system for steering and queuing agents, supervised runs with exit codes for scripts and CI, and scheduled loops that keep the fleet working on a clock.
+
+## What it does
+
+![Realtime harness dashboard, with rich information at a glance](/rimz-gallery.png)
+
+- **Realtime harness dashboard:** state and task, model and effort, context health and compactions, token mix, live dollar cost, and subagent tree.
+- **Attention, routed:** the cockpit line reads the whole fleet, the column arrives triaged, and one keypress drops you into the waiting pane.
+- **Know your pace:** token and dollar insight for today, week, and month, with provider budget bars draining in real time.
+- **Lightweight by design:** one binary wraps the agent CLIs you already run inside your existing zellij or tmux session.
+- **Local or remote:** start a room on your laptop or a server, detach, reattach, and recover the fleet after a reboot.
+- **Worktrees for every agent:** launch isolated branches side by side with dynamic layouts.
+- **Messages like a team:** address agents by handle, steer live turns, or queue delivery at the next safe boundary.
+- **Scriptable end to end:** `rimz agents -p` runs supervised turns with exit codes, JSON output, streaming, and full observability.
+- **Auto-continue:** paused agents resume after rate limits, transient errors back off, and full context windows compact before the next prompt.
+
+## How it works
+
+```text
+ terminal - ghostty, iterm2, warp, kitty, vscode, ...
+   zellij or tmux - your keybinds, your layout
+
+     +---------+   +----------------------------------------+
+     | sidebar |   | claude, codex, pi, opencode agents    |
+     +----^----+   +------------------+---------------------+
+          | renders                   | hooks, transcripts, oauth APIs
+          |                           | statusline, app-server, extensions
+          |                           v
+          +------------------------- rimz <--- git status, process stats
+```
+
+- **Agents report themselves:** sessions, tool calls, live status, and blocking questions arrive through each agent's own hooks, transcripts, and APIs.
+- **Rimz fuses every channel:** agent events, git churn, process stats, and account state combine into one live picture that the sidebar renders.
+
+## Agent compatibility
+
+| Agent | Status | Integration |
+| --- | --- | --- |
+| Claude Code | Stable | hooks, statusline, JSONL transcripts, `claude --resume` |
+| Codex | Stable | hooks, `notify`, app-server, rollout JSONL, `codex resume` |
+| Pi | Beta | extension API, session JSONL, `pi --session` |
+| OpenCode | Alpha | extension API, session JSONL |
+
+Adapters are thin layers over the same hook and transcript primitives. The agents run stock, in your terminal, with official apps untouched.
+
+## Where to go next
+
+- [Quickstart](/docs/getting-started/quickstart) gives the five-step path from install to remote attach.
+- [Sidebar guide](/docs/agents/sidebar) shows the room, attention routing, and common workflows.
+- [Set up your machine](/docs/getting-started/setup) covers hooks, color, pets, and multiplexer baselines.
+- [The sidebar](/docs/agents/sidebar) documents rendered frames and the glyph legend.
+- [CLI reference](/docs/reference/cli) and [Configuration](/docs/customization/configuration) cover every command and key.
