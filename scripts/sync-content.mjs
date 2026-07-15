@@ -26,6 +26,7 @@ const voidHtmlTags = new Set([
   'wbr',
 ]);
 const passthroughHtmlTags = new Set([
+  'b',
   'code',
   'p',
   'sub',
@@ -83,6 +84,12 @@ const excludedSources = new Set([
   // Intentionally-unmapped files under the scopes above.
   'docs/guide/AGENTS.md',
 ]);
+const readmeSections = [
+  ['project-status', 'Project status'],
+  ['what-it-does', 'What it does'],
+  ['how-it-works', 'How it works'],
+  ['agent-compatibility', 'Agent compatibility matrix'],
+];
 
 const srcToRoute = new Map(
   mappings.map(([src, dest]) => [cleanPath(src), routeForDestination(dest)]),
@@ -102,8 +109,59 @@ async function main() {
     await writeFile(target, output, 'utf8');
   }
 
+  await syncReadmeSections();
   await mkdir(publicRoot, { recursive: true });
   await copyImages();
+}
+
+async function syncReadmeSections() {
+  const sourcePath = 'README.md';
+  const source = await readFile(path.join(rimzRoot, sourcePath), 'utf8');
+  const target = path.join(docsRoot, 'index.mdx');
+  let index = await readFile(target, 'utf8');
+
+  for (const [id, heading] of readmeSections) {
+    const section = extractSection(source, heading, sourcePath);
+    const transformed = transformFragment(section, sourcePath);
+    index = replaceSyncedBlock(index, id, transformed);
+  }
+
+  await writeFile(target, index, 'utf8');
+}
+
+function extractSection(markdown, heading, sourcePath) {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const start = lines.findIndex((line) => line === `## ${heading}`);
+  if (start === -1) throw new Error(`${sourcePath}: missing section "${heading}"`);
+
+  const next = lines.findIndex((line, index) => index > start && line.startsWith('## '));
+  const end = next === -1 ? lines.length : next;
+  return lines.slice(start, end).join('\n').trimEnd();
+}
+
+function transformFragment(markdown, sourcePath) {
+  assertNoConflictMarkers(markdown, sourcePath);
+  return escapeMdxText(
+    normalizeFenceLanguages(
+      rewriteHtmlImageSources(rewriteLinks(markdown, sourcePath), sourcePath),
+    ),
+  ).trimEnd();
+}
+
+function replaceSyncedBlock(markdown, id, replacement) {
+  const start = `{/* sync:${id}:start */}`;
+  const end = `{/* sync:${id}:end */}`;
+  const startIndex = markdown.indexOf(start);
+  const endIndex = markdown.indexOf(end);
+
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+    throw new Error(`content/docs/index.mdx: missing sync markers for "${id}"`);
+  }
+  if (markdown.indexOf(start, startIndex + start.length) !== -1 || markdown.indexOf(end, endIndex + end.length) !== -1) {
+    throw new Error(`content/docs/index.mdx: duplicate sync markers for "${id}"`);
+  }
+
+  return `${markdown.slice(0, startIndex + start.length)}\n${replacement}\n${markdown.slice(endIndex)}`;
 }
 
 async function copyImages() {

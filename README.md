@@ -1,6 +1,6 @@
-# Rimz Docs
+# RimZ Docs
 
-Public documentation site for [Rimz](https://github.com/rimio-ai/rimz), built with Next.js and Fumadocs.
+Public documentation site for [RimZ](https://github.com/rimio-ai/rimz), built with Next.js and Fumadocs.
 
 ## Development
 
@@ -36,16 +36,16 @@ NEXT_PUBLIC_BASE_PATH=/REPO NEXT_PUBLIC_SITE_URL=https://USER.github.io/REPO pnp
 
 Every push to `main` deploys the static export to GitHub Pages at <https://rimz.rimio.ai> through [the deploy workflow](./.github/workflows/deploy.yml).
 
-[The sync workflow](./.github/workflows/sync.yml) imports content from the Rimz repository after a docs update and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
+[The sync workflow](./.github/workflows/sync.yml) imports content from the RimZ repository after a README or docs update and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
 
 Both automation paths read `github.com/rimio-ai/rimz` at `main`. Keep that GitHub remote current with the primary Gitea remote so the published site stays current; dispatches fire only for GitHub pushes, and the scheduled sync also reads GitHub.
 
 ## Sync content
 
-Generated docs are committed so this site builds without a Rimz source checkout. To refresh them from a local Rimz checkout:
+Generated docs are committed so this site builds without a RimZ source checkout. To refresh them from a local RimZ checkout:
 
 ```sh
 RIMZ_SRC=../rimz node scripts/sync-content.mjs
 ```
 
-The sync script only writes its mapped generated pages and copies images into `public/`; hand-written pages and `meta.json` files are left alone.
+The sync script writes its mapped generated pages, refreshes the README-derived overview sections in `content/docs/index.mdx`, and copies images into `public/`. The rest of the hand-written pages and all `meta.json` files are left alone.
