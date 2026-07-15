@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Install Rimz, open a room, launch agents, and reattach from anywhere."
+description: "Install RimZ, open a room, launch agents, and reattach from anywhere."
 ---
 
 ## Get started in five steps
@@ -18,9 +18,8 @@ claude
 # or: codex, pi, opencode
 
 # 4. Worktrees, teams, dynamic layout
-rimz agents claude,codex --worktree=feat/x
-rimz agents 'vim,claude+term' --worktree=feat/y
-rimz agents peer --worktree=feat/z
+rimz agents claude,codex --worktree=feat-x
+rimz agents 'vim,claude+term' --worktree=feat-y
 
 # 5. Native SSH remote with reconnect
 rimz remote connect dev-box:~/code/query-engine
@@ -32,7 +31,7 @@ Hooks install on first `rimz` run, with consent and a diff preview. The [sidebar
 
 ### Launch agents in layouts
 
-One spec describes the shape: commas split columns, `+` tiles rows, `/` stacks panes, and a trailing prompt broadcasts to every agent in the layout.
+One spec describes the shape: commas split columns, `+` tiles rows, and `/` stacks panes. A trailing prompt goes to the team's configured leader, its first role, or the first agent cell; use `rimz message @all` when everyone needs the same text.
 
 ```sh
 rimz agents claude,codex "Refactor token refresh; keep the public API stable."
@@ -44,22 +43,22 @@ Deep dive: [Agent control CLI](/docs/reference/cli/agents).
 
 ### Give each task its own worktree
 
-`--worktree` launches into an isolated Rimz-owned Git worktree. The tab name becomes the agents' channel.
+`--worktree` launches into an isolated RimZ-owned Git worktree. The tab name becomes the agents' channel.
 
 ```sh
-rimz agents claude,codex --worktree=feat/x
+rimz agents claude,codex --worktree=feat-x
 rimz agents claude --worktree "Take one approach."
 rimz agents codex --from-pr 42 "Review this pull request."
 ```
 
-Deep dive: [Rimz-owned worktrees](/docs/harness/worktrees).
+Deep dive: [RimZ-owned worktrees](/docs/harness/worktrees).
 
 ### Save layouts as teams
 
 A named team in `agents.toml` gives each role a handle. Launch the team, or re-add one role to the running team.
 
 ```sh
-rimz agents peer --worktree=feat/x
+rimz agents peer --worktree=feat-x
 rimz agents forge
 rimz agents forge.reviewer
 ```
@@ -73,7 +72,7 @@ Deep dive: [Configuration](/docs/customization/configuration#agent-profiles-comm
 ```sh
 rimz agents claude --resume
 rimz agents forge --resume
-rimz agents forge -w feat/x --resume
+rimz agents forge -w feat-x --resume
 rimz start
 ```
 
@@ -86,8 +85,10 @@ Every agent gets a handle such as `@codex#feat-a`. Default delivery parks until 
 ```sh
 rimz message @claude "add coverage for the expiry edge cases"
 rimz message --steer @claude "stop: the parser test comes first"
+rimz message @coder --after @planner "planner is done — read plan.md and start"
+rimz message @coder --wait "did the migration land? one line"
 rimz message --schedule 60m @codex#feat-b "run the smoke test"
-rimz message @all "summarize what changed when you reach a boundary"
+git diff main | rimz message @reviewer --stdin "review this"
 ```
 
 Deep dive: [Messaging](/docs/harness/messaging).
@@ -98,8 +99,8 @@ Deep dive: [Messaging](/docs/harness/messaging).
 
 ```sh
 rimz agents codex "Prepare the release checklist." -p --timeout 30m --output-format json
-cat build-error.txt | rimz agents claude -p 'explain the root cause' > out.txt
-rimz agents claude "Run the migration audit." -p --detach
+cat build-error.txt | rimz agents claude -p --stdin 'explain the root cause' > out.txt
+rimz agents claude "Run the migration audit." -p --bg
 rimz agents wait swift-otter --stream
 ```
 
@@ -110,9 +111,9 @@ Deep dive: [Scripting](/docs/harness/scripting).
 Scheduled pings prime provider budget windows, and check-guarded loops wake agents when tests or CI fail.
 
 ```sh
-rimz loop add morning --spec claude-ping --at 07:00 --days weekdays
+rimz loop add morning --agent claude-ping --prompt ping --every weekday --at 07:00
 rimz loop add watchdog --check "cargo test" --on fail \
-  --spec codex --prompt "fix the failing test" --every 15m
+  --agent codex --prompt "fix the failing test" --every 15m
 ```
 
 Deep dive: [Set up your machine](/docs/getting-started/setup#keep-the-fleet-moving).
@@ -129,3 +130,14 @@ rimz web open
 ```
 
 Deep dive: [Remote attach](/docs/agents/remote) and [Web access](/docs/agents/web).
+
+### Answer asks from your phone
+
+Claude Code and Codex can keep their own remote-control bridges running with the room, so provider-app questions reach your phone and answers return to the same terminal session. Both integrations are off by default.
+
+```sh
+rimz config set remote_control.claude true
+rimz config set remote_control.codex true
+```
+
+Deep dive: [Remote control](/docs/agents/remote#answer-asks-from-your-phone).
