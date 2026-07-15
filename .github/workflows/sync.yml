@@ -22,7 +22,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: rimio-ai/rimz
-          token: ${{ secrets.RIMZ_READ_TOKEN }}
           path: rimz
       - run: RIMZ_SRC=rimz node scripts/sync-content.mjs
       - id: commit
