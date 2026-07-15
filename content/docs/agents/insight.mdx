@@ -17,7 +17,7 @@ You read it two ways. `rimz stats` prints the whole history on demand, from anyw
 
 `rimz stats` prints your account-global history: a heatmap of daily token use, the totals for a chosen window, and where the spend went by model and by agent. It reads the same data as the sidebar, so it runs inside a room or anywhere else on the machine, in or out of a project.
 
-- **The heatmap** is a GitHub-style contribution graph of tokens per day, about a year of history, shaded from an idle day up to your heaviest. The scale is relative to your own busiest day in view, so the texture reads against your rhythm rather than an absolute ceiling. `--dollars` shades it by cost instead of tokens.
+- **The heatmap** is a GitHub-style contribution graph of tokens per day, about a year of history, smoothly shaded from an idle day up to your heaviest. The scale reads against your own rhythm, resists one-off spike days, and spreads the mid-range perceptually so an active stretch stays visible. `--dollars` shades it by cost instead of tokens.
 - **The window row** (All time, Week, Month, Year) scopes the Models, Agents, and insight rows below it, while the heatmap stays full-history. In the held dashboard, `Tab` and `Shift-Tab` cycle the window; a plain `rimz stats` prints the All-time view.
 - **Models** ranks where the dollars went, each model under its friendly name (`gpt-5.5` reads as `GPT 5.5`) with its token split and its share of the window; the long tail folds into one `Other` row. **Agents** ranks by session count across the five transcript-backed kinds: Claude, Codex, Amp, Pi, and OpenCode. Both breakdowns carry tokens as well as dollars, so a model RimZ cannot price still shows up with its tokens counted.
 - **The insight lines** close it: sessions and spend for the window, how many days in the window saw activity, your heaviest single day, and your longest and current active-day streaks.
@@ -67,7 +67,7 @@ These totals are account-global, like `rimz stats`: they count every project on 
 
 #### Budget is not spend
 
-The `5h` and `7d` bars measure a different thing from the dollar figures. They are the included budget of your subscription plan, draining toward the reset printed beside them (`↻ 1h47m`), and they fill with what is left. A plan like Claude Max or ChatGPT Pro refills on its duration windows automatically, so those bars are your read on pace, not a bill. An API-key account has no such window, so its block shows a single `api` row of trailing-month spend instead.
+The `5h` and `7d` bars measure a different thing from the dollar figures. They are the included budget of your subscription plan, draining toward the reset printed beside them (`↻ 1h47m`), and they fill with what is left. A plan like Claude Max or ChatGPT Pro refills on its duration windows automatically, so those bars are your read on pace, not a bill. An API-key account has no such window, so its block shows a single `api` budget row instead; an uncapped key is a full bar with `∞`.
 
 When a window empties mid-turn the agent parks rather than fails, and with auto-continue it resumes itself the moment the window resets ([loops, built-in recovery](/docs/harness/loops#built-in-recovery)). The exact bar tones, the reset colouring, and the not-yet-started window are drawn in the [interface reference](https://github.com/rimio-ai/rimz/blob/main/docs/interface/sidebar.md?ref=docs#zone-3--the-provider-dashboard); where the readings come from is [providers internals](https://github.com/rimio-ai/rimz/blob/main/docs/internals/agents/providers.md?ref=docs).
 
@@ -88,7 +88,7 @@ The token breakdown sums every durable session record that ran in the room's spe
 
 The window is yours to set with `[sidebar] spend_window` ([configuration](/docs/customization/configuration#sidebar-rendering)):
 
-- `session` (the default): the current burst of work, opened by your latest prompt after a five-hour idle gap. Loop-fired turns and agent-to-agent messages count inside it but never start or bridge it.
+- `session` (the default): the current burst of work, opened by your latest prompt after a five-hour idle gap. Loop-fired turns and agent-to-agent messages count inside it and keep it alive, but never open it.
 - `24h`: a trailing twenty-four hours.
 - `today`: since calendar midnight in your configured `timezone`.
 
@@ -117,7 +117,7 @@ A few knobs, all plain TOML ([configuration](/docs/customization/configuration))
 
 - `[sidebar] spend_window` picks the cockpit window (`session`, `24h`, `today`), and `timezone` sets the `today` cutoff and the displayed times.
 - `[theme.display] max_provider_blocks` and `provider_list` choose how many provider blocks the dashboard shows and in what order. A token-only provider ranks by spend like any other.
-- `[accounts.usage_limit_usd]` sets a display ceiling per API-key provider, changing its `api` row from `$used` to `$used/$limit`. It tunes the bar only; the provider still enforces the real limit.
+- `[accounts.usage_limit_usd]` sets a display ceiling per API-key provider, changing its full `∞` row into a month-budget bar that drains against trailing-month spend and shows `$left`. It tunes the bar only; the provider still enforces the real limit.
 
 ## See also
 
