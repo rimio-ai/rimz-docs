@@ -1,15 +1,21 @@
 ---
 title: "Introduction"
-description: "RimZ is the control room for your coding agents."
+description: "RimZ is a realtime dashboard and control room for harnessing agentic coding, build on tmux and Zellij."
 ---
 
-RimZ is a realtime dashboard for harnessing agentic coding: one human and tens of agents working together in one Zellij or tmux room, where everything about every agent reads at a glance. Every agent gets a live card with state, task, context health, and live cost, and the sidebar routes your attention to whichever one needs you.
+{/* sync:introduction:start */}
+RimZ is a realtime dashboard for harnessing agentic coding: one human and tens of agents working together in one Zellij or tmux room, where everything about every agent reads at a glance. Every agent gets a live card (state, task, context health, live cost), and the sidebar routes your attention to whichever one needs you.
 
-![A RimZ room: the sidebar triaging a fleet of coding agents beside their panes](/rimz-full.png)
+<p align="center">
+  <img src="/rimz-full.png" alt="A RimZ room: the sidebar triaging a fleet of coding agents beside their panes" width="100%"/>
+  <br/><sub>The sidebar triages the fleet on the left; agents work in their own panes.</sub>
+</p>
+
 
 RimZ stays out of your way: one lightweight binary inside the Zellij or tmux you already run. Your keybinds stay, the agent CLIs run stock, and the official web, desktop, and mobile apps keep working untouched.
 
-That same small footprint carries the primitives harness engineering and loop engineering build on: the sidebar for observability, one command grammar across twelve built-in agents, durable messages that steer and queue, supervised runs with exit codes for scripts and CI, and scheduled wakeups that keep the fleet on a clock.
+That same small footprint carries the primitives **harness engineering** and **loop engineering** build on: the sidebar for observability, one command grammar for [every supported agent](#agent-compatibility-matrix), durable messages that steer and queue, supervised runs with exit codes for scripts and CI, and scheduled wakeups that keep the fleet on a clock. The harness itself (guardrails, policies, self-running loops) is yours to build on top.
+{/* sync:introduction:end */}
 
 {/* sync:project-status:start */}
 ## Project status
@@ -72,24 +78,28 @@ Read that as: ready for personal, daily use today; for production workflows that
 {/* sync:agent-compatibility:start */}
 ## Agent compatibility matrix
 
-Twelve agents ship built in. **Claude Code and Codex are the daily drivers** and give the best experience today. **Pi and OpenCode are in alpha** — wired end to end and close behind. Every other agent is **experimental**: wired and tested against its documented surface, but not yet dogfooded enough by the author, so expect the occasional bug and please [report what you hit](https://github.com/rimio-ai/rimz/issues). Any of them still mostly just works: the CLI runs stock in your terminal and the official apps stay untouched.
+**Claude Code and Codex are the daily drivers** and give the best experience today.
+
+**Pi and OpenCode are in alpha** — wired end to end and close behind.
+
+Every other agent is **experimental**: wired and tested against its documented surface, but not yet dogfooded enough by the author, so expect the occasional bug and please [report what you hit](https://github.com/rimio-ai/rimz/issues). Any of them still mostly just works: the CLI runs stock in your terminal and the official apps stay untouched.
 
 | Agent       | Status          | State | Live | History | Account | Ask | Subagents |
 |-------------|-----------------|:-----:|:----:|:-------:|:-------:|:---:|:---------:|
 | Claude Code | 🟢 Supported     |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
 | Codex       | 🟢 Supported     |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
-| Pi          | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ✗  |     ✗     |
+| Pi          | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
 | OpenCode    | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
-| Antigravity | ⚪ Experimental  |   ◐   |  ◐   |    ◐    |    ●    |  ◐  |     ✗     |
+| Antigravity | ⚪ Experimental  |   ◐   |  ◐   |    ◐    |    ●    |  ◐  |     ◐     |
 | Copilot     | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ●  |     ✗     |
 | Droid       | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
-| Cursor      | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ✗  |     ✗     |
+| Cursor      | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ◐  |     ●     |
 | Amp         | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ✗     |
 | Kiro        | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
 | Qwen        | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ●     |
 | Kimi        | ⚪ Experimental  |   ●   |  ●   |    ●    |    ●    |  ●  |     ◐     |
 
-<sub>● full · ◐ partial · ✗ the native CLI lacks the capability</sub>
+<sub>● full · ◐ partial · ✗ unsupported by the RimZ adapter</sub>
 
 What each column covers:
 
