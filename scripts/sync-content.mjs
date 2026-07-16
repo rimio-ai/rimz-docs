@@ -120,6 +120,9 @@ async function syncReadmeSections() {
   const target = path.join(docsRoot, 'index.mdx');
   let index = await readFile(target, 'utf8');
 
+  const introduction = extractIntroduction(source, sourcePath);
+  index = replaceSyncedBlock(index, 'introduction', transformFragment(introduction, sourcePath));
+
   for (const [id, heading] of readmeSections) {
     const section = extractSection(source, heading, sourcePath);
     const transformed = transformFragment(section, sourcePath);
@@ -127,6 +130,20 @@ async function syncReadmeSections() {
   }
 
   await writeFile(target, index, 'utf8');
+}
+
+function extractIntroduction(markdown, sourcePath) {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const end = lines.findIndex((line) => line === '## Project status');
+  if (end === -1) throw new Error(`${sourcePath}: missing section "Project status"`);
+
+  let start = -1;
+  for (let index = 0; index < end; index += 1) {
+    if (lines[index] === '---') start = index + 1;
+  }
+  if (start === -1) throw new Error(`${sourcePath}: missing introduction divider`);
+
+  return lines.slice(start, end).join('\n').trim();
 }
 
 function extractSection(markdown, heading, sourcePath) {
@@ -373,7 +390,14 @@ function findClosingParen(line, start) {
 
 function rewriteTarget(rawTarget, sourcePath, isImage) {
   const { href, suffix } = splitTarget(rawTarget.trim());
-  if (!href || isExternal(href) || href.startsWith('#')) return rawTarget;
+  if (!href) return rawTarget;
+
+  const hostedDocsImage = isImage && href.match(
+    /^https:\/\/raw\.githubusercontent\.com\/rimio-ai\/rimz\/(?:HEAD|main)\/docs\/(rimz-[^/?]+\.(?:avif|gif|jpe?g|png|svg|webp))$/i,
+  );
+  if (hostedDocsImage) return `/${hostedDocsImage[1]}${suffix}`;
+
+  if (isExternal(href) || href.startsWith('#')) return rawTarget;
 
   if (isImage || /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(href)) {
     return `/${path.posix.basename(href)}${suffix}`;
@@ -526,6 +550,10 @@ function selfCheck() {
   assert.equal(
     rewriteHtmlImageSources('<img src="../rimz-sidebar.png" alt="x">', 'docs/guide/sidebar.md'),
     '<img src="/rimz-sidebar.png" alt="x">',
+  );
+  assert.equal(
+    rewriteHtmlImageSources('<img src="https://raw.githubusercontent.com/rimio-ai/rimz/HEAD/docs/rimz-full.png" alt="x">', 'README.md'),
+    '<img src="/rimz-full.png" alt="x">',
   );
   assert.equal(descriptionFrom(`${'word '.repeat(37)}.`), undefined);
   assert.throws(
