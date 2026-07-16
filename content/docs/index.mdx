@@ -72,24 +72,28 @@ Read that as: ready for personal, daily use today; for production workflows that
 {/* sync:agent-compatibility:start */}
 ## Agent compatibility matrix
 
-Twelve agents ship built in. **Claude Code and Codex are the daily drivers** and give the best experience today. **Pi and OpenCode are in alpha** — wired end to end and close behind. Every other agent is **experimental**: wired and tested against its documented surface, but not yet dogfooded enough by the author, so expect the occasional bug and please [report what you hit](https://github.com/rimio-ai/rimz/issues). Any of them still mostly just works: the CLI runs stock in your terminal and the official apps stay untouched.
+**Claude Code and Codex are the daily drivers** and give the best experience today.
+
+**Pi and OpenCode are in alpha** — wired end to end and close behind.
+
+Every other agent is **experimental**: wired and tested against its documented surface, but not yet dogfooded enough by the author, so expect the occasional bug and please [report what you hit](https://github.com/rimio-ai/rimz/issues). Any of them still mostly just works: the CLI runs stock in your terminal and the official apps stay untouched.
 
 | Agent       | Status          | State | Live | History | Account | Ask | Subagents |
 |-------------|-----------------|:-----:|:----:|:-------:|:-------:|:---:|:---------:|
 | Claude Code | 🟢 Supported     |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
 | Codex       | 🟢 Supported     |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
-| Pi          | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ✗  |     ✗     |
+| Pi          | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
 | OpenCode    | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
-| Antigravity | ⚪ Experimental  |   ◐   |  ◐   |    ◐    |    ●    |  ◐  |     ✗     |
+| Antigravity | ⚪ Experimental  |   ◐   |  ◐   |    ◐    |    ●    |  ◐  |     ◐     |
 | Copilot     | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ●  |     ✗     |
 | Droid       | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
-| Cursor      | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ✗  |     ✗     |
+| Cursor      | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ◐  |     ●     |
 | Amp         | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ✗     |
 | Kiro        | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
 | Qwen        | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ●     |
 | Kimi        | ⚪ Experimental  |   ●   |  ●   |    ●    |    ●    |  ●  |     ◐     |
 
-<sub>● full · ◐ partial · ✗ the native CLI lacks the capability</sub>
+<sub>● full · ◐ partial · ✗ unsupported by the RimZ adapter</sub>
 
 What each column covers:
 
