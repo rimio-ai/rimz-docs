@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
-import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const repoRoot = process.cwd();
 const rimzRoot = path.resolve(process.env.RIMZ_SRC ?? path.join(repoRoot, '..', 'rimz'));
-const docsRoot = path.join(repoRoot, 'content', 'docs');
-const publicRoot = path.join(repoRoot, 'public');
-const githubBase = 'https://github.com/rimio-ai/rimz/blob/main';
+const version = process.env.RIMZ_VERSION ?? 'main';
+const sourceRef = process.env.RIMZ_REF ?? version;
+const templateRoot = path.join(repoRoot, 'content', 'template');
+const docsRoot = path.join(repoRoot, 'content', 'versions', version);
+const publicRoot = path.join(repoRoot, 'public', 'docs-assets', version);
+const docsRouteBase = `/docs/${version}`;
+const assetRouteBase = `/docs-assets/${version}`;
+const githubBase = `https://github.com/rimio-ai/rimz/blob/${sourceRef}`;
 const voidHtmlTags = new Set([
   'area',
   'base',
@@ -98,8 +103,10 @@ const srcToRoute = new Map(
 await main();
 
 async function main() {
+  assertVersionIdentifier(version);
   selfCheck();
   await assertMappingComplete();
+  await prepareDestination();
 
   for (const [source, destination] of mappings) {
     const markdown = await readFile(path.join(rimzRoot, source), 'utf8');
@@ -112,6 +119,37 @@ async function main() {
   await syncReadmeSections();
   await mkdir(publicRoot, { recursive: true });
   await copyImages();
+}
+
+async function prepareDestination() {
+  await rm(docsRoot, { recursive: true, force: true });
+  await rm(publicRoot, { recursive: true, force: true });
+  await mkdir(path.dirname(docsRoot), { recursive: true });
+  await mkdir(path.dirname(publicRoot), { recursive: true });
+  await cp(templateRoot, docsRoot, { recursive: true });
+
+  const entries = await readdir(docsRoot, { recursive: true });
+  for (const entry of entries) {
+    if (!entry.endsWith('.mdx')) continue;
+
+    const target = path.join(docsRoot, entry);
+    const markdown = await readFile(target, 'utf8');
+    await writeFile(target, rewriteTemplateRoutes(markdown), 'utf8');
+  }
+}
+
+function rewriteTemplateRoutes(markdown) {
+  return markdown
+    .replace(/(\]\()\/docs(?=\/|#|\)|\s)/g, `$1${docsRouteBase}`)
+    .replace(/(\bhref=["'])\/docs(?=\/|#|["'])/g, `$1${docsRouteBase}`)
+    .replace(
+      /(\bsrc=["'])\/(rimz-[^/?"']+\.(?:avif|gif|jpe?g|png|svg|webp))/gi,
+      `$1${assetRouteBase}/$2`,
+    )
+    .replace(
+      /(!\[[^\]]*\]\()\/(rimz-[^/?)]+\.(?:avif|gif|jpe?g|png|svg|webp))/gi,
+      `$1${assetRouteBase}/$2`,
+    );
 }
 
 async function syncReadmeSections() {
@@ -393,14 +431,14 @@ function rewriteTarget(rawTarget, sourcePath, isImage) {
   if (!href) return rawTarget;
 
   const hostedDocsImage = isImage && href.match(
-    /^https:\/\/raw\.githubusercontent\.com\/rimio-ai\/rimz\/(?:HEAD|main)\/docs\/(rimz-[^/?]+\.(?:avif|gif|jpe?g|png|svg|webp))$/i,
+    /^https:\/\/raw\.githubusercontent\.com\/rimio-ai\/rimz\/(?:HEAD|main|v[^/]+)\/docs\/(rimz-[^/?]+\.(?:avif|gif|jpe?g|png|svg|webp))$/i,
   );
-  if (hostedDocsImage) return `/${hostedDocsImage[1]}${suffix}`;
+  if (hostedDocsImage) return `${assetRouteBase}/${hostedDocsImage[1]}${suffix}`;
 
   if (isExternal(href) || href.startsWith('#')) return rawTarget;
 
   if (isImage || /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(href)) {
-    return `/${path.posix.basename(href)}${suffix}`;
+    return `${assetRouteBase}/${path.posix.basename(href)}${suffix}`;
   }
 
   const resolved = cleanPath(path.posix.normalize(path.posix.join(path.posix.dirname(sourcePath), href)));
@@ -521,7 +559,7 @@ function countRun(text, start, char) {
 function routeForDestination(destination) {
   const withoutExtension = destination.replace(/\.mdx$/, '');
   const withoutIndex = withoutExtension.replace(/(^|\/)index$/, '');
-  return `/docs${withoutIndex ? `/${withoutIndex}` : ''}`;
+  return `${docsRouteBase}${withoutIndex ? `/${withoutIndex}` : ''}`;
 }
 
 function cleanPath(value) {
@@ -530,30 +568,33 @@ function cleanPath(value) {
 
 function selfCheck() {
   const source = 'docs/guide/example.md';
-  srcToRoute.set('docs/guide/target.md', '/docs/guide/target');
+  srcToRoute.set('docs/guide/target.md', `${docsRouteBase}/guide/target`);
   assert.equal(
     rewriteLinks('[target](./target.md#install) and [code](../../crates/rimz/src/main.rs)', source),
-    '[target](/docs/guide/target#install) and [code](https://github.com/rimio-ai/rimz/blob/main/crates/rimz/src/main.rs)',
+    `[target](${docsRouteBase}/guide/target#install) and [code](${githubBase}/crates/rimz/src/main.rs)`,
   );
   assert.equal(
     rewriteLinks('[external](../externals/pinned.md#top)', source),
-    '[external](https://github.com/rimio-ai/rimz/blob/main/docs/externals/pinned.md?ref=docs#top)',
+    `[external](${githubBase}/docs/externals/pinned.md?ref=docs#top)`,
   );
   assert.equal(
     rewriteLinks('```md\n[target](./target.md)\n```', source),
-    '```md\n[target](/docs/guide/target)\n```',
+    `\`\`\`md\n[target](${docsRouteBase}/guide/target)\n\`\`\``,
   );
-  assert.equal(rewriteLinks('[`[tmux] option`](./configuration.md#x)', 'docs/guide/setup.md'), '[`[tmux] option`](/docs/customization/configuration#x)');
+  assert.equal(
+    rewriteLinks('[`[tmux] option`](./configuration.md#x)', 'docs/guide/setup.md'),
+    '[`[tmux] option`](' + docsRouteBase + '/customization/configuration#x)',
+  );
   assert.equal(escapeMdxText('Use {x} and <path> but keep `{x}`.'), 'Use \\{x\\} and &lt;path> but keep `{x}`.');
   assert.equal(escapeMdxText('Break<br> then <hr /> but keep <path>.'), 'Break<br/> then <hr/> but keep &lt;path>.');
   assert.equal(escapeMdxText('<p align="center"><sub><code>x</code></sub></p> and <kind>'), '<p align="center"><sub><code>x</code></sub></p> and &lt;kind>');
   assert.equal(
     rewriteHtmlImageSources('<img src="../rimz-sidebar.png" alt="x">', 'docs/guide/sidebar.md'),
-    '<img src="/rimz-sidebar.png" alt="x">',
+    `<img src="${assetRouteBase}/rimz-sidebar.png" alt="x">`,
   );
   assert.equal(
     rewriteHtmlImageSources('<img src="https://raw.githubusercontent.com/rimio-ai/rimz/HEAD/docs/rimz-full.png" alt="x">', 'README.md'),
-    '<img src="/rimz-full.png" alt="x">',
+    `<img src="${assetRouteBase}/rimz-full.png" alt="x">`,
   );
   assert.equal(descriptionFrom(`${'word '.repeat(37)}.`), undefined);
   assert.throws(
@@ -561,6 +602,12 @@ function selfCheck() {
     /docs\/guide\/conflict\.md:3: unresolved merge conflict marker/,
   );
   srcToRoute.delete('docs/guide/target.md');
+}
+
+function assertVersionIdentifier(value) {
+  if (!/^(?:main|v[0-9][0-9A-Za-z.+-]*)$/.test(value)) {
+    throw new Error(`invalid documentation version identifier: ${value}`);
+  }
 }
 
 function assertNoConflictMarkers(markdown, sourcePath) {

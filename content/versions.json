@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "latest": "v0.3",
+  "versions": [
+    {
+      "id": "v0.3",
+      "label": "v0.3 (latest)",
+      "ref": "v0.3",
+      "sourceCommit": "ecb1f62fb2a7ec3994842c99ea43b84fd7f3b7cc",
+      "kind": "release"
+    },
+    {
+      "id": "main",
+      "label": "main (unreleased)",
+      "ref": "main",
+      "sourceCommit": "b2ba95ad1b9172476ae27dfba506ea7d84f3c81b",
+      "kind": "development"
+    },
+    {
+      "id": "v0.2",
+      "label": "v0.2",
+      "ref": "v0.2",
+      "sourceCommit": "3560f4ba363361f720ce88d8299c14217f463f10",
+      "kind": "release"
+    }
+  ]
+}
