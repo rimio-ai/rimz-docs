@@ -6,7 +6,7 @@ When something looks off, `rimz doctor` is the first move, this page is the symp
 
 ## Start with `rimz doctor`
 
-`rimz doctor` reports the whole room in one pass: the multiplexer backend and whether its version clears the floor, per-machine config parsing, per-agent hook status, workspace and store health, project trust state, terminal color depth, scheduled loop tasks, and the Zellij presence grant. It resolves the workspace, probes each of those surfaces, and prints a verdict. A normal run writes nothing, so you can run it as often as you like.
+`rimz doctor` reports the whole room in one pass: the multiplexer backend and whether its version clears the floor, per-machine config parsing, per-agent hook status, workspace and store health, project trust state, terminal color depth, scheduled loop tasks, and the Zellij presence grant. It resolves the workspace, probes each of those surfaces, and prints a verdict. It writes nothing, so you can run it as often as you like.
 
 ```sh
 rimz doctor
@@ -118,17 +118,11 @@ The install is additive, so your existing hooks stay, and `rimz doctor` reports 
 
 Kiro CLI 2.12.1 v3 is the exception: RimZ reads its stock local session store and binds only validated sessions to live panes. A validated newborn session becomes an idle agent card before its first prompt when the pane process proves the current incarnation; missing, stale, or ambiguous identity remains a process row. Hook installation stays unsupported; `rimz hooks uninstall kiro` still removes a legacy RimZ-owned hook file.
 
-Grok reads hooks from `${GROK_HOME:-~/.grok}/hooks/rimz.json`. Run `rimz hooks install --dry-run grok` to inspect the global merge; the installed set deliberately excludes blocking `PreToolUse`, so permission decisions remain in Grok's own pane.
-
 ### A card went quiet after a config edit
 
 If a card stops updating after you hand-edited an agent's config, the RimZ-managed hook block was likely disturbed. Re-run `rimz hooks install --dry-run` to see the current diff, then `rimz hooks install` to restore the block. Some agents gate hooks behind their own trust prompt; when one reports installed-but-untrusted hooks, `rimz doctor` prints the exact fix in the `HOOKS` row.
 
 If a directly-launched Copilot card has lifecycle but no resolved model or token composition, first rebirth a room created before the current RimZ build. RimZ preserves `COPILOT_OTEL_FILE_EXPORTER_PATH`; that file must remain readable to the room. An `OTEL_EXPORTER_OTLP_ENDPOINT` or non-`file` `COPILOT_OTEL_EXPORTER_TYPE` selects the user's OTLP pipeline instead of RimZ's local cache, so set an explicit `COPILOT_OTEL_FILE_EXPORTER_PATH` when you also want file enrichment.
-
-### Codex sessions drop with a WebSocket reset about hourly
-
-`WebSocket protocol error: Connection reset without closing handshake` can mean Codex's updater is running a different executable from its managed standalone install and restarting the shared app-server on each hourly update tick. Check the REMOTE CONTROL section of `rimz doctor`; when it reports the provider daemon advisory, schedule `codex remote-control stop; sleep 3; codex remote-control start` while no valuable Codex turns are running, then resume the sessions this deliberate recycle disconnects.
 
 ### Zellij pane discovery stopped
 
@@ -156,24 +150,16 @@ rimz config set theme.pets.enabled true   # an animated companion on the dashboa
 When the running RimZ build drifts from an agent's tested version range, reporting fidelity degrades rather than a pane freezing outright: `rimz doctor` warns, and blocking prompts still route to the agent's own UI. After upgrading the binary, reconcile the running sidebars onto the new build:
 
 ```sh
-rimz reload             # re-exec sidebars in place; every pane stays unchanged
-rimz reload --repair    # then repair missing, duplicate, mis-docked, or wedged sidebars
-rimz doctor --clear     # dismiss diagnostics and incidents from before the upgrade
+rimz reload    # re-exec sidebars onto the current build, repair geometry, close duplicates
 ```
 
-`rimz doctor` also warns when more than one RimZ build is writing the workspace at the same time; `rimz reload` is the pane-preserving fix for that mixed-build state. If it reports sidebars that did not converge, run `rimz reload --repair`; replacement mounts and proves a current-build heartbeat before the old pane closes. Once the live writers converge, `rimz doctor --clear` records a workspace watermark so pre-upgrade diagnostics, the last incident, and message failures stop appearing without deleting their evidence files.
-
-After an upgrade, `rimz start` and `rimz attach` also warn when a live room still runs a different sidebar build and point to `rimz reload`.
+`rimz doctor` also warns when more than one RimZ build is writing the workspace at the same time; `rimz reload` is the fix for that mixed-build state too.
 
 `rimz reload` runs from anywhere and leaves stopped sessions stopped. Agent version drift and its exact effects are in [agent support](/docs/main/reference/agent-support).
 
 ### Scroll wheel sends arrow keys (Ghostty)
 
 A Ghostty tab exposed to mouse-mode churn from an older RimZ build can wedge into converting wheel ticks to arrow keys. Run `reset` once at a shell prompt or open a new Ghostty tab; current RimZ keeps the outer mouse mode constant so the state does not recur.
-
-### Garbled terminal after a remote link death
-
-Staircased lines or Enter and Ctrl-C echoing as `^M` and `^C` mean a dead SSH link left the local terminal in raw mode. Current RimZ repairs the terminal automatically on the next `rimz remote connect`; on older builds, run `reset` once at a shell prompt.
 
 ## Notifications don't fire
 
@@ -271,7 +257,7 @@ Per-machine config lives under `~/.config/rimz/` (`config.toml`, `theme.toml`, `
 rimz uninstall            # hooks, rooms, runtime state, binaries; keeps stores and config
 ```
 
-`--state`, `--config`, and `--all` widen the removal to durable stores and per-machine config; the exact scope of each flag is in the [maintenance reference](/docs/main/reference/cli/maintenance#update-reload-reset-gc-and-uninstall). Project-local `.rimz/` directories and RimZ-owned worktrees stay in place, because they can hold project config and unlanded work.
+`--state`, `--config`, and `--all` widen the removal to durable stores and per-machine config; the exact scope of each flag is in the [maintenance reference](/docs/main/reference/cli/maintenance#reload-reset-gc-and-uninstall). Project-local `.rimz/` directories and RimZ-owned worktrees stay in place, because they can hold project config and unlanded work.
 
 ## Filing an issue
 

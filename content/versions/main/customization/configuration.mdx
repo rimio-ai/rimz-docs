@@ -133,8 +133,6 @@ auto_continue = false
 auto_continue_backoff_secs = [180, 300]
 auto_continue_max_retries = 12
 auto_continue_text = "continue"
-auto_redeem = false
-auto_redeem_min_gain = "12h"
 ```
 
 Resume covers two moments; the behavior model is [loops.md → Built-in recovery](/docs/main/harness/loops#built-in-recovery), and these are its keys.
@@ -147,9 +145,7 @@ While the room is **live**, `auto_continue` (off by default) picks a parked turn
 - Overload and transient API-error parks (stalled streams, timeouts, connection drops) fire on the retry ramp: `auto_continue_backoff_secs = [180, 300]` sends the first retry three minutes after the failure, then every five minutes.
 - Every park type stops retrying after `auto_continue_max_retries` (default 12, about an hour on the default ramp), leaving the row parked for you.
 
-Codex reset-credit expiry rescue is always active within 30 minutes of a credit's expiry, and the provider-header reset marker blinks whenever a spent window makes manual redemption useful. `auto_redeem` opts into automatic redemption while a duration window is spent; `auto_redeem_min_gain` accepts `s`, `m`, `h`, or `d` and requires that much recovered blocked time (default `12h`), while a credit that would retain less than 24 hours after the natural reset redeems regardless of the minimum.
-
-The rebirth path is in [sidebar.md](https://github.com/rimio-ai/rimz/blob/main/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth), and the live paths are in [provider internals → Auto-continue](https://github.com/rimio-ai/rimz/blob/main/docs/internals/agents/providers.md?ref=docs#auto-continue) and [Auto-redeem](https://github.com/rimio-ai/rimz/blob/main/docs/internals/agents/providers.md?ref=docs#auto-redeem).
+The rebirth path is in [sidebar.md](https://github.com/rimio-ai/rimz/blob/main/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth) and the live path in [provider.md → Auto-continue](https://github.com/rimio-ai/rimz/blob/main/docs/internals/agents/providers.md?ref=docs#auto-continue).
 
 ### Daily dollar budgets
 
@@ -317,7 +313,7 @@ archive_after_secs = 86400
 
 `spend_window` sets the cockpit and provider headline row: `"session"` starts at your latest prompt after a five-hour idle gap and is the default (loop-fired turns and agent-to-agent messages count inside the resulting window but do not start or bridge it), `"24h"` keeps a trailing-24-hour window, and `"today"` starts at calendar midnight in `timezone`.
 
-`[sidebar.keys]` rebinds movement and width keys: `narrower`, `wider`, `up`, `down`, `top`, `bottom`, `worktree_up`, `worktree_down`, `page_up`, `page_down`, `screen_top`, and `screen_bottom`. Each value is a space-separated list of alternate chords, and the first chord shows in the `?` help overlay. Chords use optional `ctrl`/`control`/`c` and `alt`/`meta`/`m` modifiers with `+` or `-`, case-sensitive single characters (`H` differs from `h`), or named keys: `up`, `down`, `left`, `right`, `home`, `end`, `pageup`, `pagedown`, `enter`, and `space`. Defaults use `a`/`d` to step the pane narrower/wider and keep Vim movement plus arrow and page keys: `k/up`, `j/down`, `g/G`, `K/J`, `ctrl+b/pageup`, `ctrl+f/pagedown`, and `H/L`. The sidebar uses an explicit `[theme.display].width_percent`, otherwise 30% on views wider than 240 columns or when pets are enabled, and 25% otherwise, capped at `max_cols`. A width selection persists for the room across launch, reload, and session rebirth until its runtime state is reset, and this explicit selection outranks the configured or width-keyed percentage and `max_cols`. Configured chords resolve before fixed action keys, so a rebind may intentionally shadow a filter or action. Fixed filters use `A` for all and `s` for success/done. tmux's default prefix consumes `Ctrl+b` before the sidebar sees it, so `PageUp` is the portable default page-up key there.
+`[sidebar.keys]` rebinds movement and width keys: `narrower`, `wider`, `up`, `down`, `top`, `bottom`, `worktree_up`, `worktree_down`, `page_up`, `page_down`, `screen_top`, and `screen_bottom`. Each value is a space-separated list of alternate chords, and the first chord shows in the `?` help overlay. Chords use optional `ctrl`/`control`/`c` and `alt`/`meta`/`m` modifiers with `+` or `-`, case-sensitive single characters (`H` differs from `h`), or named keys: `up`, `down`, `left`, `right`, `home`, `end`, `pageup`, `pagedown`, `enter`, and `space`. Defaults use `a`/`d` to step the pane narrower/wider and keep Vim movement plus arrow and page keys: `k/up`, `j/down`, `g/G`, `K/J`, `ctrl+b/pageup`, `ctrl+f/pagedown`, and `H/L`. The sidebar uses an explicit `[theme.display].width_percent`, otherwise 30% on views wider than 240 columns and 25% at or below, capped at `max_cols`. A width selection persists for the room across launch, reload, and session rebirth until its runtime state is reset, and this explicit selection outranks the configured or width-keyed percentage and `max_cols`. Configured chords resolve before fixed action keys, so a rebind may intentionally shadow a filter or action. Fixed filters use `A` for all and `s` for success/done. tmux's default prefix consumes `Ctrl+b` before the sidebar sees it, so `PageUp` is the portable default page-up key there.
 
 ## agents.toml: profiles, teams, and worktrees
 
@@ -420,7 +416,6 @@ base = "fresh"
 ### Loop tasks
 
 ```toml
-auto-ping = true            # keep each provider's longest window running
 default-timeout = "2h"   # scheduled agent turns without a task timeout
 
 [tasks.morning]
@@ -469,8 +464,6 @@ handle = "@planner"
 ```
 
 Loop tasks live in `~/.config/rimz/loop.toml` under `[tasks.<name>]`; shared project tasks use the same shape in `<repo>/.rimz/config.toml`, are trust-hashed, and stay inert until `rimz trust grant`. The scheduling model (shapes, watchdogs, pings, self-wakes) is [loops.md](/docs/main/harness/loops); this section is the field shape.
-
-`auto-ping = true` synthesizes one machine-source `autoping-<kind>` reset task per ping-capable provider in each open project room. The tasks stay visible in `rimz loop`, and an explicit task with the same name wins. Each task keeps the provider's longest window running, rechecks authoritative account usage before a ping, and retries a confirmed-down window at most once per hour; [loops.md → Prime the budget window](/docs/main/harness/loops#prime-the-budget-window) covers the workflow.
 
 `default-timeout` bounds scheduled supervised turns whose task omits `timeout`; it accepts positive `s`, `m`, `h`, and `d` durations and defaults to `2h`. Set it with `rimz config set loop.default-timeout 3h`. Task-specific `timeout` wins, and a manual `rimz loop fire` without one remains unbounded.
 
