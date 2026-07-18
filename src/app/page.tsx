@@ -29,6 +29,11 @@ export const metadata: Metadata = {
  * Palette: page #0b0e14, surfaces white/[0.03], code panes #0d1117,
  * borders white/10, text zinc-100 over zinc-400. Single accent: sky-300.
  * Radius rule: interactive elements rounded-lg, panels and frames rounded-xl.
+ *
+ * Section rhythm (one layout family each): split hero with the live card,
+ * full-bleed room shot, sidebar split, command bento, borderless 2x2
+ * away-list, stacked insight, tier chip rows, centered pets figure,
+ * centered install CTA.
  */
 
 const asset = (name: string) => withBasePath(`/docs-assets/v0.3/${name}`);
@@ -69,11 +74,30 @@ const agentTiers: { label: string; tone: string; agents: string[] }[] = [
   },
 ];
 
+const awayPoints: { title: string; body: string }[] = [
+  {
+    title: 'Answer from your phone',
+    body: "Claude Code and Codex remote control stays up with the room. The ask arrives as a push from the provider's own app, and your answer lands in the same session.",
+  },
+  {
+    title: 'Auto-continue',
+    body: 'A rate-limit pause resumes the moment the budget window resets, and a transient API error retries on a backoff ramp.',
+  },
+  {
+    title: 'A link that heals itself',
+    body: 'A room is plain Zellij or tmux under SSH. Reconnect from another machine and every agent is where you left it.',
+  },
+  {
+    title: 'Notifications that reach you',
+    body: 'Desktop banners, unread nudges, and handlers that run your own command the moment a row needs eyes.',
+  },
+];
+
 export default function HomePage() {
   const docsUrl = withBasePath(`${docsRoute}/`);
 
   return (
-    <main className="min-h-screen bg-[#0b0e14] text-zinc-100 antialiased">
+    <main className="min-h-dvh bg-[#0b0e14] text-zinc-100 antialiased">
       <nav className="sticky top-0 z-40 border-b border-white/5 bg-[#0b0e14]/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-6">
           <Link className="font-mono text-base font-semibold tracking-tight text-zinc-100" href="/">
@@ -93,32 +117,52 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero: copy only, left-aligned; the room screenshot follows full-width below. */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-14 pt-20 sm:pt-24">
-        <h1 className="landing-rise max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-          The control room for your coding agents.
-        </h1>
-        <p className="landing-rise landing-delay-1 mt-6 max-w-2xl text-lg leading-8 text-zinc-400">
-          Live cards for every agent, attention routed to whoever needs you, inside the tmux or
-          Zellij you already run.
-        </p>
-        <div className="landing-rise landing-delay-2 mt-8 flex flex-wrap items-center gap-3">
-          <Link
-            className="rounded-lg bg-sky-300 px-5 py-2.5 text-sm font-medium text-[#0b0e14] transition-colors hover:bg-sky-200 active:translate-y-px"
-            href={docsUrl}
-          >
-            Read the docs
-          </Link>
-          <a
-            className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-medium text-zinc-100 transition-colors hover:border-white/30 active:translate-y-px"
-            href={productGitHubUrl}
-          >
-            GitHub
-          </a>
-          <code className="hidden rounded-lg border border-white/10 bg-[#0d1117] px-4 py-2.5 font-mono text-[13px] text-zinc-300 sm:block">
-            <Prompt />
-            brew install rimio-ai/rimz/rimz
-          </code>
+      {/* Hero: asymmetric split, copy left, one live agent card right; the room screenshot follows full-width below. */}
+      <section className="mx-auto max-w-[1200px] px-6 pb-14 pt-16 sm:pt-20">
+        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-16">
+          <div>
+            <h1 className="landing-rise max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
+              The control room for your coding agents.
+            </h1>
+            <p className="landing-rise landing-delay-1 mt-6 max-w-2xl text-lg leading-8 text-zinc-400">
+              Live cards for every agent, attention routed to whoever needs you, inside the tmux or
+              Zellij you already run.
+            </p>
+            <div className="landing-rise landing-delay-2 mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                className="rounded-lg bg-sky-300 px-5 py-2.5 text-sm font-medium text-[#0b0e14] transition-colors hover:bg-sky-200 active:translate-y-px"
+                href={docsUrl}
+              >
+                Read the docs
+              </Link>
+              <a
+                className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-medium text-zinc-100 transition-colors hover:border-white/30 active:translate-y-px"
+                href={productGitHubUrl}
+              >
+                GitHub
+              </a>
+              <code className="hidden rounded-lg border border-white/10 bg-[#0d1117] px-4 py-2.5 font-mono text-[13px] text-zinc-300 sm:block">
+                <Prompt />
+                brew install rimio-ai/rimz/rimz
+              </code>
+            </div>
+          </div>
+          <div className="landing-rise landing-delay-3 relative">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-8 bg-[radial-gradient(60%_60%_at_50%_50%,rgba(125,211,252,0.08),transparent_70%)]"
+            />
+            <div className="relative overflow-hidden rounded-xl border border-white/10 shadow-2xl shadow-black/50">
+              <Image
+                alt="One live agent card: working state and task, model and effort, context health, live cost, and the subagent tree"
+                className="h-auto w-full"
+                height="574"
+                priority
+                src={asset('rimz-card.png')}
+                width="1236"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -202,7 +246,7 @@ export default function HomePage() {
           </p>
         </div>
         <div className="landing-reveal mt-10 grid gap-4 lg:grid-cols-3">
-          <article className="rounded-xl border border-white/10 bg-white/[0.03] p-6 lg:col-span-2">
+          <article className="rounded-xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-white/20 lg:col-span-2">
             <h3 className="font-medium">Message agents like teammates</h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               Durable delivery that parks at the turn boundary, interrupts the live turn, or waits
@@ -217,7 +261,7 @@ export default function HomePage() {
               rimz message @coder --wait &quot;did the migration land? one line&quot;
             </Term>
           </article>
-          <article className="rounded-xl border border-sky-300/20 bg-gradient-to-b from-sky-300/[0.08] to-transparent p-6">
+          <article className="rounded-xl border border-sky-300/20 bg-gradient-to-b from-sky-300/[0.08] to-transparent p-6 transition-colors hover:border-sky-300/40">
             <h3 className="font-medium">Teams, cross-model by design</h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               A planner, a coder, and a reviewer launch as one team, each role on the model best at
@@ -228,7 +272,7 @@ export default function HomePage() {
               rimz agents forge -w feat-auth
             </Term>
           </article>
-          <article className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+          <article className="rounded-xl border border-white/10 bg-white/[0.03] bg-[radial-gradient(120%_100%_at_100%_0%,rgba(125,211,252,0.06),transparent_55%)] p-6 transition-colors hover:border-white/20">
             <h3 className="font-medium">A worktree per line of work</h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               One spec lays out agents, editors, and shells in an isolated Git worktree.
@@ -240,7 +284,7 @@ export default function HomePage() {
               rimz agents &apos;vim,codex+term&apos; -w feat-b
             </Term>
           </article>
-          <article className="rounded-xl border border-white/10 bg-white/[0.03] p-6 lg:col-span-2">
+          <article className="rounded-xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-white/20 lg:col-span-2">
             <h3 className="font-medium">Script it, then put it on a clock</h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               One supervised turn with an exit code for scripts and CI, and scheduled loops that
@@ -254,6 +298,27 @@ export default function HomePage() {
               {'      '}--agent codex --prompt &quot;fix the failing test&quot; --every 15m
             </Term>
           </article>
+        </div>
+      </section>
+
+      {/* Step away: lead copy over a borderless 2x2 list. */}
+      <section className="mx-auto max-w-[1200px] px-6 pt-24 sm:pt-32">
+        <div className="landing-reveal">
+          <h2 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">
+            Step away. The room keeps working.
+          </h2>
+          <p className="mt-4 max-w-2xl text-zinc-400">
+            Start on your laptop or a server, close the lid mid-run, and reattach from anywhere. A
+            fleet that runs while you are out still stops to ask, and the ask still reaches you.
+          </p>
+        </div>
+        <div className="landing-reveal mt-12 grid gap-x-16 gap-y-10 sm:grid-cols-2">
+          {awayPoints.map((point) => (
+            <div className="border-t border-white/10 pt-5" key={point.title}>
+              <h3 className="font-medium text-zinc-100">{point.title}</h3>
+              <p className="mt-1.5 text-sm leading-6 text-zinc-400">{point.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -309,6 +374,28 @@ export default function HomePage() {
               </ul>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Pets: the delight beat before the install CTA. The PNG carries its own window chrome and shadow. */}
+      <section className="mx-auto max-w-[1200px] px-6 pt-24 sm:pt-32">
+        <div className="landing-reveal mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            And a pet keeps you company.
+          </h2>
+          <p className="mt-4 text-zinc-400">
+            An animated companion on the dashboard: it works while the agents work, and waves when
+            one waits for you.
+          </p>
+        </div>
+        <div className="landing-reveal mx-auto mt-8 max-w-3xl">
+          <Image
+            alt="rimz list-pets: eight pixel-art pets, from a codex robot to a sprouting seed, lined up in a terminal"
+            className="h-auto w-full"
+            height="752"
+            src={asset('rimz-pets.png')}
+            width="2516"
+          />
         </div>
       </section>
 
