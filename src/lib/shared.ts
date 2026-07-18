@@ -1,5 +1,6 @@
 export const appName = 'RimZ';
-export const appDescription = 'The control room for your coding agents';
+export const appDescription =
+  'RimZ is an open-source realtime dashboard and control room for running and steering fleets of coding agents in tmux and Zellij.';
 
 function normalizeBasePath(value: string | undefined) {
   const trimmed = value?.trim().replace(/^\/+|\/+$/g, '') ?? '';
@@ -12,7 +13,9 @@ function trimTrailingSlash(value: string) {
 }
 
 export const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
-export const siteUrl = trimTrailingSlash(process.env.NEXT_PUBLIC_SITE_URL ?? `https://rimz.sh${basePath}`);
+export const siteUrl = trimTrailingSlash(
+  process.env.NEXT_PUBLIC_SITE_URL ?? `https://rimz.rimio.ai${basePath}`,
+);
 
 export function withBasePath(path: string) {
   if (!basePath || path.match(/^\w+:/) || path.startsWith('//')) return path;
