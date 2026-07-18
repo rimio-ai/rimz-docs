@@ -63,7 +63,7 @@ assert.ok(
 const homeHtml = await readFile(path.join(outputRoot, 'index.html'), 'utf8');
 assert.ok(!homeHtml.includes('http-equiv="refresh"'), 'the homepage still uses a meta refresh');
 assert.ok(
-  homeHtml.includes('Run and steer a fleet of coding agents from your terminal.'),
+  homeHtml.includes('Every agent. One room.'),
   'the homepage is missing the product heading',
 );
 

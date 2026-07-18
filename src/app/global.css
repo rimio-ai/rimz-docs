@@ -10,3 +10,992 @@ html > body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
 }
+
+/* RimZ landing page: media uses 18px corners, interactive controls use 8px corners. */
+.home-shell {
+  --home-bg: #f3f6f2;
+  --home-surface: #e8ede7;
+  --home-surface-strong: #dce5da;
+  --home-text: #161a16;
+  --home-muted: #596259;
+  --home-accent: #4d712b;
+  --home-accent-ink: #f3f6f2;
+  --home-border: rgb(22 26 22 / 14%);
+  --home-shadow: rgb(45 62 39 / 18%);
+  --home-media-radius: 18px;
+  --home-control-radius: 8px;
+  min-height: 100dvh;
+  overflow: clip;
+  background: var(--home-bg);
+  color: var(--home-text);
+  font-family: var(--font-rimz-sans), sans-serif;
+}
+
+.dark .home-shell {
+  --home-bg: #111511;
+  --home-surface: #181e18;
+  --home-surface-strong: #222a21;
+  --home-text: #edf2e9;
+  --home-muted: #a8b2a5;
+  --home-accent: #a8cb73;
+  --home-accent-ink: #16200f;
+  --home-border: rgb(237 242 233 / 14%);
+  --home-shadow: rgb(4 8 4 / 52%);
+}
+
+.home-shell *,
+.home-shell *::before,
+.home-shell *::after {
+  box-sizing: border-box;
+}
+
+.home-shell a,
+.home-shell button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-shell a:focus-visible,
+.home-shell button:focus-visible,
+.home-shell pre:focus-visible {
+  outline: 2px solid var(--home-accent);
+  outline-offset: 3px;
+}
+
+.home-nav-wrap {
+  border-bottom: 1px solid var(--home-border);
+  background: var(--home-bg);
+}
+
+.home-nav {
+  display: flex;
+  height: 72px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.home-wordmark {
+  color: var(--home-text);
+  font-size: 1.35rem;
+  font-weight: 760;
+  letter-spacing: -0.055em;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.home-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 38px);
+  white-space: nowrap;
+}
+
+.home-nav-links a,
+.home-footer a,
+.home-text-link {
+  color: var(--home-muted);
+  font-size: 0.875rem;
+  font-weight: 580;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.home-nav-links a:hover,
+.home-footer a:hover,
+.home-text-link:hover {
+  color: var(--home-accent);
+}
+
+.home-hero {
+  display: grid;
+  min-height: calc(100dvh - 72px);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(48px, 7vh, 76px) 42px clamp(60px, 9vh, 96px);
+  grid-template-columns: minmax(390px, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(48px, 6vw, 92px);
+}
+
+.home-hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.home-kicker {
+  margin: 0 0 22px;
+  color: var(--home-accent);
+  font-family: var(--font-rimz-mono), monospace;
+  font-size: 0.79rem;
+  font-weight: 620;
+  line-height: 1.5;
+}
+
+.home-hero h1,
+.home-section h2,
+.home-command-section h2,
+.home-automation h2,
+.home-install h2 {
+  margin: 0;
+  font-weight: 660;
+  letter-spacing: -0.058em;
+}
+
+.home-hero h1 {
+  max-width: 12ch;
+  font-size: clamp(3.2rem, 5.1vw, 4.75rem);
+  line-height: 0.98;
+}
+
+.home-hero-summary {
+  max-width: 52ch;
+  margin: 28px 0 0;
+  color: var(--home-muted);
+  font-size: clamp(1rem, 1.6vw, 1.16rem);
+  line-height: 1.65;
+}
+
+.home-hero-actions {
+  display: flex;
+  margin-top: 32px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home-button {
+  display: inline-flex;
+  min-height: 48px;
+  padding: 0 20px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--home-control-radius);
+  font-size: 0.91rem;
+  font-weight: 650;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.home-button:hover {
+  transform: translateY(-2px);
+}
+
+.home-button:active {
+  transform: translateY(1px);
+}
+
+.home-button-primary {
+  background: var(--home-accent);
+  color: var(--home-accent-ink);
+}
+
+.home-button-secondary {
+  border-color: var(--home-border);
+  background: transparent;
+  color: var(--home-text);
+}
+
+.home-button-secondary:hover {
+  background: var(--home-surface);
+}
+
+.home-shot-frame {
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-media-radius);
+  background: #151823;
+  box-shadow: 0 32px 80px -42px var(--home-shadow);
+}
+
+.home-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.home-hero-shot {
+  width: min(840px, 58vw);
+  justify-self: start;
+}
+
+.home-proof {
+  border-top: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border);
+}
+
+.home-proof dl {
+  display: grid;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 42px;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.home-proof dl > div {
+  min-width: 0;
+  padding: 26px clamp(18px, 3vw, 36px);
+  border-left: 1px solid var(--home-border);
+}
+
+.home-proof dl > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.home-proof dt {
+  margin-bottom: 7px;
+  color: var(--home-muted);
+  font-family: var(--font-rimz-mono), monospace;
+  font-size: 0.71rem;
+}
+
+.home-proof dd {
+  margin: 0;
+  color: var(--home-text);
+  font-size: clamp(0.9rem, 1.4vw, 1.04rem);
+  font-weight: 620;
+}
+
+.home-section,
+.home-command-section,
+.home-automation-inner,
+.home-install-inner,
+.home-footer {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.home-section {
+  padding: clamp(96px, 11vw, 150px) 42px;
+}
+
+.home-attention {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: clamp(70px, 9vw, 132px);
+}
+
+.home-attention-copy {
+  grid-column: 2;
+}
+
+.home-sidebar-shot {
+  width: min(100%, 440px);
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: center;
+}
+
+.home-section h2,
+.home-command-section h2,
+.home-automation h2,
+.home-install h2 {
+  max-width: 13ch;
+  font-size: clamp(2.6rem, 5vw, 4.6rem);
+  line-height: 1;
+}
+
+.home-section-summary,
+.home-section-heading > p,
+.home-automation-lead > p,
+.home-install-inner > div > p {
+  max-width: 58ch;
+  margin: 24px 0 0;
+  color: var(--home-muted);
+  font-size: clamp(1rem, 1.5vw, 1.13rem);
+  line-height: 1.65;
+}
+
+.home-principles {
+  margin-top: 54px;
+  border-top: 1px solid var(--home-border);
+}
+
+.home-principles article {
+  display: grid;
+  padding: 26px 0;
+  border-bottom: 1px solid var(--home-border);
+  grid-template-columns: minmax(150px, 0.72fr) minmax(0, 1.28fr);
+  gap: 28px;
+}
+
+.home-principles h3,
+.home-automation-grid h3 {
+  margin: 0;
+  color: var(--home-text);
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.home-principles p,
+.home-automation-grid p {
+  margin: 0;
+  color: var(--home-muted);
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+.home-command-section {
+  max-width: none;
+  padding: clamp(96px, 11vw, 144px) max(42px, calc((100vw - 1196px) / 2));
+  background: var(--home-surface);
+}
+
+.home-section-heading {
+  max-width: 760px;
+}
+
+.home-command-deck {
+  display: grid;
+  min-height: 350px;
+  max-width: 1196px;
+  margin: 60px auto 0;
+  overflow: hidden;
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-media-radius);
+  background: var(--home-bg);
+  box-shadow: 0 28px 70px -48px var(--home-shadow);
+  grid-template-columns: 210px minmax(0, 1fr);
+}
+
+.home-command-tabs {
+  display: grid;
+  padding: 12px;
+  align-content: start;
+  gap: 4px;
+  border-right: 1px solid var(--home-border);
+  background: color-mix(in srgb, var(--home-surface) 72%, var(--home-bg));
+}
+
+.home-command-tabs button,
+.home-code-block button,
+.home-install-command button {
+  border: 0;
+  border-radius: var(--home-control-radius);
+  font: inherit;
+  cursor: pointer;
+}
+
+.home-command-tabs button {
+  min-height: 48px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--home-muted);
+  font-size: 0.88rem;
+  font-weight: 620;
+  text-align: left;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.home-command-tabs button:hover {
+  background: var(--home-surface-strong);
+  color: var(--home-text);
+}
+
+.home-command-tabs button:active {
+  transform: translateY(1px);
+}
+
+.home-command-tabs button[aria-selected='true'] {
+  background: var(--home-accent);
+  color: var(--home-accent-ink);
+}
+
+.home-command-panel {
+  display: flex;
+  min-width: 0;
+  padding: clamp(30px, 5vw, 68px);
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-command-panel > p:first-child {
+  max-width: 60ch;
+  margin: 0 0 30px;
+  color: var(--home-muted);
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  line-height: 1.6;
+}
+
+.home-code-block {
+  display: grid;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-control-radius);
+  background: var(--home-surface);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+}
+
+.home-code-block pre {
+  max-width: 100%;
+  margin: 0;
+  overflow-x: auto;
+  padding: 11px 8px;
+  color: var(--home-text);
+  font-family: var(--font-rimz-mono), monospace;
+  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.home-code-block button,
+.home-install-command button {
+  min-width: 96px;
+  min-height: 42px;
+  padding: 0 14px;
+  background: var(--home-surface-strong);
+  color: var(--home-text);
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.home-code-block button:hover,
+.home-install-command button:hover {
+  background: var(--home-accent);
+  color: var(--home-accent-ink);
+}
+
+.home-code-block button:active,
+.home-install-command button:active {
+  transform: translateY(1px);
+}
+
+.home-code-block button:disabled,
+.home-install-command button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.home-code-block button[data-state='copied'],
+.home-install-command button[data-state='copied'] {
+  background: var(--home-accent);
+  color: var(--home-accent-ink);
+}
+
+.home-copy-status {
+  min-height: 1.25rem;
+  margin: 10px 0 0;
+  color: var(--home-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.home-automation {
+  border-top: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border);
+}
+
+.home-automation-inner {
+  display: grid;
+  padding: clamp(96px, 11vw, 150px) 42px;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(64px, 9vw, 130px);
+}
+
+.home-automation-lead {
+  align-self: start;
+}
+
+.home-automation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 46px 42px;
+}
+
+.home-automation-grid article {
+  padding-top: 20px;
+  border-top: 1px solid var(--home-border);
+}
+
+.home-automation-grid p {
+  margin-top: 12px;
+}
+
+.home-insight {
+  max-width: 1280px;
+}
+
+.home-stats-figure {
+  width: 92%;
+  margin: 64px 0 0 auto;
+}
+
+.home-stats-figure figcaption {
+  margin-top: 14px;
+  color: var(--home-muted);
+  font-family: var(--font-rimz-mono), monospace;
+  font-size: 0.74rem;
+}
+
+.home-stats-figure code {
+  color: var(--home-text);
+  font-family: inherit;
+}
+
+.home-install {
+  border-top: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border);
+  background: var(--home-surface);
+}
+
+.home-install-inner {
+  display: grid;
+  padding: clamp(84px, 9vw, 120px) 42px;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(52px, 8vw, 110px);
+}
+
+.home-install-inner h2 {
+  font-size: clamp(2.5rem, 4.5vw, 4.2rem);
+}
+
+.home-install-action {
+  min-width: 0;
+}
+
+.home-install-command {
+  display: grid;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-control-radius);
+  background: var(--home-bg);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-install-command code {
+  min-width: 0;
+  overflow-x: auto;
+  padding: 10px 8px;
+  color: var(--home-text);
+  font-family: var(--font-rimz-mono), monospace;
+  font-size: clamp(0.74rem, 1.3vw, 0.9rem);
+  white-space: nowrap;
+}
+
+.home-text-link {
+  display: inline-flex;
+  margin-top: 20px;
+  align-items: center;
+  gap: 8px;
+  color: var(--home-text);
+}
+
+.home-text-link span {
+  transition: transform 180ms ease;
+}
+
+.home-text-link:hover span {
+  transform: translateX(3px);
+}
+
+.home-footer {
+  display: flex;
+  min-height: 116px;
+  padding: 30px 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  color: var(--home-muted);
+  font-size: 0.82rem;
+}
+
+.home-footer p {
+  margin: 0;
+}
+
+.home-footer div {
+  display: flex;
+  gap: 26px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-hero-copy > * {
+    animation: home-rise 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .home-hero-copy > :nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .home-hero-copy > :nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  .home-hero-copy > :nth-child(4) {
+    animation-delay: 210ms;
+  }
+
+  .home-hero-shot {
+    animation: home-shot-enter 900ms 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .home-command-panel {
+    animation: home-panel-swap 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @supports (animation-timeline: view()) {
+    .home-reveal {
+      animation: home-section-reveal linear both;
+      animation-range: entry 8% cover 28%;
+      animation-timeline: view();
+    }
+  }
+}
+
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-shot-enter {
+  from {
+    opacity: 0;
+    transform: translateX(26px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes home-panel-swap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-section-reveal {
+  from {
+    opacity: 0.82;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1023px) {
+  .home-hero {
+    padding-right: 30px;
+    padding-left: 30px;
+    grid-template-columns: minmax(340px, 0.92fr) minmax(0, 1.08fr);
+    gap: 36px;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(3rem, 5.4vw, 3.5rem);
+  }
+
+  .home-proof dl,
+  .home-nav,
+  .home-section,
+  .home-automation-inner,
+  .home-install-inner,
+  .home-footer {
+    padding-right: 30px;
+    padding-left: 30px;
+  }
+
+  .home-attention {
+    gap: 56px;
+  }
+
+  .home-principles article {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .home-command-section {
+    padding-right: 30px;
+    padding-left: 30px;
+  }
+
+  .home-automation-inner {
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 54px;
+  }
+
+  .home-automation-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 767px) {
+  .home-nav {
+    height: 64px;
+    padding: 0 20px;
+    gap: 20px;
+  }
+
+  .home-nav-links {
+    gap: 18px;
+  }
+
+  .home-nav-links a {
+    font-size: 0.78rem;
+  }
+
+  .home-hero {
+    min-height: auto !important;
+    padding: 32px 20px 28px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 24px;
+  }
+
+  .home-kicker {
+    margin-bottom: 14px;
+    font-size: 0.7rem;
+  }
+
+  .home-hero h1 {
+    max-width: 10.5ch;
+    font-size: clamp(2.65rem, 12vw, 3.4rem);
+    line-height: 0.98;
+  }
+
+  .home-hero-summary {
+    margin-top: 18px;
+    font-size: 0.96rem;
+    line-height: 1.55;
+  }
+
+  .home-hero-actions {
+    margin-top: 22px;
+  }
+
+  .home-button {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 0.84rem;
+  }
+
+  .home-hero-shot {
+    width: 100%;
+    max-height: 210px;
+    align-self: end;
+  }
+
+  .home-hero-shot .home-shot {
+    height: 100%;
+    min-height: 150px;
+    object-fit: cover;
+    object-position: left center;
+  }
+
+  .home-proof dl {
+    padding: 0 20px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .home-proof dl > div {
+    padding: 20px 14px;
+  }
+
+  .home-proof dl > div:nth-child(3) {
+    padding-left: 0;
+    border-top: 1px solid var(--home-border);
+    border-left: 0;
+  }
+
+  .home-proof dl > div:nth-child(4) {
+    border-top: 1px solid var(--home-border);
+  }
+
+  .home-proof dd {
+    font-size: 0.82rem;
+  }
+
+  .home-section,
+  .home-automation-inner,
+  .home-install-inner {
+    padding: 82px 20px;
+  }
+
+  .home-attention,
+  .home-automation-inner,
+  .home-install-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-attention {
+    gap: 48px;
+  }
+
+  .home-attention-copy,
+  .home-sidebar-shot {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .home-sidebar-shot {
+    width: min(100%, 390px);
+  }
+
+  .home-section h2,
+  .home-command-section h2,
+  .home-automation h2,
+  .home-install h2 {
+    max-width: 12ch;
+    font-size: clamp(2.35rem, 11vw, 3.4rem);
+  }
+
+  .home-section-summary,
+  .home-section-heading > p,
+  .home-automation-lead > p,
+  .home-install-inner > div > p {
+    margin-top: 18px;
+    font-size: 0.96rem;
+  }
+
+  .home-principles {
+    margin-top: 38px;
+  }
+
+  .home-command-section {
+    padding: 82px 20px;
+  }
+
+  .home-command-deck {
+    min-height: 0;
+    margin-top: 42px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-command-tabs {
+    padding: 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--home-border);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-command-tabs button {
+    min-height: 42px;
+    text-align: center;
+  }
+
+  .home-command-panel {
+    min-height: 310px;
+    padding: 28px 20px;
+    justify-content: flex-start;
+  }
+
+  .home-command-panel > p:first-child {
+    margin-bottom: 22px;
+    font-size: 0.98rem;
+  }
+
+  .home-code-block,
+  .home-install-command {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .home-code-block button,
+  .home-install-command button {
+    width: 100%;
+  }
+
+  .home-automation-inner {
+    gap: 52px;
+  }
+
+  .home-automation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-stats-figure {
+    width: 100%;
+    margin-top: 42px;
+  }
+
+  .home-install-inner {
+    gap: 42px;
+  }
+
+  .home-footer {
+    min-height: 0;
+    padding: 28px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .home-nav-links {
+    gap: 13px;
+  }
+
+  .home-nav-links a {
+    font-size: 0.73rem;
+  }
+
+  .home-hero {
+    padding-top: 26px;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(2.45rem, 12vw, 3rem);
+  }
+
+  .home-hero-summary {
+    max-width: 36ch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-shell *,
+  .home-shell *::before,
+  .home-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

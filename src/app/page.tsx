@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { CommandDeck, InstallCommand } from '@/components/home-command-deck';
 import {
   appDescription,
   docsRoute,
@@ -9,104 +11,236 @@ import {
   withBasePath,
 } from '@/lib/shared';
 
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-rimz-sans',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-rimz-mono',
+});
+
 export const metadata: Metadata = {
-  title: { absolute: 'RimZ — Open-source control room for coding agents' },
+  title: { absolute: 'RimZ | Open-source control room for coding agents' },
   description: appDescription,
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: 'RimZ — Open-source control room for coding agents',
+    title: 'RimZ | Open-source control room for coding agents',
     description: appDescription,
     url: siteUrl,
-    images: '/docs-assets/v0.3/rimz-full.png',
+    images: '/landing/rimz-room.webp',
   },
 };
 
+const attentionPrinciples = [
+  {
+    title: 'Waiting moves first',
+    body: 'Blocking questions rise to the top. One focus command takes you straight to the pane that needs an answer.',
+  },
+  {
+    title: 'Context stays visible',
+    body: 'Task, model, effort, context health, tokens, cost, and subagents stay readable without opening every pane.',
+  },
+  {
+    title: 'Your terminal stays yours',
+    body: 'Official agent CLIs keep their sessions, UI, and keybindings. RimZ observes and routes the room around them.',
+  },
+];
+
+const automationPrinciples = [
+  {
+    title: 'Start with clean context',
+    body: 'Scheduled agent turns open in fresh supervised panes and leave a durable run record behind.',
+  },
+  {
+    title: 'Wake the session you have',
+    body: 'Hand work back to a running agent later, with the conversation and its decisions still in scope.',
+  },
+  {
+    title: 'Check before spending',
+    body: 'Run a deterministic command first. The agent wakes only when the result needs judgment or repair.',
+  },
+  {
+    title: 'Verify before success',
+    body: 'Use the command that defines done to re-prompt the same session until the work is actually green.',
+  },
+];
+
 export default function HomePage() {
   const docsUrl = withBasePath(`${docsRoute}/`);
+  const installGuideUrl = withBasePath(`${docsRoute}/getting-started/installation/`);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link className="text-xl font-semibold tracking-tight" href="/">
-          RimZ
-        </Link>
-        <div className="flex items-center gap-5 text-sm">
-          <Link className="text-muted-foreground transition-colors hover:text-foreground" href={docsUrl}>
-            Documentation
+    <main className={`${geist.variable} ${geistMono.variable} home-shell`}>
+      <header className="home-nav-wrap">
+        <nav className="home-nav" aria-label="Primary navigation">
+          <Link className="home-wordmark" href="/" aria-label="RimZ home">
+            RimZ
           </Link>
-          <a
-            className="text-muted-foreground transition-colors hover:text-foreground"
-            href={productGitHubUrl}
-          >
-            GitHub
-          </a>
-        </div>
-      </nav>
-
-      <section className="mx-auto grid max-w-6xl gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24">
-        <div>
-          <p className="mb-5 text-sm font-medium text-muted-foreground">
-            Open source · Rust · tmux + Zellij
-          </p>
-          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-6xl">
-            Run and steer a fleet of coding agents from your terminal.
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-            RimZ is a realtime dashboard and control room for agentic coding. See every Claude Code,
-            Codex, and supported agent at a glance, route your attention to the ones that need you,
-            and keep the fleet moving inside the tmux or Zellij workflow you already use.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              className="rounded-lg bg-foreground px-5 py-3 text-sm font-medium text-background"
-              href={docsUrl}
-            >
-              Read the documentation
-            </Link>
-            <a
-              className="rounded-lg border px-5 py-3 text-sm font-medium"
-              href={productGitHubUrl}
-            >
-              View on GitHub
-            </a>
+          <div className="home-nav-links">
+            <Link href={docsUrl}>Documentation</Link>
+            <a href={productGitHubUrl}>GitHub</a>
           </div>
-          <pre className="mt-8 max-w-xl overflow-x-auto rounded-xl border bg-card p-4 text-left text-sm"><code>brew install rimio-ai/rimz/rimz{`\n`}rimz</code></pre>
+        </nav>
+      </header>
+
+      <section className="home-hero" aria-labelledby="home-title">
+        <div className="home-hero-copy">
+          <p className="home-kicker">Open source control for tmux and Zellij</p>
+          <h1 id="home-title">Every agent. One room.</h1>
+          <p className="home-hero-summary">
+            See every coding agent, route each decision, and keep work moving inside the terminal you already use.
+          </p>
+          <div className="home-hero-actions">
+            <a className="home-button home-button-primary" href="#install">
+              Install RimZ
+            </a>
+            <Link className="home-button home-button-secondary" href={docsUrl}>
+              Documentation
+            </Link>
+          </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border bg-card shadow-2xl shadow-black/10">
+        <figure className="home-shot-frame home-hero-shot">
           <Image
-            alt="RimZ dashboard showing a fleet of coding agents running in terminal panes"
-            className="h-auto w-full"
-            height="1080"
-            src={withBasePath('/docs-assets/v0.3/rimz-full.png')}
-            width="1920"
+            alt="A RimZ room with a triaged agent sidebar beside active Claude Code and Codex panes"
+            className="home-shot"
+            height={1368}
+            priority
+            sizes="(max-width: 767px) 92vw, (max-width: 1200px) 58vw, 820px"
+            src={withBasePath('/landing/rimz-room.webp')}
+            width={2400}
           />
+        </figure>
+      </section>
+
+      <section className="home-proof" aria-label="RimZ product facts">
+        <dl>
+          <div>
+            <dt>footprint</dt>
+            <dd>One Rust binary</dd>
+          </div>
+          <div>
+            <dt>agents</dt>
+            <dd>Stock provider CLIs</dd>
+          </div>
+          <div>
+            <dt>backends</dt>
+            <dd>tmux and Zellij</dd>
+          </div>
+          <div>
+            <dt>reach</dt>
+            <dd>Local and remote</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="home-section home-attention home-reveal" aria-labelledby="attention-title">
+        <div className="home-attention-copy">
+          <h2 id="attention-title">The room routes your attention.</h2>
+          <p className="home-section-summary">
+            RimZ ranks the fleet by what needs you now, then takes you directly to the agent&apos;s own pane.
+          </p>
+
+          <div className="home-principles">
+            {attentionPrinciples.map((principle) => (
+              <article key={principle.title}>
+                <h3>{principle.title}</h3>
+                <p>{principle.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <figure className="home-shot-frame home-sidebar-shot">
+          <Image
+            alt="The RimZ sidebar showing fleet status, agent work, context use, spend, and provider budget windows"
+            className="home-shot"
+            height={1684}
+            sizes="(max-width: 767px) 86vw, 430px"
+            src={withBasePath('/landing/rimz-sidebar.webp')}
+            width={760}
+          />
+        </figure>
+      </section>
+
+      <section className="home-command-section home-reveal" aria-labelledby="grammar-title">
+        <div className="home-section-heading">
+          <h2 id="grammar-title">One grammar runs the whole room.</h2>
+          <p>
+            Launch a team, park a message, supervise a run, or put the next turn on a clock.
+          </p>
+        </div>
+        <CommandDeck />
+      </section>
+
+      <section className="home-automation home-reveal" aria-labelledby="automation-title">
+        <div className="home-automation-inner">
+          <div className="home-automation-lead">
+            <h2 id="automation-title">The room keeps time, not a daemon.</h2>
+            <p>
+              Schedule fresh turns, wake existing sessions, guard work with checks, and verify the result before a task passes.
+            </p>
+          </div>
+
+          <div className="home-automation-grid">
+            {automationPrinciples.map((principle) => (
+              <article key={principle.title}>
+                <h3>{principle.title}</h3>
+                <p>{principle.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-4 px-6 pb-24 md:grid-cols-3">
-        <article className="rounded-xl border p-6">
-          <h2 className="font-semibold">One live fleet view</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Track agent state, task, context health, tokens, cost, and subagents without opening every
-            pane.
-          </p>
-        </article>
-        <article className="rounded-xl border p-6">
-          <h2 className="font-semibold">Steer without context switching</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Route messages, answers, and scheduled work to agents while their stock command-line tools
-            keep running.
-          </p>
-        </article>
-        <article className="rounded-xl border p-6">
-          <h2 className="font-semibold">Local, remote, and scriptable</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Reattach over SSH, supervise headless runs, and build loops or CI workflows around one RimZ
-            command grammar.
-          </p>
-        </article>
+      <section className="home-section home-insight home-reveal" aria-labelledby="insight-title">
+        <div className="home-section-heading">
+          <h2 id="insight-title">See where the week went.</h2>
+          <p>Track tokens and spend by model, agent, day, week, month, and year.</p>
+        </div>
+
+        <figure className="home-stats-figure">
+          <div className="home-shot-frame">
+            <Image
+              alt="The rimz stats view with token activity and spend grouped by model and agent"
+              className="home-shot"
+              height={1279}
+              sizes="(max-width: 767px) 92vw, 1060px"
+              src={withBasePath('/landing/rimz-stats.webp')}
+              width={1600}
+            />
+          </div>
+          <figcaption>Token and spend history from <code>rimz stats</code>.</figcaption>
+        </figure>
       </section>
+
+      <section className="home-install home-reveal" id="install" aria-labelledby="install-title">
+        <div className="home-install-inner">
+          <div>
+            <h2 id="install-title">One binary, then your own CLIs.</h2>
+            <p>
+              Hooks report the agent. RimZ watches the room. Your sessions and keybindings stay where they are.
+            </p>
+          </div>
+
+          <div className="home-install-action">
+            <InstallCommand />
+            <Link className="home-text-link" href={installGuideUrl}>
+              Installation guide <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="home-footer">
+        <p>RimZ is open source under the MIT license.</p>
+        <div>
+          <Link href={docsUrl}>Documentation</Link>
+          <a href={productGitHubUrl}>GitHub</a>
+        </div>
+      </footer>
     </main>
   );
 }
