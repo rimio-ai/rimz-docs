@@ -12,6 +12,7 @@
     "transcript",
     "pane",
     "stats",
+    "providers",
     "channel",
     "worktree",
     "loop",

@@ -74,6 +74,7 @@ const mappings = [
   ['docs/reference/cli/pane.md', 'reference/cli/pane.mdx'],
   ['docs/reference/cli/remote.md', 'reference/cli/remote.mdx'],
   ['docs/reference/cli/stats.md', 'reference/cli/stats.mdx'],
+  ['docs/reference/cli/providers.md', 'reference/cli/providers.mdx'],
   ['docs/reference/cli/loop.md', 'reference/cli/loop.mdx'],
   ['docs/reference/cli/channel.md', 'reference/cli/channel.mdx'],
   ['docs/reference/cli/worktree.md', 'reference/cli/worktree.mdx'],
@@ -106,9 +107,10 @@ async function main() {
   assertVersionIdentifier(version);
   selfCheck();
   await assertMappingComplete();
-  await prepareDestination();
+  const activeMappings = await availableMappings();
+  await prepareDestination(activeMappings);
 
-  for (const [source, destination] of mappings) {
+  for (const [source, destination] of activeMappings) {
     const markdown = await readFile(path.join(rimzRoot, source), 'utf8');
     const output = transformDocument(markdown, cleanPath(source));
     const target = path.join(docsRoot, destination);
@@ -121,12 +123,28 @@ async function main() {
   await copyImages();
 }
 
-async function prepareDestination() {
+async function availableMappings() {
+  const available = [];
+
+  for (const mapping of mappings) {
+    try {
+      await readFile(path.join(rimzRoot, mapping[0]), 'utf8');
+      available.push(mapping);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+
+  return available;
+}
+
+async function prepareDestination(activeMappings) {
   await rm(docsRoot, { recursive: true, force: true });
   await rm(publicRoot, { recursive: true, force: true });
   await mkdir(path.dirname(docsRoot), { recursive: true });
   await mkdir(path.dirname(publicRoot), { recursive: true });
   await cp(templateRoot, docsRoot, { recursive: true });
+  await pruneUnavailablePages(activeMappings);
 
   const entries = await readdir(docsRoot, { recursive: true });
   for (const entry of entries) {
@@ -135,6 +153,28 @@ async function prepareDestination() {
     const target = path.join(docsRoot, entry);
     const markdown = await readFile(target, 'utf8');
     await writeFile(target, rewriteTemplateRoutes(markdown), 'utf8');
+  }
+}
+
+async function pruneUnavailablePages(activeMappings) {
+  const available = new Set(activeMappings.map(([, destination]) => cleanPath(destination)));
+
+  for (const [, destination] of mappings) {
+    if (available.has(cleanPath(destination))) continue;
+
+    const directory = path.dirname(destination);
+    const page = path.basename(destination, path.extname(destination));
+    const metadataPath = path.join(docsRoot, directory, 'meta.json');
+
+    try {
+      const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+      if (!Array.isArray(metadata.pages) || !metadata.pages.includes(page)) continue;
+
+      metadata.pages = metadata.pages.filter((entry) => entry !== page);
+      await writeFile(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, 'utf8');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
   }
 }
 
