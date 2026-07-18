@@ -68,12 +68,16 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
   const page = request.source.getPage(request.pageSlugs);
   if (!page) notFound();
 
-  const canonical = absoluteUrl(explicitVersionUrl(request.version, page.slugs));
+  const canonical = absoluteUrl(`${explicitVersionUrl(request.version, page.slugs)}/`);
+  const isIntroduction = page.slugs.length === 0;
 
   return {
-    title: `${page.data.title} (${request.version.id})`,
+    title: isIntroduction
+      ? `RimZ documentation (${request.version.id})`
+      : `${page.data.title} (${request.version.id})`,
     description: page.data.description,
     alternates: { canonical },
+    robots: request.version.kind === 'development' ? { index: false, follow: true } : undefined,
     openGraph: {
       url: canonical,
       images: absoluteUrl(getPageImage(page, request.version).url),

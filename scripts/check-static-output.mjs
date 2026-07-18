@@ -36,6 +36,7 @@ await assertFile('api/search');
 await assertFile('llms.txt');
 await assertFile('llms-full.txt');
 await assertFile('sitemap.xml');
+await assertFile('robots.txt');
 await assertFile('.nojekyll');
 
 for (const page of pages) {
@@ -55,9 +56,32 @@ assert.deepEqual(broken, [], `broken static links:\n${broken.join('\n')}`);
 
 const latestHtml = await readFile(path.join(outputRoot, 'docs', 'index.html'), 'utf8');
 assert.ok(
-  new RegExp(`rel="canonical" href="https?://[^"/]+/docs/${catalog.latest}(?:/|\\")`).test(latestHtml),
+  new RegExp(`rel="canonical" href="https?://[^"/]+/docs/${catalog.latest}/"`).test(latestHtml),
   'the floating docs route does not canonicalize to the latest release',
 );
+
+const homeHtml = await readFile(path.join(outputRoot, 'index.html'), 'utf8');
+assert.ok(!homeHtml.includes('http-equiv="refresh"'), 'the homepage still uses a meta refresh');
+assert.ok(
+  homeHtml.includes('Run and steer a fleet of coding agents from your terminal.'),
+  'the homepage is missing the product heading',
+);
+
+const mainHtml = await readFile(path.join(outputRoot, 'docs', 'main', 'index.html'), 'utf8');
+assert.ok(mainHtml.includes('name="robots" content="noindex, follow"'), 'main docs are indexable');
+
+const sitemap = await readFile(path.join(outputRoot, 'sitemap.xml'), 'utf8');
+assert.ok(!sitemap.includes('/docs/main'), 'the sitemap includes development documentation');
+assert.ok(!sitemap.includes('<loc>https://rimz.rimio.ai/docs</loc>'), 'the sitemap includes the floating docs alias');
+assert.ok(sitemap.includes(`/docs/${catalog.latest}`), 'the sitemap omits the latest canonical release');
+assert.ok(
+  [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].every((match) => match[1].endsWith('/')),
+  'the sitemap includes a URL that redirects to add a trailing slash',
+);
+
+const robots = await readFile(path.join(outputRoot, 'robots.txt'), 'utf8');
+assert.ok(robots.includes('User-Agent: *'), 'robots.txt has no global crawler rule');
+assert.ok(robots.includes('Sitemap:'), 'robots.txt does not advertise the sitemap');
 
 async function outputPathExists(pathname) {
   if (pathname === '/') return isFile(path.join(outputRoot, 'index.html'));
