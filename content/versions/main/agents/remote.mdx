@@ -14,6 +14,8 @@ rimz remote connect dev-box:~/code/query-engine   # [user@]host:<session-or-path
 
 The target is `[user@]host:<session-or-path>`. After the colon, a path opens (or creates) that project's room, and a bare session name reaches one by name. Under the hood this is close to typing `ssh -t dev-box rimz attach query-engine` yourself: a normal SSH session that runs the host's own `rimz`, so your SSH config, keys, agent, ports, and jump hosts all apply exactly as for any `ssh` you run.
 
+RimZ compares the local and remote versions before it enters the room. A patch difference warns and proceeds; a minor difference refuses until you upgrade the older side, with `--force-version` available as a one-shot bypass; and a major difference refuses without a bypass. An older remote RimZ keeps its prior warn-only behavior because the compatibility gate runs on the host.
+
 Because you attach to the session the host is already running, everything you left is there: every agent in its `#channel` tab, every question still ranked exactly where it was, plus whatever finished while you were gone, already triaged.
 
 ### Install rimz on the host
@@ -40,7 +42,7 @@ rimz remote rm devbox                             # forget one
 
 ## A link that heals itself
 
-A plain `ssh` ends the moment the connection drops. `rimz remote connect` supervises the SSH link instead: when the train wifi cuts out or a laptop sleeps, it reconnects on its own and reattaches to the untouched room on the host, so a flaky connection never costs you your place. The link watches for the network's return and normally reattaches within a couple of seconds after the host becomes reachable again. Retry attempts run unattended, so hook installation, project trust, and recovery consent wait for the next start you make while present instead of parking the link. Your terminal beeps when the link drops and again when it comes back, and any notification handler fires on the same edges, because a dead link cannot count on the remote sidebar to reach you.
+A plain `ssh` ends the moment the connection drops. `rimz remote connect` supervises the SSH link instead: the same connection panel carries the first connection and every recovery, and when the train wifi cuts out or a laptop sleeps, it reconnects on its own and reattaches to the untouched room on the host, so a flaky connection never costs you your place. After a brief grace, the panel checks end-to-end internet access over HTTP, the SSH server, and the next SSH session; proxy-based targets omit the server checkpoint, while VPN and TUN routes skip its unreliable direct TCP check and let SSH prove the path. With the network down it waits without a dishonest countdown, and any wifi, route, or address change triggers an immediate safety attempt. With the network up it establishes SSH in the background every couple of seconds, shows the last SSH error when one fails, and returns you straight to the room when transport and authentication succeed. An initial password, two-factor, or host-key prompt falls back to one normal interactive SSH attempt. Retry attempts run unattended, so hook installation, project trust, and recovery consent wait for the next start you make while present instead of parking the link. Your terminal beeps when the link drops and again when it comes back, and any notification handler fires on the same edges, because a dead link cannot count on the remote sidebar to reach you.
 
 On Zellij, a reconnect retires an orphaned prior attach from the same device before entering the room; opening that same remote room twice from one device therefore moves the attachment to the newer terminal, while attachments from different devices coexist.
 
@@ -104,6 +106,8 @@ RimZ stays out of the path: each toggle starts the provider's own command with t
 
 - **Claude.** `claude remote-control --spawn worktree`, as a long-lived pane in the room's background `rimzd` tab, run from the project root — so a session you start from the phone is carved into its own on-demand worktree instead of touching your checkout. While the host is up, the Claude block on the [provider dashboard](/docs/main/agents/sidebar#the-provider-dashboard) wears a `⇅ rc` flag.
 - **Codex.** `codex remote-control start`, which brings up Codex's own per-user daemon with remote control enabled — one per machine, shared by every room, and the same daemon Codex's TUI already routes through.
+
+Codex's standalone updater owns daemon upgrades. `rimz doctor` warns when that live updater executes a different binary from the managed Codex target, including a deleted executable, because its next hourly refresh can replace the shared app-server and disconnect active Codex sessions. Finish valuable turns, run `cd ~; codex remote-control stop; sleep 3; codex remote-control start` once, then resume the sessions this deliberate recycle disconnects; RimZ reports the skew but leaves its disruptive timing to you.
 
 The RimZ toggle covers the machine-level Claude host; Claude's own `remoteControlAtStartup: true` (in `~/.claude/settings.json`) additionally makes every session you type into a pane reachable from the app, and RimZ lights the `⇅ rc` flag for that setting too.
 

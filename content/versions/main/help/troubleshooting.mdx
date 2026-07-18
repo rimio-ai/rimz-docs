@@ -6,7 +6,7 @@ When something looks off, `rimz doctor` is the first move, this page is the symp
 
 ## Start with `rimz doctor`
 
-`rimz doctor` reports the whole room in one pass: the multiplexer backend and whether its version clears the floor, per-machine config parsing, per-agent hook status, workspace and store health, project trust state, terminal color depth, scheduled loop tasks, and the Zellij presence grant. It resolves the workspace, probes each of those surfaces, and prints a verdict. It writes nothing, so you can run it as often as you like.
+`rimz doctor` reports the whole room in one pass: the multiplexer backend and whether its version clears the floor, per-machine config parsing, per-agent hook status, workspace and store health, project trust state, terminal color depth, scheduled loop tasks, and the Zellij presence grant. The `HOOKS` section lists detected agents and summarizes absent agents in a footer; RimZ offers their hooks automatically once the agent is installed. It resolves the workspace, probes each of those surfaces, and prints a verdict. A normal run writes nothing, so you can run it as often as you like.
 
 ```sh
 rimz doctor
@@ -75,7 +75,9 @@ Each row carries a glyph that sets its tone:
 
 The last line tallies the run (`✗ 2 problems, ⚠ 9 warnings`, or `✓ no problems found`). Work top down and clear the `✗` rows first. The rest of this page expands the common ones.
 
-The tail sections (`AGENTS`, `MESSAGES`, `DIAGNOSTICS`) report live state rather than machine setup: the agents doctor observed, messages that failed to land, and RimZ's own record of transient rendering hiccups. They are mostly context for a bug report, not a to-do list.
+The tail sections (`AGENTS`, `MESSAGES`, `DIAGNOSTICS`) report live state rather than machine setup: the agents doctor observed, messages that failed to land, and RimZ's evidence-folded incidents. An `investigate` incident is unresolved or lacks enough proof and its `warn`/`alarm` impact contributes to the final tally; `contained` means a guard successfully prevented bad state, `recovered` pairs the active episode with its recovery, and `expected` has positive evidence for a normal topology or lifecycle transition. Those last three are informational context for a bug report rather than a to-do list.
+
+The Zellij log source is host-user-wide for the uid Doctor prints, so its grouped issues can include other Zellij sessions owned by that user. The tmux log source is server-scoped. Use the scope and retained samples before attributing a log issue to the current room; incomplete or changed versions of a known benign sequence stay investigative.
 
 The `MACHINE CONFIG` section names any `config.toml`, `theme.toml`, `agents.toml`, or `loop.toml` file RimZ cannot parse and includes the precise error. `rimz start` also warns on stderr and opens the room with built-in defaults for every setting in that file; fix it, then restart so RimZ loads the intended values.
 
@@ -118,15 +120,23 @@ The install is additive, so your existing hooks stay, and `rimz doctor` reports 
 
 Kiro CLI 2.12.1 v3 is the exception: RimZ reads its stock local session store and binds only validated sessions to live panes. A validated newborn session becomes an idle agent card before its first prompt when the pane process proves the current incarnation; missing, stale, or ambiguous identity remains a process row. Hook installation stays unsupported; `rimz hooks uninstall kiro` still removes a legacy RimZ-owned hook file.
 
+Grok reads hooks from `${GROK_HOME:-~/.grok}/hooks/rimz.json`. Run `rimz hooks install --dry-run grok` to inspect the global merge; the installed set deliberately excludes blocking `PreToolUse`, so permission decisions remain in Grok's own pane. If an older RimZ command appears in Grok's hook execution log with `required env var(s) not set: ${PPID}`, run `rimz hooks install grok`, then reload the registry through Grok's Hooks UI or start a new Grok session. Grok snapshots the registry for a running TUI, so reinstalling the file alone does not switch that session to the repaired command.
+
 ### A card went quiet after a config edit
 
 If a card stops updating after you hand-edited an agent's config, the RimZ-managed hook block was likely disturbed. Re-run `rimz hooks install --dry-run` to see the current diff, then `rimz hooks install` to restore the block. Some agents gate hooks behind their own trust prompt; when one reports installed-but-untrusted hooks, `rimz doctor` prints the exact fix in the `HOOKS` row.
 
 If a directly-launched Copilot card has lifecycle but no resolved model or token composition, first rebirth a room created before the current RimZ build. RimZ preserves `COPILOT_OTEL_FILE_EXPORTER_PATH`; that file must remain readable to the room. An `OTEL_EXPORTER_OTLP_ENDPOINT` or non-`file` `COPILOT_OTEL_EXPORTER_TYPE` selects the user's OTLP pipeline instead of RimZ's local cache, so set an explicit `COPILOT_OTEL_FILE_EXPORTER_PATH` when you also want file enrichment.
 
+### Codex sessions drop with a WebSocket reset about hourly
+
+`WebSocket protocol error: Connection reset without closing handshake` can mean Codex's updater is running a different executable from its managed standalone install and restarting the shared app-server on each hourly update tick. Check the REMOTE CONTROL section of `rimz doctor`; when it reports the provider daemon advisory, schedule `cd ~; codex remote-control stop; sleep 3; codex remote-control start` while no valuable Codex turns are running, then resume the sessions this deliberate recycle disconnects.
+
 ### Zellij pane discovery stopped
 
 On Zellij, RimZ loads a small presence plugin so the sidebar learns which panes exist and where. Its permission grant is seeded for you on the first attach. Revoking that grant in Zellij's plugin manager stops pane discovery until you restore it, and `rimz doctor` names the fix in the `presence` row. Re-grant the plugin's permissions in Zellij, then run `rimz reload`. The grant lives in Zellij's own permission store, and the plugin ships no pane content anywhere; the full picture is in [security and trust](/docs/main/help/security#the-zellij-presence-plugin).
+
+Doctor joins presence telemetry to the exact plugin generation accepted as the topology writer. Stale-writer rejections mean the monotonic fence contained an older plugin and stay expected information; a recent increase in topology or other command failures for the accepted writer is a real warning. Legacy telemetry with one unsplit failure counter remains informational because it cannot prove which outcome occurred.
 
 ## The sidebar looks wrong
 
@@ -150,16 +160,25 @@ rimz config set theme.pets.enabled true   # an animated companion on the dashboa
 When the running RimZ build drifts from an agent's tested version range, reporting fidelity degrades rather than a pane freezing outright: `rimz doctor` warns, and blocking prompts still route to the agent's own UI. After upgrading the binary, reconcile the running sidebars onto the new build:
 
 ```sh
-rimz reload    # re-exec sidebars onto the current build, repair geometry, close duplicates
+rimz reload             # re-exec sidebars in place; every pane stays unchanged
+rimz sidebar repair     # repair missing, duplicate, mis-docked, or wedged sidebars
+rimz reload --repair    # run those two independent operations in order
+rimz doctor --clear     # dismiss diagnostics and incidents from before the upgrade
 ```
 
-`rimz doctor` also warns when more than one RimZ build is writing the workspace at the same time; `rimz reload` is the fix for that mixed-build state too.
+`rimz doctor` also warns when more than one RimZ build is writing the workspace at the same time; `rimz reload` is the pane-preserving fix for that mixed-build state. A sidebar that misses the command's reporting window keeps converging from the durable room record without a repair. Run `rimz sidebar repair` only for structural damage; a replacement mounts and proves a current-build heartbeat before the old pane closes. Once the live writers converge, `rimz doctor --clear` records a workspace watermark so pre-upgrade diagnostics, the last incident, and message failures stop appearing without deleting their evidence files.
+
+After an upgrade, `rimz start` and `rimz attach` also warn when a live room still runs a different sidebar build and point to `rimz reload`.
 
 `rimz reload` runs from anywhere and leaves stopped sessions stopped. Agent version drift and its exact effects are in [agent support](/docs/main/reference/agent-support).
 
 ### Scroll wheel sends arrow keys (Ghostty)
 
 A Ghostty tab exposed to mouse-mode churn from an older RimZ build can wedge into converting wheel ticks to arrow keys. Run `reset` once at a shell prompt or open a new Ghostty tab; current RimZ keeps the outer mouse mode constant so the state does not recur.
+
+### Garbled terminal after a remote link death
+
+Staircased lines or Enter and Ctrl-C echoing as `^M` and `^C` mean a dead SSH link left the local terminal in raw mode. Current RimZ repairs the terminal automatically on the next `rimz remote connect`; on older builds, run `reset` once at a shell prompt.
 
 ## Notifications don't fire
 
@@ -257,7 +276,7 @@ Per-machine config lives under `~/.config/rimz/` (`config.toml`, `theme.toml`, `
 rimz uninstall            # hooks, rooms, runtime state, binaries; keeps stores and config
 ```
 
-`--state`, `--config`, and `--all` widen the removal to durable stores and per-machine config; the exact scope of each flag is in the [maintenance reference](/docs/main/reference/cli/maintenance#reload-reset-gc-and-uninstall). Project-local `.rimz/` directories and RimZ-owned worktrees stay in place, because they can hold project config and unlanded work.
+`--state`, `--config`, and `--all` widen the removal to durable stores and per-machine config; the exact scope of each flag is in the [maintenance reference](/docs/main/reference/cli/maintenance#update-reload-reset-gc-and-uninstall). Project-local `.rimz/` directories and RimZ-owned worktrees stay in place, because they can hold project config and unlanded work.
 
 ## Filing an issue
 
