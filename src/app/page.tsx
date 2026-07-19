@@ -1,7 +1,6 @@
 import './landing.css';
 
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Geist, JetBrains_Mono } from 'next/font/google';
 import {
@@ -12,13 +11,13 @@ import {
   withBasePath,
 } from '@/lib/shared';
 import { latestVersion } from '@/lib/versions';
-import { InstallTabs, SceneTabs } from '@/components/landing/interactive';
+import { Gallery, InstallTabs, SceneTabs } from '@/components/landing/interactive';
 import {
   agentTiers,
-  capabilities,
+  featureGroups,
+  gallery,
   installMethods,
   scenes,
-  showcase,
   statusNotice,
 } from '@/components/landing/content';
 
@@ -50,7 +49,14 @@ export const metadata: Metadata = {
 };
 
 const assetBase = `/docs-assets/${latestVersion.id}`;
-const heroShot = withBasePath(`${assetBase}/rimz-full.png`);
+
+const slides = gallery.map((item) => ({
+  src: withBasePath(`${assetBase}/${item.shot}`),
+  alt: item.alt,
+  caption: item.caption,
+  width: item.width,
+  height: item.height,
+}));
 
 const hookSteps: Array<{ command: string; note: string }> = [
   { command: 'rimz hooks install --dry-run', note: 'a unified diff, writes nothing' },
@@ -62,7 +68,6 @@ export default function HomePage() {
   const docsUrl = withBasePath(`${docsRoute}/`);
   const installUrl = withBasePath(`${docsRoute}/getting-started/installation/`);
   const agentSupportUrl = withBasePath(`${docsRoute}/reference/agent-support/`);
-  const fleetUrl = withBasePath(`${docsRoute}/agents/fleet/`);
 
   return (
     <div className={`landing ${sans.variable} ${mono.variable}`}>
@@ -100,20 +105,9 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <figure className="shot-frame reveal">
-            <Image
-              alt="A RimZ room in a Zellij session: a sidebar at left triages a fleet of coding agents, each a live card showing model, working state, token mix, and live dollar cost, while agents work in their own panes."
-              className="shot"
-              height={3044}
-              priority
-              src={heroShot}
-              width={5344}
-            />
-            <figcaption className="shot-cap">
-              The sidebar triages the fleet on the left, agents work in their own panes, and spend
-              tracks below.
-            </figcaption>
-          </figure>
+          <div className="shot-frame">
+            <Gallery slides={slides} />
+          </div>
         </section>
 
         {/* ---------- works with ---------- */}
@@ -157,38 +151,21 @@ export default function HomePage() {
         <section className="section wrap">
           <h2 className="section-label">What it does</h2>
 
-          <div className="showcase">
-            {showcase.map((item) => (
-              <article className={item.tall ? 'show-row tall reveal' : 'show-row reveal'} key={item.title}>
-                <div className="show-copy">
-                  <h3>{item.title}</h3>
-                  <p>{item.body}</p>
-                </div>
-                <div className="show-shot">
-                  <Image
-                    alt={item.alt}
-                    className="shot"
-                    height={item.height}
-                    src={withBasePath(`${assetBase}/${item.shot}`)}
-                    width={item.width}
-                  />
-                </div>
-              </article>
+          <div className="fgroups">
+            {featureGroups.map((group) => (
+              <section className="fgroup" key={group.title}>
+                <h3>{group.title}</h3>
+                <dl className="fitems">
+                  {group.items.map((item) => (
+                    <div className="fitem" key={item.term}>
+                      <dt>{item.term}</dt>
+                      <dd>{item.note}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
             ))}
           </div>
-
-          <div className="caps">
-            {capabilities.map((item) => (
-              <article className="cap-row" key={item.title}>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-          <p className="more">
-            Worktrees, agent-to-agent messaging, headless scripting, auto-continue, and phone
-            control are all covered in <Link href={fleetUrl}>the fleet guide</Link>.
-          </p>
         </section>
 
         {/* ---------- how it works ---------- */}

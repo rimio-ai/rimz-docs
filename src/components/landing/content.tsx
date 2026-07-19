@@ -1,58 +1,112 @@
 import type { InstallMethod, Scene } from './interactive';
 
 /**
- * The three features that carry the pitch, each paired with a detail crop.
- * `shot` names a file inside the versioned docs-asset directory.
+ * Hero gallery. Every one of these is a window capture that ships with its own
+ * rounded corners and drop shadow in the alpha channel, so they float on the
+ * canvas rather than sitting in a frame. `shot` names a file inside the
+ * versioned docs-asset directory.
  */
-export const showcase: Array<{
-  title: string;
-  body: string;
+export const gallery: Array<{
   shot: string;
   alt: string;
+  caption: string;
   width: number;
   height: number;
-  tall?: boolean;
 }> = [
   {
-    title: 'Attention, routed.',
-    body: 'One glance at the cockpit line reads the whole fleet. The column below arrives already triaged, and one click drops you into the pane that is waiting on you.',
-    shot: 'rimz-sidebar.png',
-    alt: 'The RimZ sidebar triaging a fleet of agents, each card showing model, working state, context health, and live cost.',
-    width: 1042,
-    height: 2310,
-    tall: true,
+    shot: 'rimz-full.png',
+    alt: 'A RimZ room in a Zellij session: a sidebar at left triages a fleet of coding agents, each a live card showing model, working state, token mix, and live dollar cost, while agents work in their own panes.',
+    caption: 'The room. The sidebar triages the fleet on the left, and agents work in their own panes.',
+    width: 5344,
+    height: 3044,
   },
   {
-    title: 'Every agent, read at a glance.',
-    body: 'Working state and current task, model and effort, context health and compactions, live token stats and dollar cost, and the subagent tree.',
-    shot: 'rimz-card.png',
-    alt: 'A single RimZ agent card in detail, showing model and effort, a context health bar, token mix, and running cost.',
-    width: 1236,
-    height: 574,
+    shot: 'rimz-gallery.png',
+    alt: 'The RimZ sidebar in detail: agent cards with model and effort, context health bars, token mix, live cost, and a provider dashboard tracking plan and budget windows.',
+    caption: 'The sidebar. Working state, model and effort, context health, live cost, and the subagent tree.',
+    width: 5344,
+    height: 3044,
   },
   {
-    title: 'Know your pace.',
-    body: 'Spending and token insight for today, this week, and this month, with plan and budget-window bars for every provider that exposes them.',
     shot: 'rimz-stats.png',
     alt: 'The RimZ spend dashboard, showing token and dollar totals over time alongside plan and rate-limit budget bars.',
+    caption: 'The spend. Token and dollar insight by day, week, and month, with plan and budget windows.',
     width: 2512,
     height: 2008,
   },
 ];
 
-/** Supporting capabilities, rendered as a divided list rather than a card wall. */
-export const capabilities: Array<{ title: string; body: string }> = [
+/**
+ * What RimZ does, as plain grouped lists. Grouping by what the reader is trying
+ * to do keeps eleven capabilities scannable where a flat list of eleven, or a
+ * wall of eleven cards, would not be.
+ */
+export const featureGroups: Array<{
+  title: string;
+  items: Array<{ term: string; note: string }>;
+}> = [
   {
-    title: 'Teams, cross-model by design',
-    body: 'Pair a planner on one model with a coder on another and launch them as one team, each role on the model best at its job, in an isolated worktree.',
+    title: 'See the fleet',
+    items: [
+      {
+        term: 'Attention, routed',
+        note: 'The cockpit line reads the whole fleet, the column below arrives already triaged, and one click drops you into the pane that is waiting.',
+      },
+      {
+        term: 'Live agent cards',
+        note: 'Working state and current task, model and effort, context health and compactions, live token stats, and the subagent tree.',
+      },
+      {
+        term: 'Know your pace',
+        note: 'Spend and token insight by day, week, and month, with plan and budget-window bars for every provider that exposes them.',
+      },
+      {
+        term: 'Extremely lightweight',
+        note: 'A single binary that hooks the agents you already run, inside the Zellij or tmux you already use. Same keybinds, same terminal.',
+      },
+    ],
   },
   {
-    title: 'Loops, yours to engineer',
-    body: 'Schedule supervised runs on a clock: calendar, interval, cron, or a check-guarded watchdog that runs a command and wakes an agent on the result.',
+    title: 'Drive the work',
+    items: [
+      {
+        term: 'Teams, cross-model',
+        note: 'Pair a planner on one model with a coder on another and launch them as one team, each role on the model best at its job.',
+      },
+      {
+        term: 'A worktree per agent',
+        note: 'Open agents side by side in an isolated worktree with a dynamic layout: your editor, an agent, and a shell in one tab.',
+      },
+      {
+        term: 'Handles and messages',
+        note: 'Every agent answers to a handle. Park at the turn boundary, steer the live turn, or schedule for later; agents talk to each other.',
+      },
+      {
+        term: 'Scriptable, end to end',
+        note: 'One headless grammar for every agent, with exit codes, JSON output, streaming, and the full transcript kept for scripts and CI.',
+      },
+    ],
   },
   {
-    title: 'Local or remote, continuously',
-    body: 'Start on your laptop or a server, close the lid, and reattach from anywhere. The link heals itself every time you reconnect.',
+    title: 'Keep it running',
+    items: [
+      {
+        term: 'Loops on a clock',
+        note: 'Calendar, interval, cron, or a check-guarded watchdog that runs a command and wakes an agent on the result.',
+      },
+      {
+        term: 'Auto-continue',
+        note: 'A rate-limit pause resumes the moment the budget window resets, and transient overload retries on a backoff ramp.',
+      },
+      {
+        term: 'Local or remote',
+        note: 'Start on your laptop or a server, close the lid, and reattach from anywhere. The link heals itself every time you reconnect.',
+      },
+      {
+        term: 'Steer from your phone',
+        note: 'When an agent stops to ask, the question reaches the official Claude and ChatGPT mobile apps, and your answer lands in the session.',
+      },
+    ],
   },
 ];
 

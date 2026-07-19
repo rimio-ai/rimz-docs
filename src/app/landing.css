@@ -395,12 +395,106 @@
   margin: 72px 0 0;
 }
 
+/* Window captures ship with rounded corners and a soft drop shadow already
+   baked into their alpha channel, so they get no background and no border:
+   filling behind them turns their own shadow into a solid black rectangle
+   and squares off the corners. They float on the canvas instead. */
 .landing .shot {
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* ---- hero gallery ---- */
+.landing .gallery {
+  display: block;
+}
+
+.landing .gallery-viewport {
+  overflow: hidden;
+}
+
+.landing .gallery-track {
+  display: flex;
+  align-items: center;
+  transition: transform 520ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing .gallery-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  /* The widest capture sets the frame; the narrower spend view letterboxes
+     into it so advancing a slide never changes the page height. */
+  aspect-ratio: 5344 / 3044;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing .gallery-slide .shot {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+.landing .gallery-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.landing .gallery-arrow {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1;
+  background: transparent;
   border: 1px solid var(--hairline);
-  background: var(--surface-dark);
+  border-radius: var(--radius-sm);
+  color: var(--text-mute);
+  padding: 7px 12px;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.landing .gallery-arrow:hover {
+  color: var(--text-ink);
+  border-color: var(--hairline-strong);
+}
+
+.landing .gallery-pips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing .gallery-pip {
+  width: 26px;
+  height: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: var(--hairline);
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.landing .gallery-pip:hover {
+  background: var(--text-ash);
+}
+
+.landing .gallery-pip.on {
+  background: var(--text-charcoal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .gallery-track {
+    transition: none;
+  }
 }
 
 .landing .shot-cap {
@@ -459,123 +553,51 @@
   line-height: 1.7;
 }
 
-/* ---- showcase rows ---- */
-.landing .showcase {
+/* ---- what it does: grouped plain lists ---- */
+.landing .fgroups {
   display: grid;
-  gap: 88px;
-}
-
-.landing .show-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 56px;
-  align-items: center;
 }
 
-.landing .show-row:nth-child(even) .show-copy {
-  order: 2;
-}
-
-.landing .show-row.tall {
-  grid-template-columns: 1fr 460px;
-}
-
-.landing .show-copy h3 {
-  margin: 0 0 14px;
-  font-size: var(--size-h3);
-  font-weight: var(--weight-bold);
-  line-height: 1.3;
-  letter-spacing: -0.3px;
-  color: var(--text-ink);
-}
-
-.landing .show-copy p {
-  margin: 0;
-  max-width: 46ch;
-  color: var(--text-body);
-}
-
-.landing .show-row.tall .shot {
-  max-height: 560px;
-  object-fit: cover;
-  object-position: top center;
-}
-
-@media (max-width: 860px) {
-  .landing .showcase {
-    gap: 64px;
-  }
-
-  .landing .show-row,
-  .landing .show-row.tall {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
-  .landing .show-row:nth-child(even) .show-copy {
-    order: 0;
-  }
-
-  .landing .show-row.tall .shot {
-    max-height: 520px;
-    object-position: top left;
-  }
-}
-
-/* ---- supporting capabilities ---- */
-.landing .caps {
-  margin-top: 96px;
+.landing .fgroup h3 {
+  margin: 0 0 24px;
+  padding-top: 16px;
   border-top: 1px solid var(--hairline);
-}
-
-.landing .cap-row {
-  display: grid;
-  grid-template-columns: 1fr 1.9fr;
-  gap: 40px;
-  padding: 26px 0;
-  border-bottom: 1px solid var(--hairline);
-}
-
-.landing .cap-row h3 {
-  margin: 0;
   font-size: var(--size-body);
   font-weight: var(--weight-bold);
-  line-height: 1.5;
   color: var(--text-ink);
-  text-wrap: balance;
 }
 
-.landing .cap-row p {
+.landing .fitems {
   margin: 0;
-  color: var(--text-body);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 56px;
 }
 
-@media (max-width: 680px) {
-  .landing .caps {
-    margin-top: 64px;
-  }
-
-  .landing .cap-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
+.landing .fitem dt {
+  margin: 0 0 6px;
+  font-weight: var(--weight-bold);
+  color: var(--text-ink);
 }
 
-.landing .more {
-  margin: 24px 0 0;
+.landing .fitem dd {
+  margin: 0;
+  max-width: 52ch;
   font-size: var(--size-caption);
+  line-height: 1.7;
   color: var(--text-mute);
 }
 
-.landing .more a {
-  color: var(--text-ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--hairline-strong);
-}
+@media (max-width: 680px) {
+  .landing .fgroups {
+    gap: 44px;
+  }
 
-.landing .more a:hover {
-  text-decoration-color: var(--ink);
+  .landing .fitems {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
 }
 
 /* ---- dark terminal panel ---- */

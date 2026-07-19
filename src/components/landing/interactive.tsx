@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useState, type ReactNode } from 'react';
+import Image from 'next/image';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 /** Copy-to-clipboard state shared by every copy affordance on the page. */
 function useCopy(): [boolean, (text: string) => void] {
@@ -13,6 +14,119 @@ function useCopy(): [boolean, (text: string) => void] {
   }, []);
 
   return [copied, copy];
+}
+
+export type Slide = {
+  src: string;
+  alt: string;
+  caption: string;
+  width: number;
+  height: number;
+};
+
+const ADVANCE_MS = 6500;
+
+/**
+ * Hero gallery. Advances on its own so the page shows more than one view
+ * without demanding a click, but stops for good the moment the reader takes
+ * manual control, and never starts under `prefers-reduced-motion`.
+ */
+export function Gallery({ slides }: { slides: Slide[] }) {
+  const [index, setIndex] = useState(0);
+  const [engaged, setEngaged] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const reduced = useRef(false);
+
+  useEffect(() => {
+    reduced.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+
+  useEffect(() => {
+    if (engaged || hovered || reduced.current) return;
+    const timer = setInterval(() => setIndex((i) => (i + 1) % slides.length), ADVANCE_MS);
+    return () => clearInterval(timer);
+  }, [engaged, hovered, slides.length]);
+
+  const go = useCallback(
+    (next: number) => {
+      setEngaged(true);
+      setIndex((next + slides.length) % slides.length);
+    },
+    [slides.length],
+  );
+
+  return (
+    <div
+      aria-roledescription="carousel"
+      className="gallery"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false);
+      }}
+      onFocus={() => setHovered(true)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      role="group"
+    >
+      <div className="gallery-viewport">
+        <div className="gallery-track" style={{ transform: `translateX(-${index * 100}%)` }}>
+          {slides.map((slide, position) => (
+            <div
+              aria-hidden={position !== index}
+              aria-label={`${position + 1} of ${slides.length}`}
+              aria-roledescription="slide"
+              className="gallery-slide"
+              key={slide.src}
+              role="group"
+            >
+              <Image
+                alt={slide.alt}
+                className="shot"
+                height={slide.height}
+                priority={position === 0}
+                src={slide.src}
+                width={slide.width}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="gallery-bar">
+        <button
+          aria-label="Previous view"
+          className="gallery-arrow"
+          onClick={() => go(index - 1)}
+          type="button"
+        >
+          ←
+        </button>
+        <div className="gallery-pips">
+          {slides.map((slide, position) => (
+            <button
+              aria-current={position === index}
+              aria-label={slide.caption}
+              className={position === index ? 'gallery-pip on' : 'gallery-pip'}
+              key={slide.src}
+              onClick={() => go(position)}
+              type="button"
+            />
+          ))}
+        </div>
+        <button
+          aria-label="Next view"
+          className="gallery-arrow"
+          onClick={() => go(index + 1)}
+          type="button"
+        >
+          →
+        </button>
+      </div>
+
+      <p aria-live="polite" className="shot-cap">
+        {slides[index].caption}
+      </p>
+    </div>
+  );
 }
 
 export type CodeToken = { text: string; kind?: 'cmd' | 'flag' | 'str' };
