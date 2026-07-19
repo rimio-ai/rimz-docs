@@ -19,6 +19,7 @@ function useCopy(): [boolean, (text: string) => void] {
 export type Slide = {
   src: string;
   alt: string;
+  label: string;
   caption: string;
   width: number;
   height: number;
@@ -91,35 +92,22 @@ export function Gallery({ slides }: { slides: Slide[] }) {
         </div>
       </div>
 
-      <div className="gallery-bar">
-        <button
-          aria-label="Previous view"
-          className="gallery-arrow"
-          onClick={() => go(index - 1)}
-          type="button"
-        >
-          ←
-        </button>
-        <div className="gallery-pips">
-          {slides.map((slide, position) => (
-            <button
-              aria-current={position === index}
-              aria-label={slide.caption}
-              className={position === index ? 'gallery-pip on' : 'gallery-pip'}
-              key={slide.src}
-              onClick={() => go(position)}
-              type="button"
-            />
-          ))}
-        </div>
-        <button
-          aria-label="Next view"
-          className="gallery-arrow"
-          onClick={() => go(index + 1)}
-          type="button"
-        >
-          →
-        </button>
+      {/* One control instead of three: the view names double as navigation,
+          so arrows, pips, and a separate caption row collapse into a single
+          labeled switcher. */}
+      <div aria-label="Views of the room" className="gallery-bar" role="tablist">
+        {slides.map((slide, position) => (
+          <button
+            aria-selected={position === index}
+            className={position === index ? 'gallery-label on' : 'gallery-label'}
+            key={slide.src}
+            onClick={() => go(position)}
+            role="tab"
+            type="button"
+          >
+            {slide.label}
+          </button>
+        ))}
       </div>
 
       <p aria-live="polite" className="shot-cap">
@@ -221,7 +209,10 @@ export function SceneTabs({ scenes }: { scenes: Scene[] }) {
 export type InstallMethod = {
   id: string;
   label: string;
+  /** Lines as displayed; a long command may break with a `\` continuation. */
   lines: string[];
+  /** What the copy button writes; defaults to the displayed lines. */
+  copy?: string;
 };
 
 /** Tabbed install methods rendered as a light card. */
@@ -250,7 +241,8 @@ export function InstallTabs({ methods }: { methods: InstallMethod[] }) {
         <pre>
           {method.lines.map((line, index) => (
             <div key={index}>
-              <span className="pmt">$ </span>
+              {/* Only the first line of a `\`-continued command gets a prompt. */}
+              <span className="pmt">{index === 0 ? '$ ' : '  '}</span>
               {line}
             </div>
           ))}
@@ -258,7 +250,7 @@ export function InstallTabs({ methods }: { methods: InstallMethod[] }) {
         <button
           aria-label="Copy install command"
           className={copied ? 'copybtn ok' : 'copybtn'}
-          onClick={() => copy(method.lines.join('\n'))}
+          onClick={() => copy(method.copy ?? method.lines.join('\n'))}
           type="button"
         >
           {copied ? '[copied]' : '[copy]'}

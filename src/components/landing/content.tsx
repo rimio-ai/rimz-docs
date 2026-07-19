@@ -9,6 +9,7 @@ import type { InstallMethod, Scene } from './interactive';
 export const gallery: Array<{
   shot: string;
   alt: string;
+  label: string;
   caption: string;
   width: number;
   height: number;
@@ -16,21 +17,24 @@ export const gallery: Array<{
   {
     shot: 'rimz-full.png',
     alt: 'A RimZ room in a Zellij session: a sidebar at left triages a fleet of coding agents, each a live card showing model, working state, token mix, and live dollar cost, while agents work in their own panes.',
-    caption: 'The room. The sidebar triages the fleet on the left, and agents work in their own panes.',
+    label: 'the room',
+    caption: 'The sidebar triages the fleet on the left; agents work in their own panes.',
     width: 5344,
     height: 3044,
   },
   {
     shot: 'rimz-gallery.png',
     alt: 'The RimZ sidebar in detail: agent cards with model and effort, context health bars, token mix, live cost, and a provider dashboard tracking plan and budget windows.',
-    caption: 'The sidebar. Working state, model and effort, context health, live cost, and the subagent tree.',
+    label: 'the sidebar',
+    caption: 'Working state, model and effort, context health, live cost, and the subagent tree.',
     width: 5344,
     height: 3044,
   },
   {
     shot: 'rimz-stats.png',
     alt: 'The RimZ spend dashboard, showing token and dollar totals over time alongside plan and rate-limit budget bars.',
-    caption: 'The spend. Token and dollar insight by day, week, and month, with plan and budget windows.',
+    label: 'the spend',
+    caption: 'Token and dollar insight by day, week, and month, with plan and budget windows.',
     width: 2512,
     height: 2008,
   },
@@ -347,7 +351,13 @@ export const installMethods: InstallMethod[] = [
   {
     id: 'script',
     label: 'install script',
-    lines: ['curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh | sh'],
+    // Broken deliberately at the path boundary with a `\` continuation, so the
+    // card never wraps mid-token; the copy button still writes the one-liner.
+    lines: [
+      'curl -fsSL https://raw.githubusercontent.com/\\',
+      'rimio-ai/rimz/main/scripts/install.sh | sh',
+    ],
+    copy: 'curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh | sh',
   },
   { id: 'homebrew', label: 'homebrew', lines: ['brew install rimio-ai/rimz/rimz'] },
   { id: 'cargo', label: 'cargo', lines: ['cargo install --locked rimz'] },

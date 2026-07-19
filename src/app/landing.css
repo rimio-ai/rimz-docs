@@ -20,17 +20,14 @@
   /* --- Surfaces -------------------------------------------- */
   --surface-card: #f1eeee;
   --surface-dark: #201d1d;
-  --surface-dark-elevated: #302c2c;
   --hairline: rgba(15, 0, 0, 0.12);
   --hairline-soft: rgba(15, 0, 0, 0.07);
   --hairline-strong: #646262;
 
   /* --- Text ladder ----------------------------------------- */
   --text-ink: #201d1d;
-  --text-charcoal: #302c2c;
   --text-body: #424245;
   --text-mute: #646262;
-  --text-stone: #6e6e73;
   --text-ash: #9a9898;
 
   /* --- On-color text --------------------------------------- */
@@ -59,12 +56,21 @@
   --size-body: 16px;
   --size-caption: 13.5px;
 
-  /* --- Spacing & radius ------------------------------------ */
+  /* --- Spacing & radius ------------------------------------
+     One radius language for the whole page: small controls sit at 6px and
+     surfaces (install card, terminals) at 10px, matching the rounded window
+     captures instead of fighting them with sharp corners. */
   --space-section: 112px;
   --space-tight: 64px;
-  --radius-none: 0px;
-  --radius-sm: 4px;
+  --radius-sm: 6px;
+  --radius-card: 10px;
   --container: 1040px;
+
+  /* --- Elevation --------------------------------------------
+     Shadows are tinted to the warm ink of the canvas, never pure black. */
+  --shadow-card:
+    0 1px 2px rgba(15, 0, 0, 0.05),
+    0 16px 40px -12px rgba(15, 0, 0, 0.22);
 
   background-color: var(--canvas);
   color: var(--text-body);
@@ -207,14 +213,24 @@
   }
 }
 
-/* ---- blinking cursor ---- */
+/* A view() timeline never advances without a scroller, which would print
+   the revealed sections as blank pages. */
+@media print {
+  .landing .reveal {
+    animation: none;
+  }
+}
+
+/* ---- blinking cursor ----
+   Terminal green, the page's one accent: the same green the product uses for
+   live state, so the wordmark reads as a prompt waiting for input. */
 .landing .cursor {
   display: inline-block;
   width: 0.55em;
   height: 1.05em;
   margin-left: 2px;
   transform: translateY(2px);
-  background: var(--text-ink);
+  background: var(--live);
   animation: landing-blink 1.1s steps(1) infinite;
 }
 
@@ -437,8 +453,10 @@
    would otherwise trip a horizontal scrollbar. */
 .landing .shot-frame {
   margin: 72px 0 0;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  /* Full bleed, but capped: past ~1760px the capture stops gaining legibility
+     and starts costing the reader eye travel, so it re-centers instead. */
+  width: min(100vw, 1760px);
+  margin-left: calc(50% - min(50vw, 880px));
 }
 
 /* Window captures ship with rounded corners and a soft drop shadow already
@@ -484,57 +502,41 @@
   object-fit: contain;
 }
 
+/* The view names are the whole control: they navigate, they indicate, and
+   they title the current slide, in the same underline language as the page's
+   other tab strips. */
 .landing .gallery-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  margin-top: 24px;
 }
 
-.landing .gallery-arrow {
+.landing .gallery-label {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
   background: transparent;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-sm);
-  color: var(--text-mute);
-  padding: 7px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text-ash);
+  padding: 8px 2px 9px;
   cursor: pointer;
   transition:
     color 140ms ease,
     border-color 140ms ease;
 }
 
-.landing .gallery-arrow:hover {
+.landing .gallery-label:hover {
+  color: var(--text-mute);
+}
+
+.landing .gallery-label.on {
   color: var(--text-ink);
-  border-color: var(--hairline-strong);
-}
-
-.landing .gallery-pips {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.landing .gallery-pip {
-  width: 26px;
-  height: 3px;
-  padding: 0;
-  border: 0;
-  border-radius: 2px;
-  background: var(--hairline);
-  cursor: pointer;
-  transition: background-color 200ms ease;
-}
-
-.landing .gallery-pip:hover {
-  background: var(--text-ash);
-}
-
-.landing .gallery-pip.on {
-  background: var(--text-charcoal);
+  font-weight: var(--weight-medium);
+  border-bottom-color: var(--ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -544,7 +546,7 @@
 }
 
 .landing .shot-cap {
-  margin: 18px auto 0;
+  margin: 10px auto 0;
   max-width: 62ch;
   text-align: center;
   font-size: var(--size-caption);
@@ -649,15 +651,61 @@
   text-decoration-color: var(--ink);
 }
 
-/* ---- why rimz: grouped plain lists ---- */
+/* ---- why rimz: split header with a legible exhibit ----
+   The hero captures show scale; this one shows detail. The header pairs the
+   section's claim with the only capture on the page you can actually read. */
+.landing .why-head {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 48px 72px;
+  align-items: center;
+  margin-bottom: 72px;
+}
+
+.landing .why-head .section-label {
+  margin-bottom: 16px;
+}
+
+.landing .why-lede {
+  margin: 0;
+  max-width: 42ch;
+  font-size: var(--size-lede);
+  line-height: 1.55;
+  color: var(--text-mute);
+  text-wrap: pretty;
+}
+
+.landing .why-card {
+  margin: 0;
+}
+
+.landing .why-card-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.landing .why-card figcaption {
+  margin-top: 14px;
+  text-align: center;
+  font-size: var(--size-caption);
+  color: var(--text-ash);
+}
+
+/* One column per group: twelve capabilities resolve into three readable
+   stacks instead of one long wall. The shared border-top draws a single
+   hairline across the row. */
 .landing .fgroups {
   display: grid;
-  gap: 56px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 48px;
 }
 
 .landing .fgroup h3 {
   margin: 0 0 24px;
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid var(--hairline);
   font-size: var(--size-body);
   font-weight: var(--weight-bold);
@@ -667,8 +715,7 @@
 .landing .fitems {
   margin: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px 56px;
+  gap: 24px;
 }
 
 .landing .fitem dt {
@@ -679,37 +726,36 @@
 
 .landing .fitem dd {
   margin: 0;
-  max-width: 52ch;
   font-size: var(--size-caption);
   line-height: 1.7;
   color: var(--text-mute);
 }
 
-@media (max-width: 680px) {
+@media (max-width: 900px) {
+  .landing .why-head {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 56px;
+  }
+
+  .landing .why-card {
+    max-width: 560px;
+  }
+
   .landing .fgroups {
+    grid-template-columns: 1fr;
     gap: 44px;
   }
-
-  .landing .fitems {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
 }
 
-/* Closes a section with a way forward, without borrowing the weight of the
-   footer's primary call to action. */
-.landing .section-cta {
-  margin-top: 48px;
-  padding-top: 32px;
-  border-top: 1px solid var(--hairline);
-}
-
-/* ---- dark terminal panel ---- */
+/* ---- dark terminal panel ----
+   No border: a dark surface on a cream canvas separates itself. The tinted
+   shadow floats it the same way the window captures float. */
 .landing .term {
   background: var(--surface-dark);
   color: var(--on-dark);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -826,6 +872,13 @@
   border-color: var(--live-dark);
 }
 
+/* ---- everyday moves ----
+   Shell lines and their aligned trailing comments read best on a narrower
+   measure than the prose container. */
+.landing .moves-body {
+  max-width: 880px;
+}
+
 /* ---- tab strips (moves + install) ---- */
 .landing .tabs {
   display: flex;
@@ -861,18 +914,21 @@
 /* ---- install ---- */
 .landing .install-block {
   background: var(--surface-card);
-  border-radius: var(--radius-sm);
-  padding: 16px;
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
+  /* Tall enough for the two-line install script, so switching to the
+     one-line homebrew or cargo tab never moves the page under the cursor. */
+  min-height: 85px;
 }
 
 .landing .install-block pre {
   margin: 0;
   flex: 1;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
+  overflow-x: auto;
   font-family: var(--font-mono);
   font-size: var(--size-caption);
   line-height: 1.8;
@@ -880,7 +936,7 @@
 }
 
 .landing .install-block pre .pmt {
-  color: var(--text-ash);
+  color: var(--live);
 }
 
 .landing .copybtn {
@@ -903,6 +959,26 @@
   color: var(--live);
 }
 
+@media (max-width: 560px) {
+  /* Three tabs must share one row: smaller type beats a stranded second
+     line with a lone `cargo` tab. */
+  .landing .hero-install .tab {
+    font-size: 13px;
+    padding: 9px 8px;
+  }
+
+  /* On a narrow measure the command wraps rather than clipping: a ragged
+     but complete command beats a truncated one with no scroll hint. */
+  .landing .install-block pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .landing .install-block {
+    min-height: 0;
+  }
+}
+
 /* ---- footer ---- */
 .landing .foot {
   margin-top: var(--space-section);
@@ -915,11 +991,28 @@
 }
 
 .landing .foot-cta h2 {
-  margin: 0 0 32px;
-  font-size: var(--size-h2);
+  margin: 0 0 16px;
+  font-size: 40px;
   font-weight: var(--weight-bold);
   color: var(--text-ink);
-  letter-spacing: -0.6px;
+  letter-spacing: -1px;
+}
+
+/* The one line of social proof on the page, and it is verifiable: the tool's
+   own repository is the customer. */
+.landing .foot-proof {
+  margin: 0 auto 36px;
+  max-width: 52ch;
+  font-size: var(--size-body);
+  line-height: 1.6;
+  color: var(--text-mute);
+  text-wrap: pretty;
+}
+
+@media (max-width: 560px) {
+  .landing .foot-cta h2 {
+    font-size: 32px;
+  }
 }
 
 .landing .foot-buttons {

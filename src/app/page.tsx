@@ -1,6 +1,7 @@
 import './landing.css';
 
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Geist, JetBrains_Mono } from 'next/font/google';
 import {
@@ -53,6 +54,7 @@ const assetBase = `/docs-assets/${latestVersion.id}`;
 const slides = gallery.map((item) => ({
   src: withBasePath(`${assetBase}/${item.shot}`),
   alt: item.alt,
+  label: item.label,
   caption: item.caption,
   width: item.width,
   height: item.height,
@@ -87,15 +89,14 @@ export default function HomePage() {
         <section className="hero wrap" id="top">
           <h1>{heading}</h1>
           <p className="sub">
-            Realtime dashboard for harnessing agentic coding: one human and tens of agents working
-            together in one Zellij or tmux room, where everything about every agent reads at a
-            glance.
+            Tens of coding agents in one Zellij or tmux room, with state, task, context health, and
+            live cost at a glance.
           </p>
 
           <div className="hero-install">
             <InstallTabs methods={installMethods} />
             <p className="hero-install-sub">
-              MIT licensed, written in Rust, and it runs the room on Zellij or tmux.{' '}
+              MIT licensed and written in Rust.{' '}
               <Link href={installUrl}>Installation guide</Link>
             </p>
           </div>
@@ -110,7 +111,7 @@ export default function HomePage() {
             would shout louder than anything RimZ has to say, and the point of
             the strip is recognition, not decoration. */}
         <section className="section section-tight wrap" id="agents">
-          <ul className="agent-marks">
+          <ul className="agent-marks reveal">
             {agentMarks.map(({ name, tier, Mark }) => (
               <li className={`agent-mark ${tier}`} key={name}>
                 <Mark className="agent-glyph" />
@@ -119,18 +120,38 @@ export default function HomePage() {
             ))}
           </ul>
           <p className="works-sub">
-            RimZ wraps the agents you already run. They run stock, with your flags and your config;
-            the official command-line, web, desktop, and mobile apps all keep working. Claude Code
-            and Codex are the supported daily drivers, Pi and OpenCode are alpha, and the rest are
-            experimental: <Link href={agentSupportUrl}>per-agent detail</Link>.
+            The agents you already run, stock: your flags, your config, and the official apps keep
+            working. Claude Code and Codex are the daily drivers; the lighter marks are alpha or
+            experimental. <Link href={agentSupportUrl}>Per-agent detail</Link>
           </p>
         </section>
 
-        {/* ---------- why rimz ---------- */}
+        {/* ---------- why rimz ----------
+            The header is a split on purpose: the right column carries the one
+            capture on the page that is fully legible at rendered size, so the
+            section opens with proof instead of another wall of claims. */}
         <section className="section wrap">
-          <h2 className="section-label">Why RimZ?</h2>
+          <div className="why-head reveal">
+            <div className="why-intro">
+              <h2 className="section-label">Why RimZ?</h2>
+              <p className="why-lede">
+                One lightweight binary inside the terminal you already use, and the whole fleet
+                reads at a glance.
+              </p>
+            </div>
+            <figure className="why-card">
+              <Image
+                alt="A single RimZ agent card: working state, task, model and effort, context health bar, token counts, live dollar cost, and the subagent tree."
+                className="why-card-shot"
+                height={574}
+                src={withBasePath(`${assetBase}/rimz-card.png`)}
+                width={1236}
+              />
+              <figcaption>An agent card, up close.</figcaption>
+            </figure>
+          </div>
 
-          <div className="fgroups">
+          <div className="fgroups reveal">
             {featureGroups.map((group) => (
               <section className="fgroup" key={group.title}>
                 <h3>{group.title}</h3>
@@ -145,36 +166,40 @@ export default function HomePage() {
               </section>
             ))}
           </div>
-
-          <div className="section-cta">
-            <Link className="btn btn-secondary" href={docsUrl}>
-              Read the documentation →
-            </Link>
-          </div>
         </section>
 
-        {/* ---------- everyday moves ---------- */}
+        {/* ---------- everyday moves ----------
+            The command column is narrower than the container on purpose: a
+            shell line reads worse the wider it gets, and the aligned trailing
+            comments stop scanning once the gap grows past a few words. */}
         <section className="section wrap">
           <h2 className="section-label">Everyday moves</h2>
-          <p className="lede">
-            These run from any pane in the room, and from any script or CI job that reaches it. They
-            compose: a profile becomes a team, the team lands in a worktree, the worktree&rsquo;s
-            agents take messages, and a schedule fires the whole thing while you sleep.
-          </p>
-          <SceneTabs scenes={scenes} />
+          <div className="moves-body reveal">
+            <p className="lede">
+              These run from any pane in the room, and from any script or CI job that reaches it.
+              They compose: a profile becomes a team, the team lands in a worktree, the
+              worktree&rsquo;s agents take messages, and a schedule fires the whole thing while you
+              sleep.
+            </p>
+            <SceneTabs scenes={scenes} />
+          </div>
         </section>
       </main>
 
       <footer className="foot">
         <div className="foot-cta">
           <h2>Run the room.</h2>
+          <p className="foot-proof">
+            RimZ is built with RimZ: the fleet behind the repository routinely runs 50 to 100
+            concurrent agents across parallel worktrees.
+          </p>
           <div className="foot-buttons">
-            <a className="btn btn-primary" href={productGitHubUrl}>
-              ★ Star on GitHub
-            </a>
-            <Link className="btn btn-secondary" href={docsUrl}>
+            <Link className="btn btn-primary" href={docsUrl}>
               Read the docs →
             </Link>
+            <a className="btn btn-secondary" href={productGitHubUrl}>
+              ★ Star on GitHub
+            </a>
           </div>
         </div>
         <div className="foot-bottom">
