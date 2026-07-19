@@ -291,16 +291,14 @@ export default function HomePage() {
           <h2 className="section-label">Agent support</h2>
           <div className="tiers">
             {agentTiers.map((tier) => (
-              <article className="tier" key={tier.tier}>
-                <div className="tier-head">
-                  <h3>{tier.tier}</h3>
-                  <ul className="tier-agents">
-                    {tier.agents.map((agent) => (
-                      <li key={agent}>{agent}</li>
-                    ))}
-                  </ul>
-                </div>
-                <p>{tier.note}</p>
+              <article className={`tier ${tier.weight}`} key={tier.tier}>
+                <h3 className="tier-label">{tier.tier}</h3>
+                <ul className="tier-agents">
+                  {tier.agents.map((agent) => (
+                    <li key={agent}>{agent}</li>
+                  ))}
+                </ul>
+                <p className="tier-note">{tier.note}</p>
               </article>
             ))}
           </div>

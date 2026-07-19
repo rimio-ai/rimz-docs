@@ -1040,47 +1040,84 @@
   }
 }
 
-/* ---- agent support tiers ---- */
+/* ---- agent support tiers ----
+   The agent names are what a reader scans for, so they lead each block and
+   their size tracks the tier. Giving all three tiers equal weight let nine
+   experimental adapters outshout the two that are actually dogfooded. */
 .landing .tiers {
-  border-top: 1px solid var(--hairline);
+  display: grid;
+  gap: 44px;
 }
 
 .landing .tier {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 40px;
-  padding: 28px 0;
-  border-bottom: 1px solid var(--hairline);
+  border-top: 1px solid var(--hairline);
+  padding-top: 18px;
 }
 
-.landing .tier-head h3 {
-  margin: 0 0 12px;
-  font-size: var(--size-body);
-  font-weight: var(--weight-bold);
-  color: var(--text-ink);
+.landing .tier-label {
+  margin: 0 0 14px;
+  font-family: var(--font-mono);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.6px;
+  color: var(--text-ash);
+}
+
+.landing .tier.primary .tier-label {
+  color: var(--live);
+}
+
+.landing .tier.secondary .tier-label {
+  color: var(--warn);
 }
 
 .landing .tier-agents {
-  margin: 0;
+  margin: 0 0 14px;
   padding: 0;
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  align-items: baseline;
+  gap: 6px 28px;
+  color: var(--text-ink);
+}
+
+.landing .tier.primary .tier-agents {
+  font-size: 28px;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.6px;
+  gap: 4px 36px;
+}
+
+.landing .tier.secondary .tier-agents {
+  font-size: var(--size-h3);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.2px;
+}
+
+.landing .tier.tertiary .tier-agents {
   font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text-mute);
+  gap: 6px 22px;
+}
+
+.landing .tier-note {
+  margin: 0;
+  max-width: 74ch;
   font-size: var(--size-caption);
+  line-height: 1.75;
   color: var(--text-mute);
 }
 
-.landing .tier p {
-  margin: 0;
-  color: var(--text-body);
+/* Reads as a note on the whole section, not on the last tier above it. */
+.landing .tiers + .install-sub {
+  margin-top: 40px;
 }
 
-@media (max-width: 680px) {
-  .landing .tier {
-    grid-template-columns: 1fr;
-    gap: 14px;
+@media (max-width: 560px) {
+  .landing .tier.primary .tier-agents {
+    font-size: 23px;
   }
 }
 

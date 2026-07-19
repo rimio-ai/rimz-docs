@@ -357,19 +357,28 @@ export const installMethods: InstallMethod[] = [
  * Agent support, grouped by tier. The full per-capability grid lives in the
  * docs; reproducing it here buries the two agents that matter most.
  */
-export const agentTiers: Array<{ tier: string; agents: string[]; note: string }> = [
+export const agentTiers: Array<{
+  tier: string;
+  /** Drives type size and colour, so the two daily drivers read first. */
+  weight: 'primary' | 'secondary' | 'tertiary';
+  agents: string[];
+  note: string;
+}> = [
   {
     tier: 'Supported',
+    weight: 'primary',
     agents: ['Claude Code', 'Codex'],
     note: 'The daily drivers, and the best experience today. Every surface is wired: live state, context health, cost and history, account windows, blocking asks, and the subagent tree.',
   },
   {
     tier: 'Alpha',
+    weight: 'secondary',
     agents: ['Pi', 'OpenCode'],
     note: 'Wired end to end and close behind, with less mileage on them so far.',
   },
   {
     tier: 'Experimental',
+    weight: 'tertiary',
     agents: [
       'Antigravity',
       'Copilot',
