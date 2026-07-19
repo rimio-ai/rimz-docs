@@ -19,7 +19,7 @@ import {
   installMethods,
   scenes,
   showcase,
-  statusCells,
+  statusNotice,
 } from '@/components/landing/content';
 
 const sans = Geist({
@@ -86,7 +86,6 @@ export default function HomePage() {
       <main>
         {/* ---------- hero ---------- */}
         <section className="hero wrap" id="top">
-          <p className="eyebrow">alpha, moving fast</p>
           <h1>The control room for your coding agents.</h1>
           <p className="sub">
             One human, tens of coding agents, one Zellij or tmux room. Every agent reads at a
@@ -335,17 +334,13 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* ---------- project status ---------- */}
-        <section className="section wrap">
-          <h2 className="section-label">Project status</h2>
-          <div className="status-grid">
-            {statusCells.map((cell) => (
-              <article className="status-cell" key={cell.title}>
-                <h3>{cell.title}</h3>
-                <p>{cell.body}</p>
-              </article>
-            ))}
-          </div>
+        {/* ---------- release-stage notice ---------- */}
+        <section className="section-tight wrap">
+          <aside className="notice">
+            <p>
+              <b>{statusNotice.title}</b> {statusNotice.body}
+            </p>
+          </aside>
         </section>
       </main>
 

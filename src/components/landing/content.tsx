@@ -331,21 +331,11 @@ export const agentTiers: Array<{ tier: string; agents: string[]; note: string }>
   },
 ];
 
-export const statusCells: Array<{ title: string; body: string }> = [
-  {
-    title: 'Alpha, moving fast',
-    body: 'Expect rough edges and the occasional bug, and expect the surface to shift: commands, flags, config keys, and output formats can change between releases while the design settles.',
-  },
-  {
-    title: 'Built with RimZ, on RimZ',
-    body: 'The fleet behind the repository routinely runs 50 to 100 concurrent agents across 10 to 30 parallel worktrees and pull requests, and a single room stays responsive with 100+ agents from multiple providers at once.',
-  },
-  {
-    title: 'Ready for daily use',
-    body: 'Ready for personal, daily use today. For production workflows that need a stable interface, wait for the 1.0 release.',
-  },
-  {
-    title: 'Zero configuration',
-    body: 'RimZ runs with no configuration at all, and everything you can tune is plain TOML in files you own: no config daemon, no bespoke language.',
-  },
-];
+/**
+ * Release-stage caveat. Honest, but it is not a reason to adopt RimZ, so it
+ * reads as a closing footnote rather than a headline or a section of its own.
+ */
+export const statusNotice = {
+  title: 'Alpha, and dogfooded hard.',
+  body: 'The fleet behind the repository runs 50 to 100 concurrent agents across 10 to 30 worktrees daily, so RimZ is ready for personal use today. Commands, flags, and output formats can still change between releases; wait for 1.0 if you need a stable interface.',
+};

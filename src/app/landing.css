@@ -380,15 +380,6 @@
   margin-top: 36px;
 }
 
-.landing .eyebrow {
-  font-family: var(--font-mono);
-  display: inline-block;
-  margin: 0 0 28px;
-  font-size: var(--size-caption);
-  letter-spacing: 0.4px;
-  color: var(--text-ash);
-}
-
 @media (max-width: 560px) {
   .landing .hero {
     padding-top: 56px;
@@ -1071,37 +1062,29 @@
   }
 }
 
-/* ---- project status ---- */
-.landing .status-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px 56px;
+/* ---- release-stage notice ----
+   Deliberately quiet: the release stage is a caveat the reader deserves,
+   not a reason to adopt RimZ, so it must not compete with the sections
+   that are. */
+.landing .notice {
+  display: block;
+  background: var(--surface-soft);
+  border-radius: var(--radius-sm);
+  padding: 20px 24px;
 }
 
-.landing .status-cell {
-  border-top: 1px solid var(--hairline);
-  padding-top: 20px;
-}
-
-.landing .status-cell h3 {
-  margin: 0 0 10px;
-  font-size: var(--size-body);
-  font-weight: var(--weight-bold);
-  color: var(--text-ink);
-}
-
-.landing .status-cell p {
+.landing .notice p {
   margin: 0;
+  max-width: 84ch;
   font-size: var(--size-caption);
   line-height: 1.75;
-  color: var(--text-body);
+  color: var(--text-mute);
+  text-wrap: pretty;
 }
 
-@media (max-width: 680px) {
-  .landing .status-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
+.landing .notice b {
+  color: var(--text-charcoal);
+  font-weight: var(--weight-bold);
 }
 
 /* ---- footer ---- */
