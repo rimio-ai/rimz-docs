@@ -63,9 +63,12 @@ assert.ok(
 const homeHtml = await readFile(path.join(outputRoot, 'index.html'), 'utf8');
 assert.ok(!homeHtml.includes('http-equiv="refresh"'), 'the homepage still uses a meta refresh');
 assert.ok(
-  homeHtml.includes('Run and steer a fleet of coding agents from your terminal.'),
+  homeHtml.includes('The control room for your coding agents.'),
   'the homepage is missing the product heading',
 );
+for (const section of ['What it does', 'How it works', 'Everyday moves', 'Install', 'Agent compatibility']) {
+  assert.ok(homeHtml.includes(section), `the homepage is missing the ${section} section`);
+}
 
 const mainHtml = await readFile(path.join(outputRoot, 'docs', 'main', 'index.html'), 'utf8');
 assert.ok(mainHtml.includes('name="robots" content="noindex, follow"'), 'main docs are indexable');
