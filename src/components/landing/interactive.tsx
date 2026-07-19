@@ -185,7 +185,7 @@ export function Terminal({
         <span className="title">{title}</span>
         <button
           aria-label="Copy commands"
-          className={copied ? 'copy-btn ok' : 'copy-btn'}
+          className={copied ? 'copy-btn on-dark ok' : 'copy-btn on-dark'}
           onClick={() => copy(raw)}
           type="button"
         >
@@ -260,7 +260,27 @@ export type InstallMethod = {
   label: string;
   /** The command, on one line. It is both what is shown and what is copied. */
   command: string;
+  /**
+   * The substring set in full ink against the rest of the muted command: on a
+   * long URL it is the segment the reader needs to verify before pasting the
+   * line into a shell, and picking it out saves reading the whole thing.
+   */
+  emphasis?: string;
 };
+
+/** Splits a command around its emphasised segment, on the first match. */
+function renderCommand({ command, emphasis }: InstallMethod) {
+  const at = emphasis ? command.indexOf(emphasis) : -1;
+  if (at < 0 || !emphasis) return command;
+
+  return (
+    <>
+      {command.slice(0, at)}
+      <span className="em">{emphasis}</span>
+      {command.slice(at + emphasis.length)}
+    </>
+  );
+}
 
 /**
  * The install command, as one self-contained block: the method switcher and
@@ -271,6 +291,9 @@ export type InstallMethod = {
  * hidden with `visibility`, which keeps them out of the accessibility tree
  * while still letting them set the block's height. The block is therefore as
  * tall as its longest command and switching tabs cannot move the page.
+ *
+ * No `$` prompt: the tab already says this is a shell command, and the glyph
+ * is one more thing to mis-select when copying by hand.
  */
 export function InstallTabs({ methods }: { methods: InstallMethod[] }) {
   const [active, setActive] = useState(methods[0].id);
@@ -305,7 +328,7 @@ export function InstallTabs({ methods }: { methods: InstallMethod[] }) {
         </div>
         <button
           aria-label={`Copy the ${method.label} command`}
-          className={copied ? 'copy-btn ok' : 'copy-btn'}
+          className={copied ? 'copy-btn on-light ok' : 'copy-btn on-light'}
           onClick={() => copy(method.command)}
           type="button"
         >
@@ -326,12 +349,7 @@ export function InstallTabs({ methods }: { methods: InstallMethod[] }) {
               role="tabpanel"
               tabIndex={on ? 0 : -1}
             >
-              {/* Decorative: the prompt is not part of what gets copied, and
-                  it stays out of a drag-selection of the command. */}
-              <span aria-hidden="true" className="pmt">
-                ${' '}
-              </span>
-              {item.command}
+              {renderCommand(item)}
             </pre>
           );
         })}

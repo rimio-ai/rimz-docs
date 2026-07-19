@@ -349,11 +349,17 @@ export const scenes: Scene[] = [
 
 export const installMethods: InstallMethod[] = [
   {
-    id: 'script',
-    label: 'install script',
+    id: 'curl',
+    label: 'curl',
     command:
       'curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh | sh',
+    emphasis: 'rimio-ai/rimz',
   },
-  { id: 'homebrew', label: 'homebrew', command: 'brew install rimio-ai/rimz/rimz' },
-  { id: 'cargo', label: 'cargo', command: 'cargo install --locked rimz' },
+  {
+    id: 'homebrew',
+    label: 'homebrew',
+    command: 'brew install rimio-ai/rimz/rimz',
+    emphasis: 'rimio-ai/rimz/rimz',
+  },
+  { id: 'cargo', label: 'cargo', command: 'cargo install --locked rimz', emphasis: 'rimz' },
 ];

@@ -62,7 +62,6 @@ const slides = gallery.map((item) => ({
 
 export default function HomePage() {
   const docsUrl = withBasePath(`${docsRoute}/`);
-  const installUrl = withBasePath(`${docsRoute}/getting-started/installation/`);
   const agentSupportUrl = withBasePath(`${docsRoute}/reference/agent-support/`);
 
   return (
@@ -95,10 +94,6 @@ export default function HomePage() {
 
           <div className="hero-install">
             <InstallTabs methods={installMethods} />
-            <p className="hero-install-sub">
-              MIT licensed and written in Rust.{' '}
-              <Link href={installUrl}>Installation guide</Link>
-            </p>
           </div>
 
           <div className="shot-frame">

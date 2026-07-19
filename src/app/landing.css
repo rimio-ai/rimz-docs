@@ -398,27 +398,8 @@
    slightly wider block. */
 .landing .hero-install {
   margin: 40px auto 0;
-  max-width: 780px;
+  max-width: 800px;
   text-align: left;
-}
-
-.landing .hero-install-sub {
-  margin: 18px 0 0;
-  text-align: center;
-  color: var(--text-mute);
-  font-size: var(--size-caption);
-  line-height: 1.75;
-}
-
-.landing .hero-install-sub a {
-  color: var(--text-ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--hairline-strong);
-}
-
-.landing .hero-install-sub a:hover {
-  text-decoration-color: var(--ink);
 }
 
 @media (max-width: 560px) {
@@ -847,14 +828,13 @@
 }
 
 /* ---- copy affordance ----
-   One button for every copy-to-clipboard on the page, on the terminal panels
-   and on the install block alike. Both sit on the dark surface, so the button
-   is drawn once against that surface rather than twice in two styles. */
+   One geometry for every copy-to-clipboard on the page; the surface modifier
+   supplies the ink, because the terminal panels are dark and the install card
+   is light and no single grey clears AA contrast on both. */
 .landing .copy-btn {
   flex: none;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: var(--text-ash);
+  border: 1px solid transparent;
   font-family: var(--font-mono);
   font-size: var(--size-caption);
   padding: 4px 10px;
@@ -865,14 +845,37 @@
     border-color 140ms ease;
 }
 
-.landing .copy-btn:hover {
+.landing .copy-btn.on-dark {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text-ash);
+}
+
+.landing .copy-btn.on-dark:hover {
   color: var(--on-dark);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.landing .copy-btn.ok {
+.landing .copy-btn.on-dark.ok {
   color: var(--live-dark);
   border-color: var(--live-dark);
+}
+
+.landing .copy-btn.on-light {
+  border-color: var(--hairline);
+  color: var(--text-mute);
+}
+
+.landing .copy-btn.on-light:hover {
+  color: var(--text-ink);
+  border-color: var(--hairline-strong);
+}
+
+/* Confirmation goes to the border, not the label: `--live` clears the 3:1
+   bar for a non-text edge against this fill but not the 4.5:1 body-text bar,
+   and the word already changes to `copied`. */
+.landing .copy-btn.on-light.ok {
+  color: var(--text-ink);
+  border-color: var(--live);
 }
 
 /* ---- everyday moves ----
@@ -900,12 +903,14 @@
   margin-bottom: -1px;
   padding: 10px 14px;
   cursor: pointer;
-  color: var(--text-ash);
+  /* Ash reads as an unselected label but only clears 2.8:1 on the canvas,
+     which fails AA for text. Same correction as the install tabs. */
+  color: var(--text-mute);
   transition: color 140ms ease;
 }
 
 .landing .tab:hover {
-  color: var(--text-mute);
+  color: var(--text-ink);
 }
 
 .landing .tab[aria-selected="true"] {
@@ -915,34 +920,40 @@
 }
 
 /* ---- install block ----
-   The install command is a shell command, so it wears the same dark terminal
-   material as the panels further down the page instead of the near-canvas
-   gray it used to sit on: on a cream page that gray left the one thing the
-   reader is meant to act on as the faintest surface in the hero.
+   A light outlined card, built the way the opencode install block is built:
+   a hairline on the canvas, the method switcher as an attached header rather
+   than a rail floating above it, and the command set quietly with only the
+   segment that identifies the project in full ink.
 
-   The method switcher and the copy button live inside the block's header
-   rather than on a rail above it, so the control and the surface it controls
-   read as a single object. */
+   The fill is a hair darker than the canvas so the card reads as a surface
+   without the border having to carry the separation on its own. */
 .landing .install {
-  background: var(--surface-dark);
-  color: var(--on-dark);
+  background: color-mix(in srgb, var(--surface-card) 45%, var(--canvas));
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
+/* The tabs stretch the full height of the header so their selected-state
+   marker lands on the divider and replaces it, rather than floating as a
+   second short rule somewhere above it. */
 .landing .install-head {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-right: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  align-items: stretch;
+  gap: 16px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.landing .install-head .copy-btn {
+  align-self: center;
 }
 
 /* The strip scrolls rather than wrapping: a stranded second row holding a
    lone `cargo` tab would break the block's header in two. */
 .landing .install-tabs {
   display: flex;
+  gap: 24px;
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
@@ -958,27 +969,29 @@
   font-size: var(--size-caption);
   background: transparent;
   border: 0;
+  /* Pulled over the header's own hairline, so the marker replaces that line
+     under the selected label instead of stacking a second rule beneath it. */
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  padding: 12px 14px 10px;
+  padding: 14px 0 12px;
   cursor: pointer;
   white-space: nowrap;
-  color: var(--text-ash);
+  /* Mute, not ash: ash is the right weight for an unselected label but only
+     clears 2.7:1 on this fill, so it fails AA as body text. The selected tab
+     is still unambiguous, carrying both full ink and the marker. */
+  color: var(--text-mute);
   transition:
     color 140ms ease,
     border-color 140ms ease;
 }
 
 .landing .install-tab:hover {
-  color: var(--on-dark);
+  color: var(--text-ink);
 }
 
-/* Green marks the selected method for the same reason it marks the prompt
-   and the copied state: on this page it is the "live" ink, nothing else. */
 .landing .install-tab[aria-selected="true"] {
-  color: var(--on-dark);
-  font-weight: var(--weight-medium);
-  border-bottom-color: var(--live-dark);
+  color: var(--text-ink);
+  border-bottom-color: var(--ink);
 }
 
 /* Every method occupies this one cell. `minmax(0, 1fr)` stops the longest
@@ -995,9 +1008,9 @@
   min-width: 0;
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--size-caption);
   line-height: 1.7;
-  color: var(--on-dark);
+  color: var(--text-mute);
   white-space: pre;
   overflow-x: auto;
   scrollbar-width: thin;
@@ -1008,15 +1021,24 @@
   visibility: visible;
 }
 
-.landing .install-cmd .pmt {
-  color: var(--live-dark);
-  user-select: none;
+.landing .install-cmd .em {
+  color: var(--text-ink);
+  font-weight: var(--weight-medium);
 }
 
 @media (max-width: 640px) {
+  .landing .install-head {
+    gap: 12px;
+    padding: 0 14px;
+  }
+
+  .landing .install-tabs {
+    gap: 18px;
+  }
+
   .landing .install-tab {
-    font-size: 12px;
-    padding: 11px 10px 9px;
+    font-size: 12.5px;
+    padding: 12px 0 10px;
   }
 
   /* On a narrow measure the command wraps rather than clipping: a ragged but
@@ -1029,7 +1051,7 @@
   }
 
   .landing .install-body {
-    padding: 14px 16px;
+    padding: 14px;
   }
 }
 
