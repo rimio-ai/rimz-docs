@@ -351,14 +351,9 @@ export const installMethods: InstallMethod[] = [
   {
     id: 'script',
     label: 'install script',
-    // Broken deliberately at the path boundary with a `\` continuation, so the
-    // card never wraps mid-token; the copy button still writes the one-liner.
-    lines: [
-      'curl -fsSL https://raw.githubusercontent.com/\\',
-      'rimio-ai/rimz/main/scripts/install.sh | sh',
-    ],
-    copy: 'curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh | sh',
+    command:
+      'curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh | sh',
   },
-  { id: 'homebrew', label: 'homebrew', lines: ['brew install rimio-ai/rimz/rimz'] },
-  { id: 'cargo', label: 'cargo', lines: ['cargo install --locked rimz'] },
+  { id: 'homebrew', label: 'homebrew', command: 'brew install rimio-ai/rimz/rimz' },
+  { id: 'cargo', label: 'cargo', command: 'cargo install --locked rimz' },
 ];

@@ -1,7 +1,14 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 
 /** Copy-to-clipboard state shared by every copy affordance on the page. */
 function useCopy(): [boolean, (text: string) => void] {
@@ -14,6 +21,33 @@ function useCopy(): [boolean, (text: string) => void] {
   }, []);
 
   return [copied, copy];
+}
+
+/**
+ * Arrow-key navigation for a tablist, per the ARIA tabs pattern: Left and
+ * Right step through the tabs and wrap at the ends, Home and End jump to the
+ * ends, and focus follows selection. Paired with a roving `tabIndex` on the
+ * buttons, this makes the strip one Tab stop instead of three.
+ */
+function onTabKeyDown(
+  event: KeyboardEvent<HTMLDivElement>,
+  ids: string[],
+  current: string,
+  setActive: (id: string) => void,
+) {
+  const from = ids.indexOf(current);
+  const last = ids.length - 1;
+  let next: number;
+
+  if (event.key === 'ArrowRight') next = from === last ? 0 : from + 1;
+  else if (event.key === 'ArrowLeft') next = from === 0 ? last : from - 1;
+  else if (event.key === 'Home') next = 0;
+  else if (event.key === 'End') next = last;
+  else return;
+
+  event.preventDefault();
+  setActive(ids[next]);
+  event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]')[next]?.focus();
 }
 
 export type Slide = {
@@ -151,7 +185,7 @@ export function Terminal({
         <span className="title">{title}</span>
         <button
           aria-label="Copy commands"
-          className={copied ? 'term-copy ok' : 'term-copy'}
+          className={copied ? 'copy-btn ok' : 'copy-btn'}
           onClick={() => copy(raw)}
           type="button"
         >
@@ -183,25 +217,40 @@ export type Scene = {
 export function SceneTabs({ scenes }: { scenes: Scene[] }) {
   const [active, setActive] = useState(scenes[0].id);
   const scene = scenes.find((item) => item.id === active) ?? scenes[0];
+  const ids = scenes.map((item) => item.id);
 
   return (
     <div>
-      <div aria-label="Everyday moves" className="tabs" role="tablist">
+      <div
+        aria-label="Everyday moves"
+        className="tabs"
+        onKeyDown={(event) => onTabKeyDown(event, ids, scene.id, setActive)}
+        role="tablist"
+      >
         {scenes.map((item) => (
           <button
+            aria-controls={`scene-panel-${item.id}`}
             aria-selected={item.id === scene.id}
             className="tab"
+            id={`scene-tab-${item.id}`}
             key={item.id}
             onClick={() => setActive(item.id)}
             role="tab"
+            tabIndex={item.id === scene.id ? 0 : -1}
             type="button"
           >
             {item.label}
           </button>
         ))}
       </div>
-      <p className="lede">{scene.lede}</p>
-      <Terminal lines={scene.lines} raw={scene.raw} title={scene.title} />
+      <div
+        aria-labelledby={`scene-tab-${scene.id}`}
+        id={`scene-panel-${scene.id}`}
+        role="tabpanel"
+      >
+        <p className="lede">{scene.lede}</p>
+        <Terminal lines={scene.lines} raw={scene.raw} title={scene.title} />
+      </div>
     </div>
   );
 }
@@ -209,52 +258,83 @@ export function SceneTabs({ scenes }: { scenes: Scene[] }) {
 export type InstallMethod = {
   id: string;
   label: string;
-  /** Lines as displayed; a long command may break with a `\` continuation. */
-  lines: string[];
-  /** What the copy button writes; defaults to the displayed lines. */
-  copy?: string;
+  /** The command, on one line. It is both what is shown and what is copied. */
+  command: string;
 };
 
-/** Tabbed install methods rendered as a light card. */
+/**
+ * The install command, as one self-contained block: the method switcher and
+ * the copy button ride in the block's own header rather than floating above
+ * it, so the control and the surface it controls read as one object.
+ *
+ * Every method is rendered into the same grid cell and the inactive ones are
+ * hidden with `visibility`, which keeps them out of the accessibility tree
+ * while still letting them set the block's height. The block is therefore as
+ * tall as its longest command and switching tabs cannot move the page.
+ */
 export function InstallTabs({ methods }: { methods: InstallMethod[] }) {
   const [active, setActive] = useState(methods[0].id);
   const [copied, copy] = useCopy();
   const method = methods.find((item) => item.id === active) ?? methods[0];
+  const ids = methods.map((item) => item.id);
 
   return (
-    <div>
-      <div aria-label="Install method" className="tabs" role="tablist">
-        {methods.map((item) => (
-          <button
-            aria-selected={item.id === method.id}
-            className="tab"
-            key={item.id}
-            onClick={() => setActive(item.id)}
-            role="tab"
-            type="button"
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <div className="install-block">
-        <pre>
-          {method.lines.map((line, index) => (
-            <div key={index}>
-              {/* Only the first line of a `\`-continued command gets a prompt. */}
-              <span className="pmt">{index === 0 ? '$ ' : '  '}</span>
-              {line}
-            </div>
+    <div className="install">
+      <div className="install-head">
+        <div
+          aria-label="Install method"
+          className="install-tabs"
+          onKeyDown={(event) => onTabKeyDown(event, ids, method.id, setActive)}
+          role="tablist"
+        >
+          {methods.map((item) => (
+            <button
+              aria-controls={`install-panel-${item.id}`}
+              aria-selected={item.id === method.id}
+              className="install-tab"
+              id={`install-tab-${item.id}`}
+              key={item.id}
+              onClick={() => setActive(item.id)}
+              role="tab"
+              tabIndex={item.id === method.id ? 0 : -1}
+              type="button"
+            >
+              {item.label}
+            </button>
           ))}
-        </pre>
+        </div>
         <button
-          aria-label="Copy install command"
-          className={copied ? 'copybtn ok' : 'copybtn'}
-          onClick={() => copy(method.copy ?? method.lines.join('\n'))}
+          aria-label={`Copy the ${method.label} command`}
+          className={copied ? 'copy-btn ok' : 'copy-btn'}
+          onClick={() => copy(method.command)}
           type="button"
         >
-          {copied ? '[copied]' : '[copy]'}
+          {copied ? 'copied' : 'copy'}
         </button>
+      </div>
+
+      <div className="install-body">
+        {methods.map((item) => {
+          const on = item.id === method.id;
+          return (
+            <pre
+              aria-labelledby={`install-tab-${item.id}`}
+              className="install-cmd"
+              data-on={on ? '' : undefined}
+              id={`install-panel-${item.id}`}
+              key={item.id}
+              role="tabpanel"
+              tabIndex={on ? 0 : -1}
+            >
+              {/* Decorative: the prompt is not part of what gets copied, and
+                  it stays out of a drag-selection of the command. */}
+              <span aria-hidden="true" className="pmt">
+                ${' '}
+              </span>
+              {item.command}
+            </pre>
+          );
+        })}
       </div>
     </div>
   );

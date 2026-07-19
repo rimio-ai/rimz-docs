@@ -392,16 +392,14 @@
 }
 
 /* ---- hero install ----
-   The install card is the hero's only call to action, so it is narrower than
-   the prose above it: a command line reads worse the wider it gets. */
+   The block is the hero's only call to action, so it is narrower than the
+   prose above it, but wide enough to hold the longest command on one line:
+   a wrapped or scrolled install command is a worse call to action than a
+   slightly wider block. */
 .landing .hero-install {
   margin: 40px auto 0;
-  max-width: 620px;
+  max-width: 780px;
   text-align: left;
-}
-
-.landing .hero-install .tabs {
-  justify-content: center;
 }
 
 .landing .hero-install-sub {
@@ -848,7 +846,12 @@
   }
 }
 
-.landing .term-copy {
+/* ---- copy affordance ----
+   One button for every copy-to-clipboard on the page, on the terminal panels
+   and on the install block alike. Both sit on the dark surface, so the button
+   is drawn once against that surface rather than twice in two styles. */
+.landing .copy-btn {
+  flex: none;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: var(--text-ash);
@@ -862,12 +865,12 @@
     border-color 140ms ease;
 }
 
-.landing .term-copy:hover {
+.landing .copy-btn:hover {
   color: var(--on-dark);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.landing .term-copy.ok {
+.landing .copy-btn.ok {
   color: var(--live-dark);
   border-color: var(--live-dark);
 }
@@ -911,71 +914,122 @@
   border-bottom-color: var(--ink);
 }
 
-/* ---- install ---- */
-.landing .install-block {
-  background: var(--surface-card);
+/* ---- install block ----
+   The install command is a shell command, so it wears the same dark terminal
+   material as the panels further down the page instead of the near-canvas
+   gray it used to sit on: on a cream page that gray left the one thing the
+   reader is meant to act on as the faintest surface in the hero.
+
+   The method switcher and the copy button live inside the block's header
+   rather than on a rail above it, so the control and the surface it controls
+   read as a single object. */
+.landing .install {
+  background: var(--surface-dark);
+  color: var(--on-dark);
   border-radius: var(--radius-card);
-  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.landing .install-head {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  /* Tall enough for the two-line install script, so switching to the
-     one-line homebrew or cargo tab never moves the page under the cursor. */
-  min-height: 85px;
+  align-items: center;
+  gap: 12px;
+  padding-right: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.landing .install-block pre {
-  margin: 0;
-  flex: 1;
-  white-space: pre;
+/* The strip scrolls rather than wrapping: a stranded second row holding a
+   lone `cargo` tab would break the block's header in two. */
+.landing .install-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow-x: auto;
-  font-family: var(--font-mono);
-  font-size: var(--size-caption);
-  line-height: 1.8;
-  color: var(--text-ink);
+  scrollbar-width: none;
 }
 
-.landing .install-block pre .pmt {
-  color: var(--live);
+.landing .install-tabs::-webkit-scrollbar {
+  display: none;
 }
 
-.landing .copybtn {
+.landing .install-tab {
   font-family: var(--font-mono);
   font-size: var(--size-caption);
   background: transparent;
   border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 12px 14px 10px;
   cursor: pointer;
-  padding: 0 2px;
-  color: var(--text-ash);
   white-space: nowrap;
-  transition: color 140ms ease;
+  color: var(--text-ash);
+  transition:
+    color 140ms ease,
+    border-color 140ms ease;
 }
 
-.landing .copybtn:hover {
-  color: var(--text-ink);
+.landing .install-tab:hover {
+  color: var(--on-dark);
 }
 
-.landing .copybtn.ok {
-  color: var(--live);
+/* Green marks the selected method for the same reason it marks the prompt
+   and the copied state: on this page it is the "live" ink, nothing else. */
+.landing .install-tab[aria-selected="true"] {
+  color: var(--on-dark);
+  font-weight: var(--weight-medium);
+  border-bottom-color: var(--live-dark);
 }
 
-@media (max-width: 560px) {
-  /* Three tabs must share one row: smaller type beats a stranded second
-     line with a lone `cargo` tab. */
-  .landing .hero-install .tab {
-    font-size: 13px;
-    padding: 9px 8px;
+/* Every method occupies this one cell. `minmax(0, 1fr)` stops the longest
+   command from widening the column past the block, so the overflow below
+   resolves to a scroll inside the block rather than a scrollbar on the page. */
+.landing .install-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 16px 20px;
+}
+
+.landing .install-cmd {
+  grid-area: 1 / 1;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--on-dark);
+  white-space: pre;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  visibility: hidden;
+}
+
+.landing .install-cmd[data-on] {
+  visibility: visible;
+}
+
+.landing .install-cmd .pmt {
+  color: var(--live-dark);
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .landing .install-tab {
+    font-size: 12px;
+    padding: 11px 10px 9px;
   }
 
-  /* On a narrow measure the command wraps rather than clipping: a ragged
-     but complete command beats a truncated one with no scroll hint. */
-  .landing .install-block pre {
+  /* On a narrow measure the command wraps rather than clipping: a ragged but
+     complete command beats a truncated one with no hint that it continues.
+     Stacking in one grid cell means the wrap costs no layout stability. */
+  .landing .install-cmd {
+    font-size: 12.5px;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
 
-  .landing .install-block {
-    min-height: 0;
+  .landing .install-body {
+    padding: 14px 16px;
   }
 }
 
