@@ -37,9 +37,9 @@ export const gallery: Array<{
 ];
 
 /**
- * What RimZ does, as plain grouped lists. Grouping by what the reader is trying
- * to do keeps eleven capabilities scannable where a flat list of eleven, or a
- * wall of eleven cards, would not be.
+ * The case for RimZ, as plain grouped lists. Grouping by what the reader is
+ * trying to do keeps twelve capabilities scannable where a flat list of twelve,
+ * or a wall of twelve cards, would not be.
  */
 export const featureGroups: Array<{
   title: string;
@@ -352,53 +352,3 @@ export const installMethods: InstallMethod[] = [
   { id: 'homebrew', label: 'homebrew', lines: ['brew install rimio-ai/rimz/rimz'] },
   { id: 'cargo', label: 'cargo', lines: ['cargo install --locked rimz'] },
 ];
-
-/**
- * Agent support, grouped by tier. The full per-capability grid lives in the
- * docs; reproducing it here buries the two agents that matter most.
- */
-export const agentTiers: Array<{
-  tier: string;
-  /** Drives type size and colour, so the two daily drivers read first. */
-  weight: 'primary' | 'secondary' | 'tertiary';
-  agents: string[];
-  note: string;
-}> = [
-  {
-    tier: 'Supported',
-    weight: 'primary',
-    agents: ['Claude Code', 'Codex'],
-    note: 'The daily drivers, and the best experience today. Every surface is wired: live state, context health, cost and history, account windows, blocking asks, and the subagent tree.',
-  },
-  {
-    tier: 'Alpha',
-    weight: 'secondary',
-    agents: ['Pi', 'OpenCode'],
-    note: 'Wired end to end and close behind, with less mileage on them so far.',
-  },
-  {
-    tier: 'Experimental',
-    weight: 'tertiary',
-    agents: [
-      'Antigravity',
-      'Copilot',
-      'Droid',
-      'Cursor',
-      'Amp',
-      'Kiro',
-      'Qwen',
-      'Kimi',
-      'Grok',
-    ],
-    note: 'Wired and tested against each documented surface, but not yet dogfooded enough to promote. Expect the occasional bug. Any of them still mostly just works.',
-  },
-];
-
-/**
- * Release-stage caveat. Honest, but it is not a reason to adopt RimZ, so it
- * reads as a closing footnote rather than a headline or a section of its own.
- */
-export const statusNotice = {
-  title: 'Alpha, and dogfooded hard.',
-  body: 'The fleet behind the repository runs 50 to 100 concurrent agents across 10 to 30 worktrees daily, so RimZ is ready for personal use today. Commands, flags, and output formats can still change between releases; wait for 1.0 if you need a stable interface.',
-};

@@ -12,13 +12,12 @@ import {
 } from '@/lib/shared';
 import { latestVersion } from '@/lib/versions';
 import { Gallery, InstallTabs, SceneTabs } from '@/components/landing/interactive';
+import { agentMarks } from '@/components/landing/agent-logos';
 import {
-  agentTiers,
   featureGroups,
   gallery,
   installMethods,
   scenes,
-  statusNotice,
 } from '@/components/landing/content';
 
 const sans = Geist({
@@ -35,6 +34,7 @@ const mono = JetBrains_Mono({
 });
 
 const title = 'RimZ: the control room for your coding agents';
+const heading = 'The control room for your coding agents';
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -58,12 +58,6 @@ const slides = gallery.map((item) => ({
   height: item.height,
 }));
 
-const hookSteps: Array<{ command: string; note: string }> = [
-  { command: 'rimz hooks install --dry-run', note: 'a unified diff, writes nothing' },
-  { command: 'rimz hooks install', note: 'every agent found on the machine' },
-  { command: 'rimz doctor', note: 'verify backend, hooks, and room health' },
-];
-
 export default function HomePage() {
   const docsUrl = withBasePath(`${docsRoute}/`);
   const installUrl = withBasePath(`${docsRoute}/getting-started/installation/`);
@@ -74,7 +68,7 @@ export default function HomePage() {
       <header className="nav">
         <div className="nav-inner">
           <Link className="wordmark" href="/">
-            rimz
+            RimZ
             <span aria-hidden="true" className="cursor" />
           </Link>
           <nav className="nav-right">
@@ -91,18 +85,19 @@ export default function HomePage() {
       <main>
         {/* ---------- hero ---------- */}
         <section className="hero wrap" id="top">
-          <h1>The control room for your coding agents.</h1>
+          <h1>{heading}</h1>
           <p className="sub">
-            One human, tens of coding agents, one Zellij or tmux room. Every agent reads at a
+            Realtime dashboard for harnessing agentic coding: one human and tens of agents working
+            together in one Zellij or tmux room, where everything about every agent reads at a
             glance.
           </p>
-          <div className="hero-cta">
-            <a className="btn btn-primary" href={productGitHubUrl}>
-              ★ Star on GitHub
-            </a>
-            <Link className="btn btn-secondary" href={docsUrl}>
-              Read the docs →
-            </Link>
+
+          <div className="hero-install">
+            <InstallTabs methods={installMethods} />
+            <p className="hero-install-sub">
+              MIT licensed, written in Rust, and it runs the room on Zellij or tmux.{' '}
+              <Link href={installUrl}>Installation guide</Link>
+            </p>
           </div>
 
           <div className="shot-frame">
@@ -110,46 +105,30 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ---------- works with ---------- */}
-        <section className="section section-tight wrap">
-          <div className="works">
-            <span className="item">
-              <span aria-hidden="true" className="tick">
-                ✓
-              </span>{' '}
-              Claude Code
-            </span>
-            <span className="item">
-              <span aria-hidden="true" className="tick">
-                ✓
-              </span>{' '}
-              Codex
-            </span>
-            <span className="item">
-              <span aria-hidden="true" className="tick alpha">
-                ◐
-              </span>{' '}
-              Pi
-            </span>
-            <span className="item">
-              <span aria-hidden="true" className="tick alpha">
-                ◐
-              </span>{' '}
-              OpenCode
-            </span>
-            <a className="item rest" href="#agents">
-              + 9 more
-            </a>
-          </div>
+        {/* ---------- supported agents ----------
+            Vendor marks only, all one ink. A row of thirteen brand palettes
+            would shout louder than anything RimZ has to say, and the point of
+            the strip is recognition, not decoration. */}
+        <section className="section section-tight wrap" id="agents">
+          <ul className="agent-marks">
+            {agentMarks.map(({ name, tier, Mark }) => (
+              <li className={`agent-mark ${tier}`} key={name}>
+                <Mark className="agent-glyph" />
+                <span className="agent-name">{name}</span>
+              </li>
+            ))}
+          </ul>
           <p className="works-sub">
             RimZ wraps the agents you already run. They run stock, with your flags and your config;
-            the official command-line, web, desktop, and mobile apps all keep working.
+            the official command-line, web, desktop, and mobile apps all keep working. Claude Code
+            and Codex are the supported daily drivers, Pi and OpenCode are alpha, and the rest are
+            experimental: <Link href={agentSupportUrl}>per-agent detail</Link>.
           </p>
         </section>
 
-        {/* ---------- what it does ---------- */}
+        {/* ---------- why rimz ---------- */}
         <section className="section wrap">
-          <h2 className="section-label">What it does</h2>
+          <h2 className="section-label">Why RimZ?</h2>
 
           <div className="fgroups">
             {featureGroups.map((group) => (
@@ -166,83 +145,11 @@ export default function HomePage() {
               </section>
             ))}
           </div>
-        </section>
 
-        {/* ---------- how it works ---------- */}
-        <section className="section wrap">
-          <h2 className="section-label">How it works</h2>
-          <div className="layer term-layer">
-            <span className="layer-label">
-              <b>terminal</b>: ghostty, iterm2, warp, kitty, vscode
-            </span>
-            <div className="layer mux-layer">
-              <span className="layer-label">
-                <b>zellij or tmux</b>: your keybinds, your layout
-              </span>
-              <div className="diagram">
-                <div className="sources">
-                  <div className="node">
-                    <span className="tag">agents</span>
-                    <h4>claude, codex, pi</h4>
-                    <div className="meta">
-                      hooks, transcripts, oauth
-                      <br />
-                      statusline, extensions
-                    </div>
-                  </div>
-                  <div className="node">
-                    <span className="tag">your repo and box</span>
-                    <h4>git status, /proc</h4>
-                    <div className="meta">churn, diffs, process stats</div>
-                  </div>
-                </div>
-                <div className="arrow">
-                  <span aria-hidden="true" className="g">
-                    →
-                  </span>
-                  <span className="cap">report</span>
-                </div>
-                <div className="node core">
-                  <span className="tag">engine</span>
-                  <h4>rimz</h4>
-                  <div className="meta">fuses every channel into one live picture</div>
-                </div>
-                <div className="arrow">
-                  <span aria-hidden="true" className="g">
-                    →
-                  </span>
-                  <span className="cap">renders</span>
-                </div>
-                <div className="node">
-                  <span className="tag">output</span>
-                  <h4>sidebar</h4>
-                  <div className="meta">the whole fleet, triaged and live</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="hiw-notes">
-            <div className="row">
-              <span>
-                <b>Agents report themselves.</b>{' '}
-                Sessions, tool calls, live status, and blocking questions arrive the moment they
-                happen, through each agent&rsquo;s own hooks, transcripts, and APIs.
-              </span>
-            </div>
-            <div className="row">
-              <span>
-                <b>RimZ drives the panes.</b>{' '}
-                Messages, steering, and headless runs land as keystrokes in the agent&rsquo;s own
-                pane, so every agent runs its stock CLI in a full terminal, exactly as if you typed.
-              </span>
-            </div>
-            <div className="row">
-              <span>
-                <b>RimZ fuses every channel.</b>{' '}
-                Agent events, git churn, process stats, and account state combine into one live
-                picture, and the sidebar renders it.
-              </span>
-            </div>
+          <div className="section-cta">
+            <Link className="btn btn-secondary" href={docsUrl}>
+              Read the documentation →
+            </Link>
           </div>
         </section>
 
@@ -255,67 +162,6 @@ export default function HomePage() {
             agents take messages, and a schedule fires the whole thing while you sleep.
           </p>
           <SceneTabs scenes={scenes} />
-        </section>
-
-        {/* ---------- install ---------- */}
-        <section className="section wrap">
-          <h2 className="section-label">Install</h2>
-          <div className="install-split">
-            <div className="install-main">
-              <InstallTabs methods={installMethods} />
-              <p className="install-sub">
-                MIT licensed, written in Rust, and it runs the room on Zellij or tmux.{' '}
-                <Link href={installUrl}>Installation guide</Link>
-              </p>
-            </div>
-            <div className="install-hooks">
-              <h3>Then let the agents report in</h3>
-              <p>
-                Hooks are how agents reach the room. The first run offers to install them with a
-                diff preview, and the install is additive, so your existing hooks stay.
-              </p>
-              <ul className="steps">
-                {hookSteps.map((step) => (
-                  <li key={step.command}>
-                    <code>{step.command}</code>
-                    <span>{step.note}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* ---------- agents ---------- */}
-        <section className="section wrap" id="agents">
-          <h2 className="section-label">Agent support</h2>
-          <div className="tiers">
-            {agentTiers.map((tier) => (
-              <article className={`tier ${tier.weight}`} key={tier.tier}>
-                <h3 className="tier-label">{tier.tier}</h3>
-                <ul className="tier-agents">
-                  {tier.agents.map((agent) => (
-                    <li key={agent}>{agent}</li>
-                  ))}
-                </ul>
-                <p className="tier-note">{tier.note}</p>
-              </article>
-            ))}
-          </div>
-          <p className="install-sub">
-            RimZ tracks each agent&rsquo;s most recent release; older CLI versions are not supported.
-            Run <code>rimz coverage</code> to print the live capability grid on your own machine, or
-            read the <Link href={agentSupportUrl}>per-agent detail</Link>.
-          </p>
-        </section>
-
-        {/* ---------- release-stage notice ---------- */}
-        <section className="section-tight wrap">
-          <aside className="notice">
-            <p>
-              <b>{statusNotice.title}</b> {statusNotice.body}
-            </p>
-          </aside>
         </section>
       </main>
 

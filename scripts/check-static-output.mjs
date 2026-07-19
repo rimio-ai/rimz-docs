@@ -63,13 +63,22 @@ assert.ok(
 const homeHtml = await readFile(path.join(outputRoot, 'index.html'), 'utf8');
 assert.ok(!homeHtml.includes('http-equiv="refresh"'), 'the homepage still uses a meta refresh');
 assert.ok(
-  homeHtml.includes('The control room for your coding agents.'),
+  homeHtml.includes('The control room for your coding agents'),
   'the homepage is missing the product heading',
 );
-for (const section of ['What it does', 'How it works', 'Everyday moves', 'Install', 'Agent support']) {
+for (const section of ['Why RimZ?', 'Everyday moves']) {
   assert.ok(homeHtml.includes(section), `the homepage is missing the ${section} section`);
 }
 assert.ok(homeHtml.includes('id="agents"'), 'the homepage dropped the #agents anchor');
+// Install moved into the hero, so the commands must render above the fold
+// rather than in a section of their own.
+for (const method of ['install.sh | sh', 'brew install', 'cargo install']) {
+  assert.ok(homeHtml.includes(method), `the hero is missing the ${method} install method`);
+}
+assert.ok(
+  homeHtml.includes('agent-mark supported') && homeHtml.includes('agent-mark experimental'),
+  'the homepage is missing the supported-agent marks',
+);
 
 const mainHtml = await readFile(path.join(outputRoot, 'docs', 'main', 'index.html'), 'utf8');
 assert.ok(mainHtml.includes('name="robots" content="noindex, follow"'), 'main docs are indexable');
