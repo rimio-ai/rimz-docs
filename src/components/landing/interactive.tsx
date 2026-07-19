@@ -15,28 +15,6 @@ function useCopy(): [boolean, (text: string) => void] {
   return [copied, copy];
 }
 
-/** Single-line install pill used in the hero. */
-export function CopyLine({ command, prompt = '$' }: { command: string; prompt?: string }) {
-  const [copied, copy] = useCopy();
-
-  return (
-    <div className="copyline">
-      <code>
-        <span className="pmt">{prompt} </span>
-        {command}
-      </code>
-      <button
-        aria-label="Copy command"
-        className={copied ? 'copybtn ok' : 'copybtn'}
-        onClick={() => copy(command)}
-        type="button"
-      >
-        {copied ? '[copied]' : '[copy]'}
-      </button>
-    </div>
-  );
-}
-
 export type CodeToken = { text: string; kind?: 'cmd' | 'flag' | 'str' };
 export type CodeLine = { tokens: CodeToken[]; comment?: string };
 

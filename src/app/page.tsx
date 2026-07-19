@@ -3,7 +3,7 @@ import './landing.css';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { JetBrains_Mono } from 'next/font/google';
+import { Geist, JetBrains_Mono } from 'next/font/google';
 import {
   appDescription,
   docsRoute,
@@ -12,18 +12,21 @@ import {
   withBasePath,
 } from '@/lib/shared';
 import { latestVersion } from '@/lib/versions';
-import { CopyLine, InstallTabs, SceneTabs, Terminal } from '@/components/landing/interactive';
+import { InstallTabs, SceneTabs } from '@/components/landing/interactive';
 import {
-  cellGlyph,
-  features,
+  agentTiers,
+  capabilities,
   installMethods,
-  matrixColumnNotes,
-  matrixColumns,
-  matrixRows,
   scenes,
+  showcase,
   statusCells,
-  wordmarkArt,
 } from '@/components/landing/content';
+
+const sans = Geist({
+  subsets: ['latin'],
+  variable: '--font-rimz-sans',
+  display: 'swap',
+});
 
 const mono = JetBrains_Mono({
   subsets: ['latin'],
@@ -32,7 +35,7 @@ const mono = JetBrains_Mono({
   display: 'swap',
 });
 
-const title = 'RimZ — The control room for your coding agents';
+const title = 'RimZ: the control room for your coding agents';
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -46,47 +49,23 @@ export const metadata: Metadata = {
   },
 };
 
-const heroShot = withBasePath(`/docs-assets/${latestVersion.id}/rimz-full.png`);
-const galleryShot = withBasePath(`/docs-assets/${latestVersion.id}/rimz-gallery.png`);
+const assetBase = `/docs-assets/${latestVersion.id}`;
+const heroShot = withBasePath(`${assetBase}/rimz-full.png`);
 
-const hooksLines = [
-  {
-    tokens: [
-      { text: 'rimz', kind: 'cmd' as const },
-      { text: ' hooks install ' },
-      { text: '--dry-run', kind: 'flag' as const },
-    ],
-    comment: '# a unified diff; writes nothing',
-  },
-  {
-    tokens: [
-      { text: 'rimz', kind: 'cmd' as const },
-      { text: ' hooks install' },
-    ],
-    comment: '# every agent found on the machine',
-  },
-  {
-    tokens: [
-      { text: 'rimz', kind: 'cmd' as const },
-      { text: ' doctor' },
-    ],
-    comment: '# verify backend, hooks, room health',
-  },
+const hookSteps: Array<{ command: string; note: string }> = [
+  { command: 'rimz hooks install --dry-run', note: 'a unified diff, writes nothing' },
+  { command: 'rimz hooks install', note: 'every agent found on the machine' },
+  { command: 'rimz doctor', note: 'verify backend, hooks, and room health' },
 ];
-
-const hooksRaw = [
-  'rimz hooks install --dry-run    # per-agent summary plus a unified diff; writes nothing',
-  'rimz hooks install              # every agent detected on the machine',
-  'rimz doctor                     # verify backend, hooks, and room health',
-].join('\n');
 
 export default function HomePage() {
   const docsUrl = withBasePath(`${docsRoute}/`);
   const installUrl = withBasePath(`${docsRoute}/getting-started/installation/`);
   const agentSupportUrl = withBasePath(`${docsRoute}/reference/agent-support/`);
+  const fleetUrl = withBasePath(`${docsRoute}/agents/fleet/`);
 
   return (
-    <div className={`landing ${mono.variable}`}>
+    <div className={`landing ${sans.variable} ${mono.variable}`}>
       <header className="nav">
         <div className="nav-inner">
           <Link className="wordmark" href="/">
@@ -97,9 +76,6 @@ export default function HomePage() {
             <Link className="nav-link" href={docsUrl}>
               docs
             </Link>
-            <span aria-hidden="true" className="sep">
-              ·
-            </span>
             <a className="nav-link" href={productGitHubUrl}>
               github
             </a>
@@ -110,18 +86,12 @@ export default function HomePage() {
       <main>
         {/* ---------- hero ---------- */}
         <section className="hero wrap" id="top">
-          <p className="eyebrow">
-            <b>alpha</b> · moving fast, and built with RimZ on RimZ
-          </p>
+          <p className="eyebrow">alpha, moving fast</p>
           <h1>The control room for your coding agents.</h1>
           <p className="sub">
-            RimZ is a realtime dashboard for harnessing agentic coding: one human and tens of agents
-            working together in one Zellij or tmux room, where everything about every agent reads at
-            a glance.
+            One human, tens of coding agents, one Zellij or tmux room. Every agent reads at a
+            glance.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <CopyLine command="brew install rimio-ai/rimz/rimz" />
-          </div>
           <div className="hero-cta">
             <a className="btn btn-primary" href={productGitHubUrl}>
               ★ Star on GitHub
@@ -131,7 +101,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="shot-frame">
+          <figure className="shot-frame reveal">
             <Image
               alt="A RimZ room in a Zellij session: a sidebar at left triages a fleet of coding agents, each a live card showing model, working state, token mix, and live dollar cost, while agents work in their own panes."
               className="shot"
@@ -140,15 +110,15 @@ export default function HomePage() {
               src={heroShot}
               width={5344}
             />
-            <p className="shot-cap">
-              One room — the sidebar triages the fleet on the left, agents work in their own panes,
-              and spend tracks below.
-            </p>
-          </div>
+            <figcaption className="shot-cap">
+              The sidebar triages the fleet on the left, agents work in their own panes, and spend
+              tracks below.
+            </figcaption>
+          </figure>
         </section>
 
         {/* ---------- works with ---------- */}
-        <section className="section wrap">
+        <section className="section section-tight wrap">
           <div className="works">
             <span className="item">
               <span aria-hidden="true" className="tick">
@@ -156,17 +126,11 @@ export default function HomePage() {
               </span>{' '}
               Claude Code
             </span>
-            <span aria-hidden="true" className="dot">
-              ·
-            </span>
             <span className="item">
               <span aria-hidden="true" className="tick">
                 ✓
               </span>{' '}
               Codex
-            </span>
-            <span aria-hidden="true" className="dot">
-              ·
             </span>
             <span className="item">
               <span aria-hidden="true" className="tick alpha">
@@ -174,20 +138,14 @@ export default function HomePage() {
               </span>{' '}
               Pi
             </span>
-            <span aria-hidden="true" className="dot">
-              ·
-            </span>
             <span className="item">
               <span aria-hidden="true" className="tick alpha">
                 ◐
               </span>{' '}
               OpenCode
             </span>
-            <span aria-hidden="true" className="dot">
-              ·
-            </span>
             <a className="item rest" href="#agents">
-              + 9 more, experimental
+              + 9 more
             </a>
           </div>
           <p className="works-sub">
@@ -196,62 +154,69 @@ export default function HomePage() {
           </p>
         </section>
 
-        {/* ---------- 01 what it does ---------- */}
+        {/* ---------- what it does ---------- */}
         <section className="section wrap">
-          <h2 className="section-label">
-            <span className="idx">01</span> What it does
-          </h2>
-          <div className="features">
-            {features.map((feature) => (
-              <article className="feature" key={feature.label}>
-                <div className="label">{feature.label}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.body}</p>
+          <h2 className="section-label">What it does</h2>
+
+          <div className="showcase">
+            {showcase.map((item) => (
+              <article className={item.tall ? 'show-row tall reveal' : 'show-row reveal'} key={item.title}>
+                <div className="show-copy">
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </div>
+                <div className="show-shot">
+                  <Image
+                    alt={item.alt}
+                    className="shot"
+                    height={item.height}
+                    src={withBasePath(`${assetBase}/${item.shot}`)}
+                    width={item.width}
+                  />
+                </div>
               </article>
             ))}
           </div>
-          <div className="shot-frame">
-            <Image
-              alt="The RimZ sidebar in detail: agent cards with model and effort, context health bars, token mix, live cost, and a provider dashboard tracking plan and budget windows."
-              className="shot"
-              height={3044}
-              src={galleryShot}
-              width={5344}
-            />
-            <p className="shot-cap">
-              Working state and task, model and effort, context health, live token stats and dollar
-              cost, and the subagent tree — all at a glance.
-            </p>
+
+          <div className="caps">
+            {capabilities.map((item) => (
+              <article className="cap-row" key={item.title}>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </article>
+            ))}
           </div>
+          <p className="more">
+            Worktrees, agent-to-agent messaging, headless scripting, auto-continue, and phone
+            control are all covered in <Link href={fleetUrl}>the fleet guide</Link>.
+          </p>
         </section>
 
-        {/* ---------- 02 how it works ---------- */}
+        {/* ---------- how it works ---------- */}
         <section className="section wrap">
-          <h2 className="section-label">
-            <span className="idx">02</span> How it works
-          </h2>
+          <h2 className="section-label">How it works</h2>
           <div className="layer term-layer">
             <span className="layer-label">
-              <b>terminal</b> — ghostty · iterm2 · warp · kitty · vscode
+              <b>terminal</b>: ghostty, iterm2, warp, kitty, vscode
             </span>
             <div className="layer mux-layer">
               <span className="layer-label">
-                <b>zellij / tmux</b> — your keybinds, your layout
+                <b>zellij or tmux</b>: your keybinds, your layout
               </span>
               <div className="diagram">
                 <div className="sources">
                   <div className="node">
                     <span className="tag">agents</span>
-                    <h4>claude · codex · pi · opencode · …</h4>
+                    <h4>claude, codex, pi</h4>
                     <div className="meta">
-                      hooks · transcripts (.jsonl) · oauth api
+                      hooks, transcripts, oauth
                       <br />
-                      statusline · app-server · extensions
+                      statusline, extensions
                     </div>
                   </div>
                   <div className="node">
-                    <span className="tag">your repo &amp; box</span>
-                    <h4>git status · /proc</h4>
+                    <span className="tag">your repo and box</span>
+                    <h4>git status, /proc</h4>
                     <div className="meta">churn, diffs, process stats</div>
                   </div>
                 </div>
@@ -262,10 +227,7 @@ export default function HomePage() {
                   <span className="cap">report</span>
                 </div>
                 <div className="node core">
-                  <span className="tag">
-                    <span aria-hidden="true" className="live-dot" />
-                    engine
-                  </span>
+                  <span className="tag">engine</span>
                   <h4>rimz</h4>
                   <div className="meta">fuses every channel into one live picture</div>
                 </div>
@@ -278,49 +240,39 @@ export default function HomePage() {
                 <div className="node">
                   <span className="tag">output</span>
                   <h4>sidebar</h4>
-                  <div className="meta">the whole fleet, triaged &amp; live</div>
+                  <div className="meta">the whole fleet, triaged and live</div>
                 </div>
               </div>
             </div>
           </div>
           <div className="hiw-notes">
             <div className="row">
-              <span aria-hidden="true" className="mk">
-                [+]
-              </span>
               <span>
-                <b>Agents report themselves</b> — sessions, tool calls, live status, and blocking
-                questions arrive the moment they happen, through each agent&rsquo;s own hooks,
-                transcripts, and APIs.
+                <b>Agents report themselves.</b>{' '}
+                Sessions, tool calls, live status, and blocking questions arrive the moment they
+                happen, through each agent&rsquo;s own hooks, transcripts, and APIs.
               </span>
             </div>
             <div className="row">
-              <span aria-hidden="true" className="mk">
-                [+]
-              </span>
               <span>
-                <b>RimZ drives the panes</b> — messages, steering, and headless runs land as
-                keystrokes in the agent&rsquo;s own pane, so every agent runs its stock CLI in a full
-                terminal, exactly as if you typed.
+                <b>RimZ drives the panes.</b>{' '}
+                Messages, steering, and headless runs land as keystrokes in the agent&rsquo;s own
+                pane, so every agent runs its stock CLI in a full terminal, exactly as if you typed.
               </span>
             </div>
             <div className="row">
-              <span aria-hidden="true" className="mk">
-                [+]
-              </span>
               <span>
-                <b>RimZ fuses every channel</b> — agent events, git churn, process stats, and account
-                state combine into one live picture, and the sidebar renders it.
+                <b>RimZ fuses every channel.</b>{' '}
+                Agent events, git churn, process stats, and account state combine into one live
+                picture, and the sidebar renders it.
               </span>
             </div>
           </div>
         </section>
 
-        {/* ---------- 03 everyday moves ---------- */}
+        {/* ---------- everyday moves ---------- */}
         <section className="section wrap">
-          <h2 className="section-label">
-            <span className="idx">03</span> Everyday moves
-          </h2>
+          <h2 className="section-label">Everyday moves</h2>
           <p className="lede">
             These run from any pane in the room, and from any script or CI job that reaches it. They
             compose: a profile becomes a team, the team lands in a worktree, the worktree&rsquo;s
@@ -329,95 +281,63 @@ export default function HomePage() {
           <SceneTabs scenes={scenes} />
         </section>
 
-        {/* ---------- 04 install ---------- */}
+        {/* ---------- install ---------- */}
         <section className="section wrap">
-          <h2 className="section-label">
-            <span className="idx">04</span> Install
-          </h2>
-          <InstallTabs methods={installMethods} />
-          <p className="install-sub">
-            Then open a room with <code>rimz</code> and launch agents as you always do. Hooks are how
-            agents report to the room: the first run offers to install them with a diff preview, and
-            the install is additive, so your existing hooks stay.
-          </p>
-          <div style={{ marginTop: '20px' }}>
-            <Terminal lines={hooksLines} raw={hooksRaw} title="~/code/query-engine" />
+          <h2 className="section-label">Install</h2>
+          <div className="install-split">
+            <div className="install-main">
+              <InstallTabs methods={installMethods} />
+              <p className="install-sub">
+                MIT licensed, written in Rust, and it runs the room on Zellij or tmux.{' '}
+                <Link href={installUrl}>Installation guide</Link>
+              </p>
+            </div>
+            <div className="install-hooks">
+              <h3>Then let the agents report in</h3>
+              <p>
+                Hooks are how agents reach the room. The first run offers to install them with a
+                diff preview, and the install is additive, so your existing hooks stay.
+              </p>
+              <ul className="steps">
+                {hookSteps.map((step) => (
+                  <li key={step.command}>
+                    <code>{step.command}</code>
+                    <span>{step.note}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <p className="install-sub">
-            <span className="ok">●</span> MIT licensed · Rust · Zellij or tmux runs the room ·{' '}
-            <Link href={installUrl}>installation guide</Link>
-          </p>
         </section>
 
-        {/* ---------- 05 agents ---------- */}
+        {/* ---------- agents ---------- */}
         <section className="section wrap" id="agents">
-          <h2 className="section-label">
-            <span className="idx">05</span> Agent compatibility
-          </h2>
-          <p className="lede">
-            <span className="em">Claude Code and Codex are the daily drivers</span> and give the best
-            experience today. <span className="em">Pi and OpenCode are in alpha</span> — wired end to
-            end and close behind. Every other agent is experimental: wired and tested against its
-            documented surface, but not yet dogfooded enough, so expect the occasional bug. Any of
-            them still mostly just works.
-          </p>
-          <div className="matrix-scroll">
-            <table className="matrix">
-              <thead>
-                <tr>
-                  <th className="agent" scope="col">
-                    Agent
-                  </th>
-                  <th scope="col" style={{ textAlign: 'left' }}>
-                    Status
-                  </th>
-                  {matrixColumns.map((column) => (
-                    <th key={column} scope="col">
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {matrixRows.map((row) => (
-                  <tr className={`tier-${row.tier}`} key={row.agent}>
-                    <td className="agent">{row.agent}</td>
-                    <td className="status">
-                      <span aria-hidden="true" className="pip">
-                        ●
-                      </span>
-                      {row.status}
-                    </td>
-                    {row.cells.map((cell, index) => (
-                      <td className={`cell ${cell}`} key={matrixColumns[index]}>
-                        {cellGlyph[cell]}
-                      </td>
+          <h2 className="section-label">Agent support</h2>
+          <div className="tiers">
+            {agentTiers.map((tier) => (
+              <article className="tier" key={tier.tier}>
+                <div className="tier-head">
+                  <h3>{tier.tier}</h3>
+                  <ul className="tier-agents">
+                    {tier.agents.map((agent) => (
+                      <li key={agent}>{agent}</li>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="matrix-legend">● full · ◐ partial · ✗ unsupported by the RimZ adapter</p>
-          <ul className="matrix-cols">
-            {matrixColumnNotes.map((note) => (
-              <li key={note.term}>
-                <b>{note.term}</b> — {note.note}
-              </li>
+                  </ul>
+                </div>
+                <p>{tier.note}</p>
+              </article>
             ))}
-          </ul>
+          </div>
           <p className="install-sub">
             RimZ tracks each agent&rsquo;s most recent release; older CLI versions are not supported.
-            Run <code>rimz coverage</code> to print the live grid on your own machine, with a reason
-            on every cell · <Link href={agentSupportUrl}>per-agent detail</Link>
+            Run <code>rimz coverage</code> to print the live capability grid on your own machine, or
+            read the <Link href={agentSupportUrl}>per-agent detail</Link>.
           </p>
         </section>
 
-        {/* ---------- 06 project status ---------- */}
+        {/* ---------- project status ---------- */}
         <section className="section wrap">
-          <h2 className="section-label">
-            <span className="idx">06</span> Project status
-          </h2>
+          <h2 className="section-label">Project status</h2>
           <div className="status-grid">
             {statusCells.map((cell) => (
               <article className="status-cell" key={cell.title}>
@@ -432,7 +352,7 @@ export default function HomePage() {
       <footer className="foot">
         <div className="foot-cta">
           <h2>Run the room.</h2>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="foot-buttons">
             <a className="btn btn-primary" href={productGitHubUrl}>
               ★ Star on GitHub
             </a>
@@ -440,9 +360,6 @@ export default function HomePage() {
               Read the docs →
             </Link>
           </div>
-        </div>
-        <div className="foot-art">
-          <pre aria-label="rimz">{wordmarkArt}</pre>
         </div>
         <div className="foot-bottom">
           <span>© {new Date().getFullYear()} RimZ · MIT</span>

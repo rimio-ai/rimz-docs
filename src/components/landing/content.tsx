@@ -1,66 +1,58 @@
 import type { InstallMethod, Scene } from './interactive';
 
-/** The "what it does" grid, tracking the feature list in the RimZ README. */
-export const features: Array<{ label: string; title: string; body: string }> = [
+/**
+ * The three features that carry the pitch, each paired with a detail crop.
+ * `shot` names a file inside the versioned docs-asset directory.
+ */
+export const showcase: Array<{
+  title: string;
+  body: string;
+  shot: string;
+  alt: string;
+  width: number;
+  height: number;
+  tall?: boolean;
+}> = [
   {
-    label: 'lightweight',
-    title: 'Extremely lightweight.',
-    body: 'A single binary that hooks the agents you already run, inside the Zellij or tmux you already use: same keybinds, same terminal, zero learning curve.',
-  },
-  {
-    label: 'dashboard',
-    title: 'Realtime harness dashboard.',
-    body: 'Working state and task, model and effort, context health and compactions, live token stats and dollar cost, and the subagent tree.',
-  },
-  {
-    label: 'attention',
     title: 'Attention, routed.',
-    body: 'One glance at the cockpit line reads the whole fleet, the column below arrives already triaged, and one click drops you into the pane that is waiting.',
+    body: 'One glance at the cockpit line reads the whole fleet. The column below arrives already triaged, and one click drops you into the pane that is waiting on you.',
+    shot: 'rimz-sidebar.png',
+    alt: 'The RimZ sidebar triaging a fleet of agents, each card showing model, working state, context health, and live cost.',
+    width: 1042,
+    height: 2310,
+    tall: true,
   },
   {
-    label: 'spend',
+    title: 'Every agent, read at a glance.',
+    body: 'Working state and current task, model and effort, context health and compactions, live token stats and dollar cost, and the subagent tree.',
+    shot: 'rimz-card.png',
+    alt: 'A single RimZ agent card in detail, showing model and effort, a context health bar, token mix, and running cost.',
+    width: 1236,
+    height: 574,
+  },
+  {
     title: 'Know your pace.',
-    body: 'Spending and token insight for today, week, and month, with plan and 5h/7d budget bars for providers that expose those account surfaces.',
+    body: 'Spending and token insight for today, this week, and this month, with plan and budget-window bars for every provider that exposes them.',
+    shot: 'rimz-stats.png',
+    alt: 'The RimZ spend dashboard, showing token and dollar totals over time alongside plan and rate-limit budget bars.',
+    width: 2512,
+    height: 2008,
+  },
+];
+
+/** Supporting capabilities, rendered as a divided list rather than a card wall. */
+export const capabilities: Array<{ title: string; body: string }> = [
+  {
+    title: 'Teams, cross-model by design',
+    body: 'Pair a planner on one model with a coder on another and launch them as one team, each role on the model best at its job, in an isolated worktree.',
   },
   {
-    label: 'worktrees',
-    title: 'A worktree for every agent.',
-    body: 'Open agents together, side by side in an isolated worktree with a dynamic layout: your editor, an agent, and a shell in one tab.',
+    title: 'Loops, yours to engineer',
+    body: 'Schedule supervised runs on a clock: calendar, interval, cron, or a check-guarded watchdog that runs a command and wakes an agent on the result.',
   },
   {
-    label: 'teams',
-    title: 'Teams, cross-model by design.',
-    body: 'Pair a planner on one model with a coder on another and launch them as one team, each role on the model best at its job.',
-  },
-  {
-    label: 'messages',
-    title: 'Agents chat as in Slack.',
-    body: 'Every agent answers to a handle. Steer and queue delivery guarantees the message lands, and agents talk to each other inside channels.',
-  },
-  {
-    label: 'scripting',
-    title: 'Scriptable, end to end.',
-    body: 'One headless grammar for every agent, with exit codes, JSON output, streaming, and the full transcript kept, so agents drop into scripts and CI.',
-  },
-  {
-    label: 'loops',
-    title: 'Loops, yours to engineer.',
-    body: 'Schedule supervised runs on a clock — calendar, interval, cron, or a check-guarded watchdog that runs a command and wakes an agent on the result.',
-  },
-  {
-    label: 'recovery',
-    title: 'Auto-continue while you are away.',
-    body: 'A rate-limit pause resumes the moment the budget window resets, and transient API overload retries on a backoff ramp. Agents recover themselves.',
-  },
-  {
-    label: 'phone',
-    title: 'Steer the fleet from your phone.',
-    body: 'When an agent stops to ask, the question reaches the official Claude and ChatGPT mobile apps; your answer lands in the same terminal session.',
-  },
-  {
-    label: 'anywhere',
-    title: 'Local or remote, continuously.',
-    body: 'Start on your laptop or a server, close the lid, and reattach from anywhere; the link heals itself every time you reconnect.',
+    title: 'Local or remote, continuously',
+    body: 'Start on your laptop or a server, close the lid, and reattach from anywhere. The link heals itself every time you reconnect.',
   },
 ];
 
@@ -74,7 +66,7 @@ export const scenes: Scene[] = [
       <>
         Every supported agent joins the room the same way: type its own command into any pane. When
         you want more than the default, <span className="em">rimz agents</span> adds permission
-        modes, reusable profiles, layouts, and isolated worktrees — <code>,</code> splits,{' '}
+        modes, reusable profiles, layouts, and isolated worktrees: <code>,</code> splits,{' '}
         <code>+</code> tiles, <code>/</code> stacks.
       </>
     ),
@@ -307,43 +299,36 @@ export const installMethods: InstallMethod[] = [
   { id: 'cargo', label: 'cargo', lines: ['cargo install --locked rimz'] },
 ];
 
-type Cell = 'full' | 'partial' | 'none';
-type Tier = 'supported' | 'alpha' | 'experimental';
-
-export type MatrixRow = {
-  agent: string;
-  tier: Tier;
-  status: string;
-  cells: Cell[];
-};
-
-export const matrixColumns = ['State', 'Live', 'History', 'Account', 'Ask', 'Subagents'];
-
-export const matrixRows: MatrixRow[] = [
-  { agent: 'Claude Code', tier: 'supported', status: 'Supported', cells: ['full', 'full', 'full', 'full', 'full', 'full'] },
-  { agent: 'Codex', tier: 'supported', status: 'Supported', cells: ['full', 'full', 'full', 'full', 'full', 'full'] },
-  { agent: 'Pi', tier: 'alpha', status: 'Alpha', cells: ['full', 'full', 'full', 'full', 'full', 'full'] },
-  { agent: 'OpenCode', tier: 'alpha', status: 'Alpha', cells: ['full', 'full', 'full', 'full', 'full', 'full'] },
-  { agent: 'Antigravity', tier: 'experimental', status: 'Experimental', cells: ['partial', 'partial', 'partial', 'full', 'partial', 'partial'] },
-  { agent: 'Copilot', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'partial', 'partial', 'full', 'none'] },
-  { agent: 'Droid', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'partial', 'none', 'partial', 'none'] },
-  { agent: 'Cursor', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'partial', 'partial', 'partial', 'full'] },
-  { agent: 'Amp', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'full', 'partial', 'full', 'none'] },
-  { agent: 'Kiro', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'partial', 'none', 'partial', 'none'] },
-  { agent: 'Qwen', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'full', 'partial', 'full', 'full'] },
-  { agent: 'Kimi', tier: 'experimental', status: 'Experimental', cells: ['full', 'full', 'full', 'full', 'full', 'partial'] },
-  { agent: 'Grok', tier: 'experimental', status: 'Experimental', cells: ['full', 'partial', 'full', 'partial', 'full', 'full'] },
-];
-
-export const cellGlyph: Record<Cell, string> = { full: '●', partial: '◐', none: '✗' };
-
-export const matrixColumnNotes: Array<{ term: string; note: string }> = [
-  { term: 'State', note: 'live working / idle / waiting' },
-  { term: 'Live', note: 'realtime context health and cost' },
-  { term: 'History', note: 'full session read and per-turn spend' },
-  { term: 'Account', note: 'login, plan, and rate-limit windows' },
-  { term: 'Ask', note: 'blocking prompts routed to your keyboard' },
-  { term: 'Subagents', note: 'the child-agent tree' },
+/**
+ * Agent support, grouped by tier. The full per-capability grid lives in the
+ * docs; reproducing it here buries the two agents that matter most.
+ */
+export const agentTiers: Array<{ tier: string; agents: string[]; note: string }> = [
+  {
+    tier: 'Supported',
+    agents: ['Claude Code', 'Codex'],
+    note: 'The daily drivers, and the best experience today. Every surface is wired: live state, context health, cost and history, account windows, blocking asks, and the subagent tree.',
+  },
+  {
+    tier: 'Alpha',
+    agents: ['Pi', 'OpenCode'],
+    note: 'Wired end to end and close behind, with less mileage on them so far.',
+  },
+  {
+    tier: 'Experimental',
+    agents: [
+      'Antigravity',
+      'Copilot',
+      'Droid',
+      'Cursor',
+      'Amp',
+      'Kiro',
+      'Qwen',
+      'Kimi',
+      'Grok',
+    ],
+    note: 'Wired and tested against each documented surface, but not yet dogfooded enough to promote. Expect the occasional bug. Any of them still mostly just works.',
+  },
 ];
 
 export const statusCells: Array<{ title: string; body: string }> = [
@@ -353,7 +338,7 @@ export const statusCells: Array<{ title: string; body: string }> = [
   },
   {
     title: 'Built with RimZ, on RimZ',
-    body: 'The fleet behind the repository routinely runs 50–100 concurrent agents across 10–30 parallel worktrees and pull requests, and a single room stays responsive with 100+ agents from multiple providers at once.',
+    body: 'The fleet behind the repository routinely runs 50 to 100 concurrent agents across 10 to 30 parallel worktrees and pull requests, and a single room stays responsive with 100+ agents from multiple providers at once.',
   },
   {
     title: 'Ready for daily use',
@@ -364,10 +349,3 @@ export const statusCells: Array<{ title: string; body: string }> = [
     body: 'RimZ runs with no configuration at all, and everything you can tune is plain TOML in files you own: no config daemon, no bespoke language.',
   },
 ];
-
-export const wordmarkArt = `  ██████╗ ██╗███╗   ███╗  ███████╗
-  ██╔══██╗██║████╗ ████║  ╚══███╔╝
-  ██████╔╝██║██╔████╔██║    ███╔╝
-  ██╔══██╗██║██║╚██╔╝██║   ███╔╝
-  ██║  ██║██║██║ ╚═╝ ██║  ███████╗
-  ╚═╝  ╚═╝╚═╝╚═╝     ╚═╝  ╚══════╝`;

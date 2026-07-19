@@ -66,9 +66,10 @@ assert.ok(
   homeHtml.includes('The control room for your coding agents.'),
   'the homepage is missing the product heading',
 );
-for (const section of ['What it does', 'How it works', 'Everyday moves', 'Install', 'Agent compatibility']) {
+for (const section of ['What it does', 'How it works', 'Everyday moves', 'Install', 'Agent support']) {
   assert.ok(homeHtml.includes(section), `the homepage is missing the ${section} section`);
 }
+assert.ok(homeHtml.includes('id="agents"'), 'the homepage dropped the #agents anchor');
 
 const mainHtml = await readFile(path.join(outputRoot, 'docs', 'main', 'index.html'), 'utf8');
 assert.ok(mainHtml.includes('name="robots" content="noindex, follow"'), 'main docs are indexable');
