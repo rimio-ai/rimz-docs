@@ -130,13 +130,13 @@ If a directly-launched Copilot card has lifecycle but no resolved model or token
 
 ### Codex sessions drop with a WebSocket reset about hourly
 
-`WebSocket protocol error: Connection reset without closing handshake` can mean Codex's updater is running a different executable from its managed standalone install and restarting the shared app-server on each hourly update tick. Check the REMOTE CONTROL section of `rimz doctor`; when it reports the provider daemon advisory, schedule `cd ~; codex remote-control stop; sleep 3; codex remote-control start` while no valuable Codex turns are running, then resume the sessions this deliberate recycle disconnects.
+`WebSocket protocol error: Connection reset without closing handshake` can mean Codex's updater is running a different executable from its managed standalone install. Its next successful hourly pass restarts the shared app-server before refreshing its own process image, which normally clears the skew but disconnects active sessions once. Check the REMOTE CONTROL section of `rimz doctor`; when it reports the provider daemon advisory, either leave the automatic one-time refresh to its next pass or schedule the printed managed-binary `codex app-server daemon bootstrap --remote-control` command while no valuable Codex turns are running, then resume the sessions this deliberate recycle disconnects. A `codex remote-control stop` / `start` pair does not recycle the updater and does not fix this advisory.
 
 ### Zellij pane discovery stopped
 
 On Zellij, RimZ loads a small presence plugin so the sidebar learns which panes exist and where. Its permission grant is seeded for you on the first attach. Revoking that grant in Zellij's plugin manager stops pane discovery until you restore it, and `rimz doctor` names the fix in the `presence` row. Re-grant the plugin's permissions in Zellij, then run `rimz reload`. The grant lives in Zellij's own permission store, and the plugin ships no pane content anywhere; the full picture is in [security and trust](/docs/main/help/security#the-zellij-presence-plugin).
 
-Doctor joins presence telemetry to the exact plugin generation accepted as the topology writer. Stale-writer rejections mean the monotonic fence contained an older plugin and stay expected information; a recent increase in topology or other command failures for the accepted writer is a real warning. Legacy telemetry with one unsplit failure counter remains informational because it cannot prove which outcome occurred.
+Doctor lists only the presence plugins currently loaded in the Zellij session, with each plugin's load time, build, Zellij version, and active, rejected, or inactive status. More than one loaded plugin and every rejected row point to `rimz reload`, while a recent increase in topology or other command failures remains a real warning. Full generation history stays in the `plugin-presence.log.jsonl` path doctor prints; when the live Zellij pane listing cannot be read, the section reports that it is unavailable instead of substituting history.
 
 ## The sidebar looks wrong
 
@@ -252,7 +252,9 @@ gc — would reclaim 62 MB (dry run)
   checked 4 of 8 areas · cutoff 24h
 
   ✦ worktrees       would remove 3 · 62 MB · 4 kept
-      kept: 3 in use, 1 not merged yet
+      kept: api-redesign — in use
+      kept: auth-fix — not merged yet
+      …
       would remove: guides-tune  21 MB  merged
       …
   ✦ workspaces      would prune 31 · 9.2 KB
