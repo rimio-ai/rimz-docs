@@ -75,6 +75,11 @@
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Contains the full-bleed hero captures. `clip` rather than `hidden` on
+     purpose: `hidden` makes this a scroll container, which silently kills
+     `position: sticky` on the nav. */
+  overflow-x: clip;
 }
 
 @media (max-width: 860px) {
@@ -420,9 +425,20 @@
   }
 }
 
-/* ---- screenshot frame ---- */
+/* ---- screenshot frame ----
+   The captures break out of the 1040px column and run edge to edge: a room
+   full of agents is the one thing on this page that earns the whole viewport,
+   and at column width the sidebar text in the shot is unreadable.
+
+   Full-bleed from inside a centred container: `50%` resolves against the
+   container's content box, so the negative margin cancels the offset exactly
+   and the left edge lands at the viewport edge. `.landing` clips the overflow
+   (see the rule on the root) because `100vw` counts the scrollbar gutter and
+   would otherwise trip a horizontal scrollbar. */
 .landing .shot-frame {
   margin: 72px 0 0;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 /* Window captures ship with rounded corners and a soft drop shadow already
