@@ -49,7 +49,7 @@ Notification handlers run a command of your choosing when a row needs attention 
 
 ### The Zellij presence plugin
 
-On Zellij, RimZ loads a small presence plugin into each session so the sidebar learns pane layout by push, and a tab switch lands back on your work instead of the sidebar ([internals](https://github.com/rimio-ai/rimz/blob/main/docs/internals/multiplexers.md?ref=docs#zellij-presence-channel)). Zellij normally prompts before a plugin gets permissions; RimZ seeds that grant ahead of load, keyed to the exact plugin path it materializes, so the first attach is not interrupted. The grant covers:
+On Zellij, RimZ loads a small presence plugin into each session so the sidebar learns pane layout by push, and a tab switch lands back on your work instead of the sidebar ([internals](https://github.com/rimio-ai/rimz/blob/main/docs/internals/multiplexers.md?ref=docs#the-zellij-presence-plugin)). Zellij normally prompts before a plugin gets permissions; RimZ seeds that grant ahead of load, keyed to the exact plugin path it materializes, so the first attach is not interrupted. The grant covers:
 
 - **Access Zellij state**: the plugin watches pane and tab shape.
 - **Run commands**: it runs the RimZ-owned `rimz sidebar wake` and `rimz sidebar focus` calls, and nothing else.
@@ -69,7 +69,7 @@ RimZ keeps your work local. Your prompts, transcripts, pane text, file paths, an
 
 ### Hook payload privacy
 
-Hook payloads can carry prompts, tool inputs, file paths, command arguments, and errors. They stay in RimZ's local state, and nothing forwards them off the box. Payload-fidelity and retention controls (a `[privacy]` block with `payload_mode` and `retention_days`) are a planned project surface, tracked in [configuration.md](/docs/main/customization/configuration) against the [hook adapter boundary](https://github.com/rimio-ai/rimz/blob/main/docs/internals/agents/model.md?ref=docs#the-adapter-boundary).
+Hook payloads can carry prompts, tool inputs, file paths, command arguments, and errors. They stay in RimZ's local state, and nothing forwards them off the box. Payload-fidelity and retention controls (a `[privacy]` block with `payload_mode` and `retention_days`) are a planned project surface, tracked in [configuration.md](/docs/main/customization/configuration) against the [hook adapter boundary](https://github.com/rimio-ai/rimz/blob/main/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
 
 ### Off-box error reporting
 

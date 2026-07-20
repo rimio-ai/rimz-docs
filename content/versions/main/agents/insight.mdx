@@ -20,10 +20,10 @@ You read it two ways. `rimz stats` prints the whole history on demand, from anyw
 - **The heatmap** is a GitHub-style contribution graph of tokens per day, about a year of history, smoothly shaded from an idle day up to your heaviest. The scale reads against your own rhythm, resists one-off spike days, and spreads the mid-range perceptually so an active stretch stays visible. `--dollars` shades it by cost instead of tokens.
 - **The window row** (All time, Week, Month, Year) scopes the Models, Agents, insight rows, and Assists below it, while the heatmap stays full-history. In the held dashboard, `Tab` and `Shift-Tab` cycle the window; a plain `rimz stats` prints the All-time view.
 - **Models** ranks where the dollars went, each model under its friendly name (`gpt-5.5` reads as `GPT 5.5`) with its token split and its share of the window. **Agents** ranks by session count across the five transcript-backed kinds: Claude, Codex, Amp, Pi, and OpenCode. The long tail in either breakdown folds into one `Other` row. Both breakdowns carry tokens as well as dollars, so a model RimZ cannot price still shows up with its tokens counted.
-- **The insight lines** close it: sessions and spend for the window, how many days in the window saw activity, your heaviest single day, and your longest and current active-day streaks.
-- **Assists** shows non-zero category counts for completed budget-window pings, reset-credit attempts, delivered auto-continues, and focus repairs. The section stays absent until RimZ has a counted assist to report; `rimz stats --assists` carries the complete newest-first event timeline.
+- **The insight lines** close it: sessions and spend for the window, cost per session and average spend per active day over the same spend span, how many days saw activity, your heaviest single day, and your longest and current active-day streaks. Week and Month also compare spend with the immediately preceding equal window. All time keeps the recent `Active days: N/28` cadence line while its average, like its spend, covers the trailing year.
+- **Assists** shows non-zero category counts for five ways RimZ saves work: budget-window auto-pings, delivered auto-continues, pre-delivery auto-compaction, reset-credit redemptions, and sessions restored automatically after a crash or reboot. The section stays absent until RimZ has a counted assist to report; `rimz stats --assists` carries the complete newest-first event timeline.
 
-For a shell or a script, `rimz stats --json` emits the per-day buckets, the windows, both breakdowns, the insights, and the structured assists rollup plus events. `rimz stats --assists` prints the complete newest-first assist timeline with the redeem request id and reset windows, resume message and agent ids, and ping task, run, transcript, and cost. `rimz stats --refresh` instead holds the panel open and repaints it every minute; this is the live pane the `rimzd` daemon view carries.
+For a shell or a script, `rimz stats --json` emits the per-day buckets that scripts can use for their own trend windows, the usage windows, both breakdowns, the insights, and the structured assists rollup plus events. `rimz stats --assists` prints the complete newest-first assist timeline with the redeem request id and reset windows, continue and compact message and agent ids, restored workspace and session, and ping task, run, transcript, and cost. `rimz stats --refresh` instead holds the panel open and repaints it every minute; this is the live pane the `rimzd` daemon view carries.
 
 `rimz stats` only reads. It touches no agent, writes nothing to your sessions, and prints from a cache RimZ keeps under its own state directory. Its one network call is the weekly price-table refresh described below, which `RIMZ_PRICING_OFFLINE=1` turns off.
 
@@ -57,7 +57,7 @@ Pinned to the bottom of the sidebar is one block per provider account, because a
    ▘▘ ▝▝   7d ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱   ↻ 5d22h
 ```
 
-When a provider has historical usage, the stats row is its account-global spend for the headline window: sessions, the token breakdown, and dollars pinned right. A provider without spend history on disk shows only `◎` with the sessions active in this room; the token and dollar positions stay absent rather than read zero. Two fleet-total rows then close the dashboard, summing every supported provider across the trailing week and month:
+When a provider has historical usage, the stats row is its account-global spend for the headline window: sessions, the token breakdown, and dollars pinned right. In `session` mode, every provider row shares one machine-global burst, opened by your prompt to any agent kind. A provider without spend history on disk shows only `◎` with the sessions active in this room; the token and dollar positions stay absent rather than read zero. Two fleet-total rows then close the dashboard, summing every supported provider across the trailing week and month:
 
 ```
   W: ◎ 420  ◇ 202.9M ↘ 175.1M ↗ 27.8M ◌  5.2B $3,888.88
@@ -89,7 +89,7 @@ The token breakdown sums every durable session record that ran in the room's spe
 
 The window is yours to set with `[sidebar] spend_window` ([configuration](/docs/main/customization/configuration#sidebar-rendering)):
 
-- `session` (the default): the current burst of work, opened by your latest prompt after a five-hour idle gap. Loop-fired turns and agent-to-agent messages count inside it and keep it alive, but never open it.
+- `session` (the default): the current burst of work, opened by your latest prompt to any agent after a five-hour idle gap. Provider rows share one machine-global burst; the cockpit applies the same rule within this room's scope. Loop-fired turns and agent-to-agent messages count inside an open burst and keep it alive, but never open one.
 - `24h`: a trailing twenty-four hours.
 - `today`: since calendar midnight in your configured `timezone`.
 
