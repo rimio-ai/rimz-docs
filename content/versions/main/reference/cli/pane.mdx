@@ -1,11 +1,12 @@
 ---
 title: "Pane CLI"
-description: "rimz pane exposes the public pane primitives that humans and scripts share: see the room as panes, read what is on screen, type into one, and move focus."
+description: "rimz pane exposes the public pane primitives that humans and scripts share: see the room as panes, measure pane output, read what is on screen, type into one, and move focus."
 ---
-`rimz pane` exposes the public pane primitives that humans and scripts share: see the room as panes, read what is on screen, type into one, and move focus. `pane send` is the same explicit input path as `message --steer` — literal keystrokes into a real pane, nothing more — and `pane capture` reads back the visible buffer, so a script observes and drives a pane exactly as a person at the keyboard would. It targets panes by id or by the [agent-address grammar](/docs/main/reference/cli/agents#addressing-agents). The operator-facing safety rules for treating captured text as untrusted are in [security.md](/docs/main/help/security).
+`rimz pane` exposes the public pane primitives that humans and scripts share: see the room as panes, measure pane output, read what is on screen, type into one, and move focus. `pane send` is the same explicit input path as `message --steer` — literal keystrokes into a real pane, nothing more — and `pane capture` reads back the visible buffer, so a script observes and drives a pane exactly as a person at the keyboard would. It targets panes by id or by the [agent-address grammar](/docs/main/reference/cli/agents#addressing-agents). The operator-facing safety rules for treating captured text as untrusted are in [security.md](/docs/main/help/security).
 
 ```sh
 rimz pane list
+rimz pane bandwidth --secs 5
 rimz pane capture @codex#auth-refresh --lines 80                             # read an agent's visible buffer
 rimz pane capture zellij:terminal_4 --lines 80                                # read a precise pane id
 rimz pane send @codex#auth-refresh --key ctrl-u --enter -- "cargo xtask test" # clear line, type, run
@@ -30,3 +31,7 @@ The agent labels are a best-effort overlay folded from the workspace snapshot, s
 `split` opens a shell beside the current pane along its longer visual edge, matching the room's native new-pane behavior. `detach` detaches the attached client; the session keeps running in the background and comes back on the next attach.
 
 Because `pane capture` returns untrusted terminal text, a script should match bounded patterns before sending anything back. The operator-facing safety rules are in [security.md](/docs/main/help/security).
+
+## Bandwidth
+
+`rimz pane bandwidth [--secs N] [--json]` runs on the Linux host serving the room and samples VFS write-rate counters to attribute per-pane terminal output on both backends. tmux reports pane pids natively, while Zellij pane pids resolve through RimZ's process matcher. Use it inside the room when a remote attach looks chatty; full-screen TUIs such as agents mid-turn or system monitors should dominate the report. Remote rooms also include SSH `WIRE` rows when socket counters are available; the [bandwidth attribution internals](https://github.com/rimio-ai/rimz/blob/main/docs/internals/remote.md?ref=docs#bandwidth-attribution) explain the measurements.
