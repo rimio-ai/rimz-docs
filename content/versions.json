@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "latest": "v0.3",
+  "latest": "v0.4",
   "versions": [
     {
-      "id": "v0.3",
-      "label": "v0.3 (latest)",
-      "ref": "v0.3",
-      "sourceCommit": "ecb1f62fb2a7ec3994842c99ea43b84fd7f3b7cc",
+      "id": "v0.4",
+      "label": "v0.4 (latest)",
+      "ref": "v0.4",
+      "sourceCommit": "f64d970aec0c519e71b2f53b81297a87dafa71cd",
       "kind": "release"
     },
     {
@@ -15,6 +15,13 @@
       "ref": "main",
       "sourceCommit": "f9d5f962f63eb88660be55175b9770c620898b1c",
       "kind": "development"
+    },
+    {
+      "id": "v0.3",
+      "label": "v0.3",
+      "ref": "v0.3",
+      "sourceCommit": "ecb1f62fb2a7ec3994842c99ea43b84fd7f3b7cc",
+      "kind": "release"
     },
     {
       "id": "v0.2",
