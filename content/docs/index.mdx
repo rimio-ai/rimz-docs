@@ -20,7 +20,7 @@ That same small footprint carries the primitives **harness engineering** and **l
 {/* sync:project-status:start */}
 ## Project status
 
-RimZ is **alpha software**, moving fast. Expect rough edges and the occasional bug, and expect the surface to shift: commands, flags, config keys, and output formats can change between releases while the design settles. The [changelog](https://github.com/rimio-ai/rimz/blob/v0.4/CHANGELOG.md?ref=docs) records what moved in each release.
+RimZ is **alpha software**, moving fast. Expect rough edges and the occasional bug, and expect the surface to shift: commands, flags, config keys, and output formats can change between releases while the design settles. The [changelog](https://github.com/rimio-ai/rimz/blob/v0.4.1/CHANGELOG.md?ref=docs) records what moved in each release.
 
 It is also heavily used, on itself. RimZ is built with RimZ: the fleet behind this repository routinely runs 50–100 concurrent agents across 10–30 parallel worktrees and PRs, and a single room stays responsive with 100+ agents from multiple providers working at once. Driven through teams and loops, most of the routine engineering here — features, bug fixes, CI repair — already flows through the harness with little hand-holding.
 
@@ -72,7 +72,7 @@ Read that as: ready for personal, daily use today; for production workflows that
 - **RimZ drives the panes:** messages, steering, and `-p` harness runs land as keystrokes in the agent's own pane, so every agent runs its stock CLI in a full terminal, exactly as if you typed
 - **RimZ fuses every channel:** agent events, git churn, process stats, and account state combine into one live picture, and the sidebar renders it
 
-→ [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4/DESIGN.md?ref=docs) · [ARCHITECTURE.md](https://github.com/rimio-ai/rimz/blob/v0.4/ARCHITECTURE.md?ref=docs)
+→ [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/DESIGN.md?ref=docs) · [ARCHITECTURE.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/ARCHITECTURE.md?ref=docs)
 {/* sync:how-it-works:end */}
 
 {/* sync:agent-compatibility:start */}
@@ -90,28 +90,28 @@ Every other agent is **experimental**: wired and tested against its documented s
 | Codex       | 🟢 Supported     |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
 | Pi          | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
 | OpenCode    | 🟡 Alpha         |   ●   |  ●   |    ●    |    ●    |  ●  |     ●     |
-| Antigravity | ⚪ Experimental  |   ◐   |  ◐   |    ◐    |    ●    |  ◐  |     ◐     |
-| Copilot     | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ●  |     ✗     |
+| Antigravity | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ●    |  ◐  |     ◐     |
+| Copilot     | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ●  |     ◐     |
 | Droid       | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
-| Cursor      | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ◐  |     ●     |
-| Amp         | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ✗     |
-| Kiro        | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
-| Qwen        | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ●     |
-| Kimi        | ⚪ Experimental  |   ●   |  ●   |    ●    |    ●    |  ●  |     ◐     |
+| Cursor      | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ◐  |     ◐     |
+| Amp         | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ●  |     ✗     |
+| Kiro        | ⚪ Experimental  |   ◐   |  ◐   |    ◐    |    ✗    |  ◐  |     ✗     |
+| Qwen        | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ◐    |  ●  |     ●     |
+| Kimi        | ⚪ Experimental  |   ●   |  ◐   |    ◐    |    ●    |  ●  |     ◐     |
 | Grok        | ⚪ Experimental  |   ●   |  ◐   |    ●    |    ◐    |  ●  |     ●     |
 
-<sub>● full · ◐ partial · ✗ unsupported by the RimZ adapter</sub>
+<sub>● full — complete and live · ◐ partial — a working version with a stated limit · ✗ unsupported</sub>
 
-What each column covers:
+A mark answers what you see and when, rather than how RimZ reads it:
 
-- **State**: live working/idle/waiting
-- **Live**: realtime context health and cost on the card
-- **History**: full session read (transcript, per-turn tokens, spend)
-- **Account**: login, plan, and rate-limit or balance windows
-- **Ask**: blocking prompts routed to your keyboard
-- **Subagents**: the child-agent tree
+- **State** — the card tracks the agent's whole life: it appears at session start, follows working, waiting, and idle, and clears when the session ends
+- **Live** — while a turn runs: context-window fill, the token breakdown behind it, and a dollar figure for the work in flight
+- **History** — every past session readable end to end, with per-turn tokens and dollars feeding `rimz stats` and the provider dashboard
+- **Account** — your login and plan, plus each usage window (5h/7d, monthly credits, a balance) with its fill and reset
+- **Ask** — the agent stops to ask, the card raises Waiting, and the question's own text and options reach `rimz asks`
+- **Subagents** — child agents nested under the parent card as they start, each with its name, task, and model
 
-The per-mechanism detail and permission-mode mapping live in [agent support](/docs/reference/agent-support), and `rimz coverage` prints the live grid on your own machine with a reason on every cell.
+A ◐ names its own limit: part of the detail, or the whole of it a beat late. The [agent support](/docs/reference/agent-support) reference spells out every cell and the mechanism behind it, and `rimz coverage` prints the same grid on your own machine.
 
 <sub><b>Latest version only.</b> RimZ tracks each agent's most recent release; older CLI versions are not supported.</sub>
 {/* sync:agent-compatibility:end */}

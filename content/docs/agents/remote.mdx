@@ -53,7 +53,7 @@ rimz remote connect dev --no-reconnect   # one ssh run, no supervisor, no health
 rimz remote connect dev --reset          # attach a fresh room (passes --no-resume through)
 ```
 
-`rimz remote reset dev` is the shorthand for that last one. The link supervisor and its reconnect policy are in [the internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/remote.md?ref=docs).
+`rimz remote reset dev` is the shorthand for that last one. The link supervisor and its reconnect policy are in [the internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/remote.md?ref=docs).
 
 ## Reading the link badge
 
@@ -99,7 +99,7 @@ rimz reset               # force a clean rebirth of a stuck or resurrected room
 rimz reset --hard        # rebuild without seeding prior agents
 ```
 
-Keeping the agent processes alive across a reboot belongs to the host. Reach for systemd, tmux-resurrect, or Zellij resurrect to carry them across a restart, and RimZ reattaches to whatever is still running ([DESIGN.md → Non-goals](https://github.com/rimio-ai/rimz/blob/v0.4/DESIGN.md?ref=docs#non-goals)).
+Keeping the agent processes alive across a reboot belongs to the host. Reach for systemd, tmux-resurrect, or Zellij resurrect to carry them across a restart, and RimZ reattaches to whatever is still running ([DESIGN.md → Non-goals](https://github.com/rimio-ai/rimz/blob/v0.4.1/DESIGN.md?ref=docs#non-goals)).
 
 ## Answer asks from your phone
 
@@ -131,7 +131,7 @@ The `⇅ rc` flag and `rimz doctor` read Claude's own record of the process serv
 
 Undo is the same toggle set back to `false`: it closes the RimZ-managed Claude host panes in every running room, or stops the Codex daemon. One known gap: a session you spawn from the phone runs headless in its worktree with no local pane, and the sidebar does not yet render these remote agents.
 
-Key detail and the daemon-view placement live in [configuration → remote control](/docs/customization/configuration#remote-control); which providers carry the surface is the `remote` row of the [coverage matrix](/docs/reference/agent-support#the-coverage-matrix).
+Key detail and the daemon-view placement live in [configuration → remote control](/docs/customization/configuration#remote-control); which providers carry the surface is the `remote` row of the [wiring matrix](/docs/reference/agent-support#the-wiring-matrix).
 
 ## See also
 

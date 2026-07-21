@@ -25,10 +25,11 @@ cd ~/code/your-project && rimz
 
 - offers to keep an existing config and refresh it against the current templates,
 - offers one summarized install or refresh for every detected agent with missing hooks or a stale RimZ-owned whole-file integration,
-- shows separate live truecolor and Nerd Font probes, and
-- previews the configured sidebar pet before asking whether to enable it.
+- shows separate live truecolor and Nerd Font probes,
+- previews the configured sidebar pet before asking whether to enable it, and
+- offers to enable auto-continue and automatic Codex reset-credit redemption together.
 
-The hook summary names every affected file and points to `rimz hooks install --dry-run` for the exact unified diff before you consent. The first `rimz` run on a terminal asks the same hook, color, glyph, and pet questions when it creates the config. `rimz setup --yes` takes the non-interactive path — merge existing files, write missing ones, no hook installs, upgrades, trust grants, or appearance changes — which suits a server provisioning script.
+The hook summary names every affected file and points to `rimz hooks install --dry-run` for the exact unified diff before you consent. The first `rimz` run on a terminal asks the same hook, color, glyph, pet, and automation questions when it creates the config. `rimz setup --yes` takes the non-interactive path — merge existing files, write missing ones, no hook installs, upgrades, trust grants, appearance changes, or automation opt-ins — which suits a server provisioning script.
 
 Four files carry the settings this guide touches:
 
@@ -37,7 +38,7 @@ Four files carry the settings this guide touches:
 | `~/.config/rimz/config.toml` | room behavior: resume, auto-continue, smart compaction, notifications, multiplexer room overrides |
 | `~/.config/rimz/theme.toml` | sidebar appearance: scheme, color depth, glyphs, pets |
 | `~/.config/rimz/agents.toml` | agent profiles, teams, worktree defaults, attention timing |
-| `~/.config/rimz/loop.toml` | scheduled loop tasks: window pings, watchdogs, self-wakes |
+| `~/.config/rimz/loop.toml` | scheduled loop tasks: recurring turns, watchdogs, self-wakes |
 
 Every key ships commented with its default and an inline note, so the generated template is the field reference:
 
@@ -127,7 +128,7 @@ on_rebirth = true    # already the default
 max = 128            # cap on agents one rebirth relaunches
 ```
 
-When RimZ rebuilds a room after a reboot or a multiplexer crash — a *rebirth* — it offers to bring back the prior agents from its durable records, each restored agent starting idle in its worktree tab. This is on by default; the knobs bound it, and `rimz start --no-resume` or `on_rebirth = false` gives a clean empty room instead. The mechanics are in [sidebar internals → Resume on rebirth](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth).
+When RimZ rebuilds a room after a reboot or a multiplexer crash — a *rebirth* — it offers to bring back the prior agents from its durable records, each restored agent starting idle in its worktree tab. This is on by default; the knobs bound it, and `rimz start --no-resume` or `on_rebirth = false` gives a clean empty room instead. The mechanics are in [sidebar internals → Resume on rebirth](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth).
 
 ### Auto-continue interrupted turns
 
@@ -139,7 +140,7 @@ auto_continue = true                       # off by default
 # auto_continue_text = "continue"          # the nudge typed into the parked pane
 ```
 
-A turn that dies mid-flight — a rate limit, a spend limit, a provider overload, or a transient API error such as a stalled stream, timeout, or dropped connection — *parks* its agent: the agent sits waiting for a nudge to continue. `auto_continue` picks those turns back up by typing `continue` into the pane through the same audited path as `rimz message`. Rate-limit and spend-limit parks resume when the provider's budget window resets; overload and transient-error parks retry on the backoff ramp until the retry cap. The model is in [provider internals → Auto-continue](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/agents/providers.md?ref=docs#auto-continue).
+A turn that dies mid-flight — a rate limit, a spend limit, a provider overload, or a transient API error such as a stalled stream, timeout, or dropped connection — *parks* its agent: the agent sits waiting for a nudge to continue. `auto_continue` picks those turns back up by typing `continue` into the pane through the same audited path as `rimz message`. Rate-limit and spend-limit parks resume when the provider's budget window resets; overload and transient-error parks retry on the backoff ramp until the retry cap. The model is in [provider internals → Auto-continue](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/providers.md?ref=docs#auto-continue).
 
 ### Compact before the prompt lands
 
@@ -148,35 +149,30 @@ A turn that dies mid-flight — a rate limit, a spend limit, a provider overload
 smart_compact = "200k"   # occupied-token count; a percentage of the window such as "70%" works too
 ```
 
-`smart_compact` makes `rimz message` compact-first: when the target agent's context window has reached the threshold, RimZ submits the agent's `/compact` ahead of your text so the prompt lands against a fresh window instead of dying at the context ceiling. Unset, compaction stays opt-in per send through `rimz message --smart-compact`. The mechanics are in [message internals → Smart compaction](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/messaging.md?ref=docs#smart-compaction).
+`smart_compact` makes `rimz message` sends and scheduled loop wakes compact-first: when the target agent's context window has reached the threshold, RimZ submits the agent's `/compact` ahead of the text so the prompt lands against a fresh window instead of dying at the context ceiling. Unset, compaction stays opt-in per message through `rimz message --smart-compact`. The mechanics are in [message internals → Smart compaction](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/messaging.md?ref=docs#smart-compaction).
 
-### Prime provider windows on a schedule
+### Put a turn on a schedule
 
-A provider's budget window starts counting on first use, so a window that starts when you sit down ends mid-afternoon. A scheduled `<kind>-ping` loop task starts the window on your clock instead — one cheap ping per provider primes the whole account:
-
-```sh
-rimz loop add morning --agent claude-ping --prompt ping --every weekday --at 07:00
-rimz loop add follow-reset --agent claude-ping --prompt ping --every reset   # re-prime when the window resets
-```
-
-or hand-edit `~/.config/rimz/loop.toml`:
+Scheduled work lives in its own file, `~/.config/rimz/loop.toml`, one `[tasks.<name>]` entry per job:
 
 ```toml
-[tasks.morning]
-agent = "claude-ping"
-prompt = "ping"
-root = "/home/you/code/app"
-at = "07:00"
-every = "weekday"
+[tasks.nightly-audit]
+agent = "codex"
+prompt = "Audit the dependency lockfile for advisories and open an issue for anything actionable"
+root = "/home/you/code/app"      # absolute project root whose room hosts the turn
+at = "00:30"                     # 24h time in the configured timezone
+every = "day"
 ```
 
-The ping runs at the lowest effort, skips when the provider's window is already counting down, and fires only while a room for `root` is open. The same `[tasks]` table also schedules watchdogs and self-wakes — an agent turn on an interval, gated on a shell check such as `cargo test` or `gh run watch` — covered in [configuration → Loop tasks](/docs/customization/configuration#loop-tasks) and [the loop CLI](/docs/reference/cli/loop).
+`rimz loop add` writes the same entries, so you never have to hand-edit unless you want to. Two things about the model are worth knowing before you write your first task: a task fires only while a room for `root` is open, since the room's sidebar keeps the clock and there is no separate daemon, and a task that repeats needs `every` or `cron` — a bare `at` fires once and retires itself.
+
+The same table carries watchdogs and self-wakes, where an agent turn runs on an interval behind a shell check such as `cargo test` or `gh run watch`. What you would schedule and why is [loops](/docs/harness/loops); the field-by-field shape is [configuration → Loop tasks](/docs/customization/configuration#loop-tasks), and every flag is in [the loop CLI](/docs/reference/cli/loop).
 
 ## Configure your multiplexer
 
 RimZ sets the room's behavior for you: on every session birth and reattach it applies the options agents need — locked mode and single-click sidebar jumps on Zellij; mouse, focus events, OSC passthrough, CSI-u soft-newline keys, and clipboard on tmux; 100k-line scrollback on both — so a freshly installed multiplexer works without touching its config. Your own `~/.config/zellij/config.kdl` or `~/.tmux.conf` owns everything RimZ leaves alone — the theme, true color, copy-mode, the status bar, and your keybindings — inside the room and in every session you run outside RimZ.
 
-The fastest path to a good config of your own is copying the shipped baselines under [examples/](https://github.com/rimio-ai/rimz/blob/v0.4/examples/README.md?ref=docs) — Zellij as a complete starting file, tmux as sourceable modules:
+The fastest path to a good config of your own is copying the shipped baselines under [examples/](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/README.md?ref=docs) — Zellij as a complete starting file, tmux as sourceable modules:
 
 ```sh
 # From the rimz checkout
@@ -214,7 +210,7 @@ set -ga terminal-features ",*:RGB,*:usstyle,*:clipboard"
 # Behaviors a modern TUI agent relies on.
 set -g  mouse on                 # scroll, select panes, resize
 set -g  history-limit 100000     # long Claude/Codex output stays in scrollback
-set -sg escape-time 0            # no ESC lag in helix, nvim, fzf, agent TUIs
+set -sg escape-time 10           # upstream 3.5+ default; safely joins split ESC sequences
 set -ga terminal-features ",*:sync"   # atomic redraws for tmux sessions outside RimZ
 set -g  focus-events on          # editors and agents see focus changes
 set -g  allow-passthrough on     # let desktop notifications pass through tmux
@@ -228,6 +224,6 @@ bind-key -n M-Enter send-keys Escape "[13;3u"
 set -g  set-clipboard on         # yank into the host clipboard over OSC52
 ```
 
-Three of these earn a note; the block's comments carry the rest. `escape-time 0` removes the lag that otherwise makes `Esc` feel sticky in any full-screen TUI. The extended-keys trio plus the modified-Enter bindings let an agent's composer receive Shift+Enter and Alt+Enter as soft newlines while plain Enter still submits — on tmux 3.5.x this trades clean multiline paste while extended keys are active (use Ctrl+J or tmux 3.6+ for both); the `user-keys` pair keeps plain Esc clean on terminals such as Ghostty that answer the extended-keys request with modifier-less CSI-u. `allow-passthrough on` lets the desktop-notification bytes RimZ emits reach your terminal.
+Three of these earn a note; the block's comments carry the rest. `escape-time 10` gives tmux a short window to join an ESC byte with the rest of its sequence, avoiding split-ESC misparses over SSH while keeping the delay imperceptible. The extended-keys trio plus the modified-Enter bindings let an agent's composer receive Shift+Enter and Alt+Enter as soft newlines while plain Enter still submits — on tmux 3.5.x this trades clean multiline paste while extended keys are active (use Ctrl+J or tmux 3.6+ for both); the `user-keys` pair keeps plain Esc clean on terminals such as Ghostty that answer the extended-keys request with modifier-less CSI-u. `allow-passthrough on` lets the desktop-notification bytes RimZ emits reach your terminal.
 
 Copy-mode, stable window names, titled pane borders, smart splits, Zellij-parity keys, and the themed status bar continue in [Zellij and tmux baselines](/docs/customization/multiplexer#tmux).

@@ -4,7 +4,7 @@ description: "RimZ runs as you: no daemon, no elevated privileges, no account of
 ---
 RimZ runs as you: no daemon, no elevated privileges, no account of its own. It reports on the agents you already run, inside the terminal you already use. Its security model follows from that. RimZ asks before it changes anything on your machine, every change has a matching undo, and the only places a config file can make RimZ run a command are decisions you make by hand.
 
-This page covers three questions: what RimZ touches, what can execute, and what leaves your machine. The design commitments behind them are in [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4/DESIGN.md?ref=docs).
+This page covers three questions: what RimZ touches, what can execute, and what leaves your machine. The design commitments behind them are in [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/DESIGN.md?ref=docs).
 
 ## What RimZ changes on your machine
 
@@ -28,7 +28,7 @@ A cloned repository can ship a `.rimz/config.toml` that names agents, profiles, 
 
 A first interactive `rimz start` in an untrusted workspace offers the grant, and the interactive `rimz loop fire` and project-task edit surfaces offer it inline with the surface diff when their trust gate is closed. Declining leaves the workspace inert; only the first-start prompt stays suppressed until `.rimz/config.toml` changes.
 
-`rimz trust grant` pins a single hash over every command-running field in that config. Each later read re-hashes the live file. Edit one of those fields, or let an agent in the room edit the file, and the hash drifts: the workspace flips to `stale`, command execution turns back off, and `rimz trust status` prints a field-level diff of what changed before you re-grant. There is no background sweep. `rimz trust status` and `rimz doctor` both re-hash on the spot.
+`rimz trust grant` pins a single hash over every command-running field in that config. Each later read re-hashes the live file. Edits outside RimZ's project-task commands, including direct file edits by an agent in the room, make the hash drift: the workspace flips to `stale`, command execution turns back off, and `rimz trust status` prints a field-level diff of what changed before you re-grant. When `rimz loop add`, `remove`, or `rename` performs the edit from a trusted workspace or creates the first config, it re-pins the grant whether invoked interactively, by a script, or by an agent; an untrusted or stale pre-state keeps the review flow. There is no background sweep. `rimz trust status` and `rimz doctor` both re-hash on the spot.
 
 The hashed surface is every field that can cause a process to run:
 
@@ -39,17 +39,17 @@ The hashed surface is every field that can cause a process to run:
 - `[[hooks]]`: `event`, `command`
 - `[env]`: every key and value
 
-Room layout stays out of a repo's reach: a project config carrying a `[layout]` table (including tmux status `#(...)` and popup commands) is refused, with the fix to move it to your per-machine config. Any field RimZ can execute must enter this hash, and a unit test fails if one slips out. The mechanics, the grant record, and the diff are in [the trust internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/trust.md?ref=docs); the command is in [the trust reference](/docs/reference/cli/hooks-trust#project-trust).
+Room layout stays out of a repo's reach: a project config carrying a `[layout]` table (including tmux status `#(...)` and popup commands) is refused, with the fix to move it to your per-machine config. Any field RimZ can execute must enter this hash, and a unit test fails if one slips out. The mechanics, the grant record, and the diff are in [the trust internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/trust.md?ref=docs); the command is in [the trust reference](/docs/reference/cli/hooks-trust#project-trust).
 
 Per-machine loop schedules are separate: a `check = "<shell>"` line in your own `~/.config/rimz/loop.toml` is your command, not a repo's. A clone can supply only project `[tasks]`, and those stay inert until you grant, unless a same-named machine task is already the one that runs.
 
 ### Notification handlers
 
-Notification handlers run a command of your choosing when a row needs attention (`[[notifications.handler]]`, or the legacy `[notifications].command`). They live only in your per-machine `~/.config/rimz/config.toml`, so a clone can never supply one. They run under your user id, spawned by the sidebar process, and often carry local push credentials. A handler that acts back on the room should treat pane text and transcripts as untrusted data: match a bounded prompt shape, and stay silent on anything else. Wiring is in [the notifications internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/sidebar/notifications.md?ref=docs).
+Notification handlers run a command of your choosing when a row needs attention (`[[notifications.handler]]`, or the legacy `[notifications].command`). They live only in your per-machine `~/.config/rimz/config.toml`, so a clone can never supply one. They run under your user id, spawned by the sidebar process, and often carry local push credentials. A handler that acts back on the room should treat pane text and transcripts as untrusted data: match a bounded prompt shape, and stay silent on anything else. Wiring is in [the notifications internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/notifications.md?ref=docs).
 
 ### The Zellij presence plugin
 
-On Zellij, RimZ loads a small presence plugin into each session so the sidebar learns pane layout by push, and a tab switch lands back on your work instead of the sidebar ([internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/multiplexers.md?ref=docs#the-zellij-presence-plugin)). Zellij normally prompts before a plugin gets permissions; RimZ seeds that grant ahead of load, keyed to the exact plugin path it materializes, so the first attach is not interrupted. The grant covers:
+On Zellij, RimZ loads a small presence plugin into each session so the sidebar learns pane layout by push, and a tab switch lands back on your work instead of the sidebar ([internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/multiplexers.md?ref=docs#the-zellij-presence-plugin)). Zellij normally prompts before a plugin gets permissions; RimZ seeds that grant ahead of load, keyed to the exact plugin path it materializes, so the first attach is not interrupted. The grant covers:
 
 - **Access Zellij state**: the plugin watches pane and tab shape.
 - **Run commands**: it runs the RimZ-owned `rimz sidebar wake` and `rimz sidebar focus` calls, and nothing else.
@@ -69,13 +69,13 @@ RimZ keeps your work local. Your prompts, transcripts, pane text, file paths, an
 
 ### Hook payload privacy
 
-Hook payloads can carry prompts, tool inputs, file paths, command arguments, and errors. They stay in RimZ's local state, and nothing forwards them off the box. Payload-fidelity and retention controls (a `[privacy]` block with `payload_mode` and `retention_days`) are a planned project surface, tracked in [configuration.md](/docs/customization/configuration) against the [hook adapter boundary](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
+Hook payloads can carry prompts, tool inputs, file paths, command arguments, and errors. They stay in RimZ's local state, and nothing forwards them off the box. Payload-fidelity and retention controls (a `[privacy]` block with `payload_mode` and `retention_days`) are a planned project surface, tracked in [configuration.md](/docs/customization/configuration) against the [hook adapter boundary](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
 
 ### Off-box error reporting
 
 Release binaries ship without the reporting code, so a stock install makes no Sentry calls whatever the config. Reporting compiles in only under `--features sentry`, and even then it is off until you set `[sentry] dsn` (or `RIMZ_SENTRY_DSN`). The DSN is per-machine and never the committed project config, so a clone or pull cannot redirect a contributor's telemetry.
 
-When on, it sends RimZ's own `warn!` and `error!` events and the provider conditions RimZ observes (rate limits, overload), tagged with low-cardinality facts: the release and build id, the running command, a fault class, and the agent or session id when known. The hostname is stripped, Sentry's default personal-data collection is off, and hook payloads, prompts, and transcripts never ride along. A failed account-usage probe reports the request's host, never its path or query. The full payload and the config knobs are in [the diagnostics internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/diagnostics.md?ref=docs#off-box-error-reporting) and [configuration.md](/docs/customization/configuration#off-box-error-reporting).
+When on, it sends RimZ's own `warn!` and `error!` events and the provider conditions RimZ observes (rate limits, overload), tagged with low-cardinality facts: the release and build id, the running command, a fault class, and the agent or session id when known. The hostname is stripped, Sentry's default personal-data collection is off, and hook payloads, prompts, and transcripts never ride along. A failed account-usage probe reports the request's host, never its path or query. The full payload and the config knobs are in [the diagnostics internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/diagnostics.md?ref=docs#off-box-error-reporting) and [configuration.md](/docs/customization/configuration#off-box-error-reporting).
 
 ## Pane text is data, not instructions
 

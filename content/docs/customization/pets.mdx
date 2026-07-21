@@ -58,7 +58,7 @@ The same `pet` key takes bring-your-own art:
 - `pet = "https://example.com/my-pet.webp"` fetches an HTTPS WebP or PNG sheet once and caches it. Plain `http://` is refused.
 - `pet = "~/art/my-pet.png"` reads a local WebP or PNG sheet; a directory path is read as a [petdex](#petdex) install.
 
-Every source uses the petdex sheet geometry — a `1536x1872` image holding an `8x9` grid of `192x208` frames — with each row an animation the pet plays. The row-by-row catalog, cache layout, and decode pipeline live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/sidebar/pets.md?ref=docs#assets).
+Every source uses the petdex sheet geometry — a `1536x1872` image holding an `8x9` grid of `192x208` frames — with each row an animation the pet plays. The row-by-row catalog, cache layout, and decode pipeline live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/pets.md?ref=docs#assets).
 
 ## Crisp pixels and cell art
 
@@ -87,4 +87,4 @@ Built-in and URL sheets fetch once over HTTPS into the per-machine cache; `RIMZ_
 
 Pets run no commands. Asset loading sends only the configured asset request; prompts, transcripts, pane text, workspace paths, and provider credentials stay local. The pet's place in the threat model is one bullet in [security.md](/docs/help/security#what-leaves-your-machine).
 
-Sheet geometry, the cache layout, and the pixel gates live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/sidebar/pets.md?ref=docs).
+Sheet geometry, the cache layout, and the pixel gates live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/pets.md?ref=docs).
