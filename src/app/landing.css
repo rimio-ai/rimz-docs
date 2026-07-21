@@ -276,14 +276,21 @@
    #ffb454 manages 1.72:1 there — the caret would wash out to a pale smudge
    beside a bold wordmark. This rung reads at 3.89:1, a shade stronger than
    the green it replaces. */
-/* Sized to the capitals it stands next to: JetBrains Mono reports a cap height
-   of 730/1000, so at 0.73em the caret is exactly as tall as the R and the Z,
-   and baseline alignment above puts its foot exactly on theirs. The block is
-   therefore inscribed by the letterforms on both edges, with no magic offset
-   to drift out of true when the size or the line-height changes. */
+/* Both dimensions come off the font's own metrics, so the caret is a
+   proportion rather than a pair of tuned numbers.
+
+   Height is 0.73em, JetBrains Mono's reported cap height, which makes the
+   block exactly as tall as the R and the Z; baseline alignment above puts its
+   foot on theirs, so the letterforms inscribe it top and bottom.
+
+   Width is half a character cell. The dark site types its caret literally, as
+   `▌` — U+258C, left half block — and this font advances 0.6em per cell, so
+   half of one is 0.3em. That lands the block near 0.41 wide-to-tall, which is
+   about where a terminal's own block cursor sits; at cap height a wider bar
+   stops reading as a caret and starts reading as a dropped glyph. */
 .landing .cursor {
   display: inline-block;
-  width: 0.55em;
+  width: 0.3em;
   height: 0.73em;
   margin-left: 2px;
   background: var(--accent-line);
