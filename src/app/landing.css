@@ -276,12 +276,16 @@
    #ffb454 manages 1.72:1 there — the caret would wash out to a pale smudge
    beside a bold wordmark. This rung reads at 3.89:1, a shade stronger than
    the green it replaces. */
+/* Sized to the capitals it stands next to: JetBrains Mono reports a cap height
+   of 730/1000, so at 0.73em the caret is exactly as tall as the R and the Z,
+   and baseline alignment above puts its foot exactly on theirs. The block is
+   therefore inscribed by the letterforms on both edges, with no magic offset
+   to drift out of true when the size or the line-height changes. */
 .landing .cursor {
   display: inline-block;
   width: 0.55em;
-  height: 1.05em;
+  height: 0.73em;
   margin-left: 2px;
-  transform: translateY(2px);
   background: var(--accent-line);
   animation: landing-blink 1.1s steps(1) infinite;
 }
@@ -388,7 +392,12 @@
   letter-spacing: -0.5px;
   color: var(--text-ink);
   display: inline-flex;
-  align-items: center;
+  /* Baseline, not center. The caret is a bare block with no text of its own,
+     so flex synthesizes its baseline from its bottom border edge — which is
+     precisely the edge that has to land on the wordmark's baseline. Centering
+     instead aligned the two boxes, and since the line box is much taller than
+     the glyphs, that hung the caret well below the letters. */
+  align-items: baseline;
 }
 
 .landing .nav-right {
