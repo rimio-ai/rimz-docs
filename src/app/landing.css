@@ -9,11 +9,19 @@
    Typography splits by job: a proportional sans carries headings
    and prose, JetBrains Mono carries the wordmark, labels, code,
    terminals, and anything the product itself would print.
+
+   Color follows rimio's house system: one accent, amber, spent on
+   very few things per screen, plus terminal green reserved for
+   live state. rimio's own site is dark-only and this page is not,
+   so the amber is re-cut for a cream canvas — see the accent
+   ladder below — but the hue and the restraint are the same.
    ============================================================ */
 
 .landing {
   /* --- Brand / ink ---------------------------------------- */
   --ink: #201d1d;
+  /* The deepest ink, and the tint every hairline and shadow below is mixed
+     from — they carry it as literal `rgba(15, 0, 0, …)`. */
   --ink-deep: #0f0000;
   --canvas: #fdfcfc;
 
@@ -30,11 +38,40 @@
   --text-mute: #646262;
   --text-ash: #9a9898;
 
+  /* --- Accent: rimio amber ---------------------------------
+     One accent for the whole page, inherited from rimio's dark site, where a
+     single amber (#ffb454) lights the arc, the caret and the one lit seat. The
+     hue carries over unchanged; only the lightness is re-cut for a cream
+     canvas, because #ffb454 reaches just 1.7:1 here and cannot legally carry
+     text or even a hairline.
+
+     So the accent is a ladder, and each rung has exactly one job:
+
+       --accent        fills only, and only with ink on top (9.5:1)
+       --accent-strong the same fill, pressed
+       --accent-line   non-text marks — tab markers, rules (3.9:1, clears 3:1)
+       --accent-ink    accent-colored text and link underlines (5.0:1, AA)
+
+     Spend it sparingly. On the dark site the rule is that amber appearing more
+     than about five times in a viewport means the page has failed, and nothing
+     about a light canvas relaxes that. The budget here: the primary button,
+     the selected marker in a tab strip, the current segment of the gallery
+     switcher, link underlines, and the focus ring. Nothing else earns it. */
+  --accent: #ffb454;
+  --accent-strong: #f2a23c;
+  --accent-line: #bf6a00;
+  --accent-ink: #a85a00;
+  --accent-wash: rgba(255, 180, 84, 0.22);
+
   /* --- On-color text --------------------------------------- */
-  --on-primary: #fdfcfc;
+  --on-primary: #201d1d;
   --on-dark: #fdfcfc;
 
-  /* --- Terminal green, live/active/success semantics only --- */
+  /* --- Terminal green, live/active/success semantics only ---
+     The second color on the page, and it is not a second accent: it never
+     decorates, it only reports state. It appears in the wordmark's cursor —
+     the prompt is live, waiting on input — and in the confirmation edge of a
+     copy button. Anything brand or navigational is amber. */
   --live: #1f9d4d;
   --live-dark: #30d158;
 
@@ -117,9 +154,17 @@
   text-decoration: none;
 }
 
+/* Amber selection and amber focus, both carried over from the dark site: the
+   accent marks wherever the reader currently is. 2px rather than the dark
+   site's 1px, because a hairline ring loses far more presence against a cream
+   canvas than it does against a void. */
+.landing ::selection {
+  background: var(--accent-wash);
+}
+
 .landing a:focus-visible,
 .landing button:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -222,8 +267,11 @@
 }
 
 /* ---- blinking cursor ----
-   Terminal green, the page's one accent: the same green the product uses for
-   live state, so the wordmark reads as a prompt waiting for input. */
+   The wordmark's caret, and the one place green appears above the fold. Amber
+   is the brand accent; green is state, and here it reports that the prompt is
+   live and waiting on input — the same green the product paints live agents
+   with. Keeping the two jobs separate is what stops the page from reading as
+   though it had two accents. */
 .landing .cursor {
   display: inline-block;
   width: 0.55em;
@@ -273,32 +321,27 @@
     transform 140ms ease;
 }
 
-.landing .btn:hover {
-  transform: translateY(-1px);
-}
-
-.landing .btn:active {
-  transform: translateY(0) scale(0.985);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .landing .btn,
-  .landing .btn:hover,
-  .landing .btn:active {
-    transform: none;
+  .landing .btn {
     transition: none;
   }
 }
 
+/* The one element on the page allowed to carry an accent fill, and there is
+   never more than one of it in a viewport. Ink sits on the amber rather than
+   white: amber is a light color, so white text on it reads at 1.7:1 while ink
+   reads at 9.5:1. The hover state deepens the fill instead of lifting the
+   button — on the dark site nothing on the page bounces, scales, or rises on
+   hover, and that rule is worth keeping. */
 .landing .btn-primary {
-  background: var(--ink);
+  background: var(--accent);
   color: var(--on-primary);
-  border: 1px solid var(--ink);
+  border: 1px solid var(--accent);
 }
 
 .landing .btn-primary:hover {
-  background: var(--ink-deep);
-  border-color: var(--ink-deep);
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
 }
 
 .landing .btn-secondary {
@@ -307,8 +350,11 @@
   border: 1px solid var(--hairline-strong);
 }
 
+/* Warms toward the accent on hover rather than darkening toward ink, which is
+   how the secondary button behaves on the dark site. */
 .landing .btn-secondary:hover {
-  border-color: var(--ink);
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
 }
 
 /* ---- nav ---- */
@@ -460,7 +506,7 @@
    same focus ring the links and buttons get. Offset clears the capture's own
    baked-in drop shadow instead of cutting through it. */
 .landing .gallery:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent-ink);
   outline-offset: 8px;
   border-radius: var(--radius-card);
 }
@@ -555,8 +601,11 @@
   background: var(--text-ash);
 }
 
+/* The lit segment. `--accent-line` rather than the raw amber: a 2px rule in
+   #ffb454 sits at 1.7:1 on the canvas and simply disappears, which would leave
+   the switcher with no current state at all. */
 .landing .gallery-dash.on::after {
-  background: var(--ink);
+  background: var(--accent-line);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -664,15 +713,21 @@
   line-height: 1.7;
 }
 
+/* The one text-link pattern, taken from the dark site: ink label, amber rule
+   underneath, and the whole thing goes amber on hover. Links are links here —
+   there is no such thing as a button pretending to be one. */
 .landing .works-sub a {
   color: var(--text-ink);
   text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--hairline-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  text-decoration-color: var(--accent-line);
+  transition: color 140ms ease;
 }
 
 .landing .works-sub a:hover {
-  text-decoration-color: var(--ink);
+  color: var(--accent-ink);
+  text-decoration-color: var(--accent-ink);
 }
 
 /* ---- why rimz: split header with a legible exhibit ----
@@ -851,8 +906,12 @@
   color: var(--text-ash);
 }
 
+/* The terminal panels get one highlighted token and it is the accent, never a
+   third hue: the dark site's rule for syntax color is ink, mute, rule, plus
+   amber for a single token, and no rainbow theme. Inside a dark panel the raw
+   brand amber needs no correction — it reads at 9.5:1 there. */
 .landing .code-line .cmd .tok-str {
-  color: var(--live-dark);
+  color: var(--accent);
 }
 
 .landing .code-line .cmt {
@@ -958,10 +1017,12 @@
   color: var(--text-ink);
 }
 
+/* Ink carries the label, amber carries the marker. Splitting the two means the
+   selected tab still reads as selected without color alone doing the work. */
 .landing .tab[aria-selected="true"] {
   color: var(--text-ink);
   font-weight: var(--weight-medium);
-  border-bottom-color: var(--ink);
+  border-bottom-color: var(--accent-line);
 }
 
 /* ---- install block ----
@@ -1036,7 +1097,7 @@
 
 .landing .install-tab[aria-selected="true"] {
   color: var(--text-ink);
-  border-bottom-color: var(--ink);
+  border-bottom-color: var(--accent-line);
 }
 
 /* Every method occupies this one cell. `minmax(0, 1fr)` stops the longest
