@@ -1,14 +1,14 @@
-import { getExplicitPages, getLLMText, getPageMarkdownUrl, resolveExplicitPage } from '@/lib/source';
+import { getLLMText, getPageMarkdownUrl, source } from '@/lib/source';
 import { notFound } from 'next/navigation';
 
 export const revalidate = false;
 
 export async function GET(_req: Request, { params }: RouteContext<'/llms.mdx/docs/[[...slug]]'>) {
   const { slug } = await params;
-  const resolved = resolveExplicitPage(slug?.slice(0, -1) ?? []);
-  if (!resolved) notFound();
+  const page = source.getPage(slug?.slice(0, -1) ?? []);
+  if (!page) notFound();
 
-  return new Response(await getLLMText(resolved.page), {
+  return new Response(await getLLMText(page), {
     headers: {
       'Content-Type': 'text/markdown',
     },
@@ -16,8 +16,8 @@ export async function GET(_req: Request, { params }: RouteContext<'/llms.mdx/doc
 }
 
 export function generateStaticParams() {
-  return getExplicitPages().map(({ page, version }) => ({
+  return source.getPages().map((page) => ({
     lang: page.locale,
-    slug: getPageMarkdownUrl(page, version).segments,
+    slug: getPageMarkdownUrl(page).segments,
   }));
 }

@@ -24,8 +24,8 @@ jobs:
           repository: rimio-ai/rimz
           path: rimz
           fetch-depth: 0
-      - run: RIMZ_SRC=rimz node scripts/sync-versions.mjs
-      - run: node scripts/check-versioned-content.mjs
+      - run: RIMZ_SRC=rimz node scripts/sync-release.mjs
+      - run: node scripts/check-content.mjs
       - id: commit
         run: |
           git add content public
@@ -34,7 +34,7 @@ jobs:
           else
             git -c user.name="github-actions[bot]" \
                 -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-                commit -m "docs(content): sync versioned RimZ documentation"
+                commit -m "docs(content): sync RimZ documentation from the latest release tag"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi

@@ -11,7 +11,6 @@ const search = createFromSource(source, {
       url: page.url,
       id: page.url,
       structuredData: page.data.structuredData,
-      tag: page.slugs[0],
     };
   },
 });

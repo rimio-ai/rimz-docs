@@ -36,9 +36,9 @@ NEXT_PUBLIC_BASE_PATH=/REPO NEXT_PUBLIC_SITE_URL=https://USER.github.io/REPO pnp
 
 Every push to `main` deploys the static export to GitHub Pages at <https://rimz.rimio.ai> through [the deploy workflow](./.github/workflows/deploy.yml).
 
-[The sync workflow](./.github/workflows/sync.yml) imports the mutable `main` documentation and creates immutable snapshots for every `v*` release tag after a README or docs update, when a release is published, and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
+[The sync workflow](./.github/workflows/sync.yml) rebuilds the documentation from the highest stable `v*` release tag after a README or docs update, when a release is published, and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
 
-The published routes keep the latest stable release at `/docs`, expose exact releases under `/docs/vVERSION`, and expose unreleased documentation under `/docs/main`. Keep the `github.com/rimio-ai/rimz` mirror and its release tags current with the primary Gitea remote so the published site stays current; dispatches fire only for GitHub pushes, and the scheduled sync also reads GitHub.
+The site publishes exactly one release at a time under `/docs`, with no version in the URL. The tag it was built from is recorded in `content/version.json` and shown in the navigation bar. Keep the `github.com/rimio-ai/rimz` mirror and its release tags current with the primary Gitea remote so the published site stays current; dispatches fire only for GitHub pushes, and the scheduled sync also reads GitHub.
 
 ## Sync content
 
@@ -48,6 +48,6 @@ Generated docs are committed so this site builds without a RimZ source checkout.
 RIMZ_SRC=../rimz pnpm sync
 ```
 
-The sync scripts refresh `main`, discover semantic `v*` tags, create missing release snapshots, and copy each version's images into its own asset directory. Existing release snapshots stay unchanged. Hand-written scaffolding under `content/template/` seeds `main` and each newly created release.
+The sync script picks the highest stable `v*` tag, checks it out into a temporary worktree, and regenerates `content/docs/` and `public/docs-assets/` from it. Patch releases such as `v0.4.1` supersede `v0.4` automatically; prereleases such as `v0.5.0-rc.1` are ignored. Hand-written scaffolding under `content/template/` seeds the generated tree.
 
-Run `pnpm check:versions` to verify snapshot completeness, version-scoped links and images, release source refs, and the catalog.
+Run `pnpm check:content` to verify page completeness, link and image targets, the release source ref, and `content/version.json`.

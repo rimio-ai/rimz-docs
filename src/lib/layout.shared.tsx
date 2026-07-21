@@ -1,13 +1,8 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { appName, productGitHubUrl } from './shared';
-import type { DocsVersion } from './versions';
+import { docsVersion, releaseUrl } from './version';
 
-type VersionSwitch = {
-  version: DocsVersion;
-  url: string;
-};
-
-export function baseOptions(version: DocsVersion, switches: VersionSwitch[]): BaseLayoutProps {
+export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       title: appName,
@@ -15,13 +10,11 @@ export function baseOptions(version: DocsVersion, switches: VersionSwitch[]): Ba
     githubUrl: productGitHubUrl,
     links: [
       {
-        type: 'menu',
-        text: `Docs: ${version.label}`,
-        items: switches.map((item) => ({
-          text: item.version.label,
-          url: item.url,
-          active: 'none',
-        })),
+        type: 'main',
+        text: docsVersion.id,
+        url: releaseUrl,
+        external: true,
+        active: 'none',
       },
     ],
   };

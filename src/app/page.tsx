@@ -11,7 +11,6 @@ import {
   siteUrl,
   withBasePath,
 } from '@/lib/shared';
-import { latestVersion } from '@/lib/versions';
 import { Gallery, InstallTabs, SceneTabs } from '@/components/landing/interactive';
 import { agentMarks } from '@/components/landing/agent-logos';
 import {
@@ -34,6 +33,8 @@ const mono = JetBrains_Mono({
   display: 'swap',
 });
 
+const assetBase = '/docs-assets';
+
 const title = 'RimZ: the control room for your coding agents';
 const heading = 'The control room for your coding agents';
 
@@ -45,11 +46,9 @@ export const metadata: Metadata = {
     title,
     description: appDescription,
     url: siteUrl,
-    images: `/docs-assets/${latestVersion.id}/rimz-full.png`,
+    images: `${assetBase}/rimz-full.png`,
   },
 };
-
-const assetBase = `/docs-assets/${latestVersion.id}`;
 
 const slides = gallery.map((item) => ({
   src: withBasePath(`${assetBase}/${item.shot}`),

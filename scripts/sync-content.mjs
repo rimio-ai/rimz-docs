@@ -6,13 +6,12 @@ import path from 'node:path';
 
 const repoRoot = process.cwd();
 const rimzRoot = path.resolve(process.env.RIMZ_SRC ?? path.join(repoRoot, '..', 'rimz'));
-const version = process.env.RIMZ_VERSION ?? 'main';
-const sourceRef = process.env.RIMZ_REF ?? version;
+const sourceRef = process.env.RIMZ_REF ?? 'main';
 const templateRoot = path.join(repoRoot, 'content', 'template');
-const docsRoot = path.join(repoRoot, 'content', 'versions', version);
-const publicRoot = path.join(repoRoot, 'public', 'docs-assets', version);
-const docsRouteBase = `/docs/${version}`;
-const assetRouteBase = `/docs-assets/${version}`;
+const docsRoot = path.join(repoRoot, 'content', 'docs');
+const publicRoot = path.join(repoRoot, 'public', 'docs-assets');
+const docsRouteBase = '/docs';
+const assetRouteBase = '/docs-assets';
 const githubBase = `https://github.com/rimio-ai/rimz/blob/${sourceRef}`;
 const voidHtmlTags = new Set([
   'area',
@@ -104,7 +103,6 @@ const srcToRoute = new Map(
 await main();
 
 async function main() {
-  assertVersionIdentifier(version);
   selfCheck();
   await assertMappingComplete();
   const activeMappings = await availableMappings();
@@ -642,12 +640,6 @@ function selfCheck() {
     /docs\/guide\/conflict\.md:3: unresolved merge conflict marker/,
   );
   srcToRoute.delete('docs/guide/target.md');
-}
-
-function assertVersionIdentifier(value) {
-  if (!/^(?:main|v[0-9][0-9A-Za-z.+-]*)$/.test(value)) {
-    throw new Error(`invalid documentation version identifier: ${value}`);
-  }
 }
 
 function assertNoConflictMarkers(markdown, sourcePath) {

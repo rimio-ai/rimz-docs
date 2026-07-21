@@ -6,32 +6,15 @@ import path from 'node:path';
 
 const repoRoot = process.cwd();
 const outputRoot = path.join(repoRoot, 'out');
-const catalog = JSON.parse(await readFile(path.join(repoRoot, 'content', 'versions.json'), 'utf8'));
+const version = JSON.parse(await readFile(path.join(repoRoot, 'content', 'version.json'), 'utf8'));
 const pages = await filesBelow(outputRoot, '.html');
 const broken = [];
 
-for (const version of catalog.versions) {
-  await assertFile(`docs/${version.id}/index.html`);
-  await assertFile(`docs/${version.id}/getting-started/quickstart/index.html`);
-  await assertFile(`docs-assets/${version.id}/rimz-sidebar.png`);
-  await assertFile(`llms.mdx/docs/${version.id}/content.md`);
-  await assertFile(`llms/${version.id}/index.txt`);
-  await assertFile(`og/docs/${version.id}/image.png`);
-
-  const versionHtml = await readFile(path.join(outputRoot, 'docs', version.id, 'index.html'), 'utf8');
-  assert.ok(versionHtml.includes(`Docs: ${version.label}`), `${version.id} has no active version label`);
-  for (const target of catalog.versions) {
-    assert.ok(versionHtml.includes(`/docs/${target.id}`), `${version.id} cannot switch to ${target.id}`);
-  }
-
-  if (version.kind === 'development') {
-    assert.ok(versionHtml.includes('documents unreleased work'), 'main has no unreleased notice');
-  } else if (version.id !== catalog.latest) {
-    assert.ok(versionHtml.includes('older RimZ release'), `${version.id} has no older-release notice`);
-  }
-}
-
 await assertFile('docs/index.html');
+await assertFile('docs/getting-started/quickstart/index.html');
+await assertFile('docs-assets/rimz-sidebar.png');
+await assertFile('llms.mdx/docs/content.md');
+await assertFile('og/docs/image.png');
 await assertFile('api/search');
 await assertFile('llms.txt');
 await assertFile('llms-full.txt');
@@ -54,10 +37,15 @@ for (const page of pages) {
 
 assert.deepEqual(broken, [], `broken static links:\n${broken.join('\n')}`);
 
-const latestHtml = await readFile(path.join(outputRoot, 'docs', 'index.html'), 'utf8');
+const docsHtml = await readFile(path.join(outputRoot, 'docs', 'index.html'), 'utf8');
 assert.ok(
-  new RegExp(`rel="canonical" href="https?://[^"/]+/docs/${catalog.latest}/"`).test(latestHtml),
-  'the floating docs route does not canonicalize to the latest release',
+  /rel="canonical" href="https?:\/\/[^"/]+\/docs\/"/.test(docsHtml),
+  'the docs root does not canonicalize to itself',
+);
+assert.ok(docsHtml.includes(version.id), 'the docs shell does not name the release it documents');
+assert.ok(
+  !/href="\/docs\/v[0-9]/.test(docsHtml),
+  'the docs shell still links to a version-prefixed route',
 );
 
 const homeHtml = await readFile(path.join(outputRoot, 'index.html'), 'utf8');
@@ -80,13 +68,9 @@ assert.ok(
   'the homepage is missing the supported-agent marks',
 );
 
-const mainHtml = await readFile(path.join(outputRoot, 'docs', 'main', 'index.html'), 'utf8');
-assert.ok(mainHtml.includes('name="robots" content="noindex, follow"'), 'main docs are indexable');
-
 const sitemap = await readFile(path.join(outputRoot, 'sitemap.xml'), 'utf8');
-assert.ok(!sitemap.includes('/docs/main'), 'the sitemap includes development documentation');
-assert.ok(!sitemap.includes('<loc>https://rimz.rimio.ai/docs</loc>'), 'the sitemap includes the floating docs alias');
-assert.ok(sitemap.includes(`/docs/${catalog.latest}`), 'the sitemap omits the latest canonical release');
+assert.ok(!/\/docs\/v[0-9]/.test(sitemap), 'the sitemap includes a version-prefixed route');
+assert.ok(sitemap.includes('/docs/'), 'the sitemap omits the documentation');
 assert.ok(
   [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].every((match) => match[1].endsWith('/')),
   'the sitemap includes a URL that redirects to add a trailing slash',
