@@ -65,6 +65,12 @@ const ADVANCE_MS = 6500;
  * Hero gallery. Advances on its own so the page shows more than one view
  * without demanding a click, but stops for good the moment the reader takes
  * manual control, and never starts under `prefers-reduced-motion`.
+ *
+ * Three ways in, none of them shouting: click the half of the capture you want
+ * to travel toward, press Left or Right once the gallery has focus, or hit a
+ * segment of the hairline switcher underneath. The switcher carries no text —
+ * the caption already names the current view, so labels on the bar would say
+ * it twice — which is why each segment needs an `aria-label` of its own.
  */
 export function Gallery({ slides }: { slides: Slide[] }) {
   const [index, setIndex] = useState(0);
@@ -92,27 +98,38 @@ export function Gallery({ slides }: { slides: Slide[] }) {
 
   return (
     <div
+      aria-label="Views of the room"
       aria-roledescription="carousel"
       className="gallery"
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false);
       }}
       onFocus={() => setHovered(true)}
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowRight') go(index + 1);
+        else if (event.key === 'ArrowLeft') go(index - 1);
+        else return;
+        event.preventDefault();
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       role="group"
+      tabIndex={0}
     >
-      <div className="gallery-viewport">
+      {/* Click-to-travel: the half you click is the direction you go, which
+          needs no chrome drawn over the capture and stays true whether there
+          are two views or ten. Keyboard readers get the same two moves from
+          the arrow keys on the group above, so this is not the only route. */}
+      <div
+        className="gallery-viewport"
+        onClick={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          go(event.clientX - box.left < box.width / 2 ? index - 1 : index + 1);
+        }}
+      >
         <div className="gallery-track" style={{ transform: `translateX(-${index * 100}%)` }}>
           {slides.map((slide, position) => (
-            <div
-              aria-hidden={position !== index}
-              aria-label={`${position + 1} of ${slides.length}`}
-              aria-roledescription="slide"
-              className="gallery-slide"
-              key={slide.src}
-              role="group"
-            >
+            <div className="gallery-slide" key={slide.src}>
               <Image
                 alt={slide.alt}
                 className="shot"
@@ -124,23 +141,24 @@ export function Gallery({ slides }: { slides: Slide[] }) {
             </div>
           ))}
         </div>
+
+        {/* Cursor affordance only: these two carry the direction glyphs so the
+            pointer shape flips at the midline. They are decorative and the
+            click is handled above, so they take no role and no tab stop. */}
+        <div aria-hidden="true" className="gallery-half back" />
+        <div aria-hidden="true" className="gallery-half fwd" />
       </div>
 
-      {/* One control instead of three: the view names double as navigation,
-          so arrows, pips, and a separate caption row collapse into a single
-          labeled switcher. */}
-      <div aria-label="Views of the room" className="gallery-bar" role="tablist">
+      <div className="gallery-bar">
         {slides.map((slide, position) => (
           <button
-            aria-selected={position === index}
-            className={position === index ? 'gallery-label on' : 'gallery-label'}
+            aria-current={position === index}
+            aria-label={slide.label}
+            className={position === index ? 'gallery-dash on' : 'gallery-dash'}
             key={slide.src}
             onClick={() => go(position)}
-            role="tab"
             type="button"
-          >
-            {slide.label}
-          </button>
+          />
         ))}
       </div>
 

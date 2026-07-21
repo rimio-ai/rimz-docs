@@ -9,6 +9,8 @@ import type { InstallMethod, Scene } from './interactive';
 export const gallery: Array<{
   shot: string;
   alt: string;
+  /** Not painted anywhere: the gallery's switcher is an unlabeled hairline, so
+   *  this is the accessible name of that slide's control. */
   label: string;
   caption: string;
   width: number;
@@ -29,14 +31,6 @@ export const gallery: Array<{
     caption: 'Working state, model and effort, context health, live cost, and the subagent tree.',
     width: 5344,
     height: 3044,
-  },
-  {
-    shot: 'rimz-stats.png',
-    alt: 'The RimZ spend dashboard, showing token and dollar totals over time alongside plan and rate-limit budget bars.',
-    label: 'the spend',
-    caption: 'Token and dollar insight by day, week, and month, with plan and budget windows.',
-    width: 2512,
-    height: 2008,
   },
 ];
 

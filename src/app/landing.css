@@ -421,21 +421,24 @@
 }
 
 /* ---- screenshot frame ----
-   The captures break out of the 1040px column and run edge to edge: a room
-   full of agents is the one thing on this page that earns the whole viewport,
-   and at column width the sidebar text in the shot is unreadable.
+   The captures break out of the 1040px column because at column width the
+   sidebar text in the shot is unreadable. They stop short of the viewport
+   edge, though: a capture that touches both edges reads as a background
+   plate rather than as an object on the page, and the retained margin is
+   what tells the eye the shot has a frame at all.
 
-   Full-bleed from inside a centred container: `50%` resolves against the
+   Breakout from inside a centred container: `50%` resolves against the
    container's content box, so the negative margin cancels the offset exactly
-   and the left edge lands at the viewport edge. `.landing` clips the overflow
-   (see the rule on the root) because `100vw` counts the scrollbar gutter and
-   would otherwise trip a horizontal scrollbar. */
+   and the element re-centres on the viewport at its own width. `.landing`
+   clips the overflow (see the rule on the root) as a safety net against the
+   scrollbar gutter. */
 .landing .shot-frame {
   margin: 72px 0 0;
-  /* Full bleed, but capped: past ~1760px the capture stops gaining legibility
-     and starts costing the reader eye travel, so it re-centers instead. */
-  width: min(100vw, 1760px);
-  margin-left: calc(50% - min(50vw, 880px));
+  /* Wide, but never edge to edge: 90vw holds a visible gutter on every
+     screen, and past ~1320px the capture stops gaining legibility and starts
+     costing the reader eye travel, so it re-centers instead. */
+  width: min(90vw, 1320px);
+  margin-left: calc(50% - min(45vw, 660px));
 }
 
 /* Window captures ship with rounded corners and a soft drop shadow already
@@ -453,8 +456,42 @@
   display: block;
 }
 
+/* The gallery is one Tab stop that answers the arrow keys, so it needs the
+   same focus ring the links and buttons get. Offset clears the capture's own
+   baked-in drop shadow instead of cutting through it. */
+.landing .gallery:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 8px;
+  border-radius: var(--radius-card);
+}
+
 .landing .gallery-viewport {
   overflow: hidden;
+  position: relative;
+}
+
+/* Click the half you want to travel toward. A pair of hover arrows would sit
+   on top of the very thing the reader came to look at, so the affordance is
+   the cursor itself: two transparent halves, each with its own direction
+   glyph, so the shape flips as the pointer crosses the midline. They only
+   carry the cursor — the click is read from `clientX` by the handler on the
+   viewport, which is also what keeps this working when they are absent. */
+.landing .gallery-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  z-index: 1;
+}
+
+.landing .gallery-half.back {
+  left: 0;
+  cursor: w-resize;
+}
+
+.landing .gallery-half.fwd {
+  right: 0;
+  cursor: e-resize;
 }
 
 .landing .gallery-track {
@@ -466,8 +503,9 @@
 .landing .gallery-slide {
   flex: 0 0 100%;
   min-width: 0;
-  /* The widest capture sets the frame; the narrower spend view letterboxes
-     into it so advancing a slide never changes the page height. */
+  /* A fixed ratio on the slide, not on the image, so the frame is reserved
+     before the captures decode and advancing a slide never changes the page
+     height. Any capture that is not this shape letterboxes into it. */
   aspect-ratio: 5344 / 3044;
   display: flex;
   align-items: center;
@@ -481,51 +519,58 @@
   object-fit: contain;
 }
 
-/* The view names are the whole control: they navigate, they indicate, and
-   they title the current slide, in the same underline language as the page's
-   other tab strips. */
+/* The switcher is a rule that happens to be divided: unlabeled hairline
+   segments, one per view, reading as a progress track rather than as a row of
+   controls. The caption underneath already names the current view, so text on
+   the segments would say it twice and pull weight away from the capture. */
 .landing .gallery-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 4px 28px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 26px;
 }
 
-.landing .gallery-label {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 1;
+/* The painted line is 2px; the button around it is 20px tall so the target
+   stays comfortably clickable without the mark growing to match. */
+.landing .gallery-dash {
+  width: 56px;
+  padding: 9px 0;
   background: transparent;
   border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--text-ash);
-  padding: 8px 2px 9px;
   cursor: pointer;
-  transition:
-    color 140ms ease,
-    border-color 140ms ease;
+  line-height: 0;
 }
 
-.landing .gallery-label:hover {
-  color: var(--text-mute);
+.landing .gallery-dash::after {
+  content: "";
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--hairline);
+  transition: background-color 160ms ease;
 }
 
-.landing .gallery-label.on {
-  color: var(--text-ink);
-  font-weight: var(--weight-medium);
-  border-bottom-color: var(--ink);
+.landing .gallery-dash:hover::after {
+  background: var(--text-ash);
+}
+
+.landing .gallery-dash.on::after {
+  background: var(--ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing .gallery-track {
     transition: none;
   }
+
+  .landing .gallery-dash::after {
+    transition: none;
+  }
 }
 
 .landing .shot-cap {
-  margin: 10px auto 0;
+  margin: 14px auto 0;
   max-width: 62ch;
   text-align: center;
   font-size: var(--size-caption);
