@@ -49,14 +49,16 @@
 
        --accent        fills only, and only with ink on top (9.5:1)
        --accent-strong the same fill, pressed
-       --accent-line   non-text marks — tab markers, rules (3.9:1, clears 3:1)
+       --accent-line   non-text marks — caret, tab markers, rules (3.9:1)
        --accent-ink    accent-colored text and link underlines (5.0:1, AA)
 
      Spend it sparingly. On the dark site the rule is that amber appearing more
      than about five times in a viewport means the page has failed, and nothing
-     about a light canvas relaxes that. The budget here: the primary button,
-     the selected marker in a tab strip, the current segment of the gallery
-     switcher, link underlines, and the focus ring. Nothing else earns it. */
+     about a light canvas relaxes that. The budget here: the wordmark's caret,
+     the primary button, the selected marker in a tab strip, the current
+     segment of the gallery switcher, link underlines, and the focus ring. Only
+     the caret is always on screen; the rest are section-local or appear on
+     focus, so no one viewport spends the whole list. Nothing else earns it. */
   --accent: #ffb454;
   --accent-strong: #f2a23c;
   --accent-line: #bf6a00;
@@ -68,10 +70,9 @@
   --on-dark: #fdfcfc;
 
   /* --- Terminal green, live/active/success semantics only ---
-     The second color on the page, and it is not a second accent: it never
-     decorates, it only reports state. It appears in the wordmark's cursor —
-     the prompt is live, waiting on input — and in the confirmation edge of a
-     copy button. Anything brand or navigational is amber. */
+     Not a second accent: it never decorates, and it survives in exactly one
+     place — the confirmation edge on a copy button, where it reports that the
+     copy landed. Everything brand, navigational, or merely lit is amber. */
   --live: #1f9d4d;
   --live-dark: #30d158;
 
@@ -267,18 +268,21 @@
 }
 
 /* ---- blinking cursor ----
-   The wordmark's caret, and the one place green appears above the fold. Amber
-   is the brand accent; green is state, and here it reports that the prompt is
-   live and waiting on input — the same green the product paints live agents
-   with. Keeping the two jobs separate is what stops the page from reading as
-   though it had two accents. */
+   The wordmark's caret, in the brand accent: the mark reads as a prompt
+   waiting on input, and the accent is what marks it as ours.
+
+   `--accent-line`, not the raw amber. The caret is a filled block sitting
+   against the canvas, so it answers to the 3:1 bar for a non-text mark, and
+   #ffb454 manages 1.72:1 there — the caret would wash out to a pale smudge
+   beside a bold wordmark. This rung reads at 3.89:1, a shade stronger than
+   the green it replaces. */
 .landing .cursor {
   display: inline-block;
   width: 0.55em;
   height: 1.05em;
   margin-left: 2px;
   transform: translateY(2px);
-  background: var(--live);
+  background: var(--accent-line);
   animation: landing-blink 1.1s steps(1) infinite;
 }
 
