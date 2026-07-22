@@ -30,6 +30,7 @@ const voidHtmlTags = new Set([
   'wbr',
 ]);
 const passthroughHtmlTags = new Set([
+  'a',
   'b',
   'code',
   'p',
@@ -219,7 +220,12 @@ function extractIntroduction(markdown, sourcePath) {
   }
   if (start === -1) throw new Error(`${sourcePath}: missing introduction divider`);
 
-  return lines.slice(start, end).join('\n').trim();
+  const llms = lines.find((line, index) => (
+    index < start && line.includes('<b>AI agents / LLMs:</b>')
+  ));
+  if (!llms) throw new Error(`${sourcePath}: missing AI agents / LLMs callout`);
+
+  return `${llms}\n\n${lines.slice(start, end).join('\n').trim()}`;
 }
 
 function extractSection(markdown, heading, sourcePath) {
@@ -625,7 +631,10 @@ function selfCheck() {
   );
   assert.equal(escapeMdxText('Use {x} and <path> but keep `{x}`.'), 'Use \\{x\\} and &lt;path> but keep `{x}`.');
   assert.equal(escapeMdxText('Break<br> then <hr /> but keep <path>.'), 'Break<br/> then <hr/> but keep &lt;path>.');
-  assert.equal(escapeMdxText('<p align="center"><sub><code>x</code></sub></p> and <kind>'), '<p align="center"><sub><code>x</code></sub></p> and &lt;kind>');
+  assert.equal(
+    escapeMdxText('<p align="center"><sub><a href="/llms.txt"><code>x</code></a></sub></p> and <kind>'),
+    '<p align="center"><sub><a href="/llms.txt"><code>x</code></a></sub></p> and &lt;kind>',
+  );
   assert.equal(
     rewriteHtmlImageSources('<img src="../rimz-sidebar.png" alt="x">', 'docs/guide/sidebar.md'),
     `<img src="${assetRouteBase}/rimz-sidebar.png" alt="x">`,
@@ -633,6 +642,18 @@ function selfCheck() {
   assert.equal(
     rewriteHtmlImageSources('<img src="https://raw.githubusercontent.com/rimio-ai/rimz/HEAD/docs/rimz-full.png" alt="x">', 'README.md'),
     `<img src="${assetRouteBase}/rimz-full.png" alt="x">`,
+  );
+  assert.equal(
+    extractIntroduction([
+      '<p align="center"><sub><b>AI agents / LLMs:</b> fetch <a href="/llms.txt">the live index</a>.</sub></p>',
+      '',
+      '---',
+      '',
+      'Introduction copy.',
+      '',
+      '## Project status',
+    ].join('\n'), 'README.md'),
+    '<p align="center"><sub><b>AI agents / LLMs:</b> fetch <a href="/llms.txt">the live index</a>.</sub></p>\n\nIntroduction copy.',
   );
   assert.equal(descriptionFrom(`${'word '.repeat(37)}.`), undefined);
   assert.throws(
