@@ -2,7 +2,7 @@
 title: "Scripting"
 description: "You already script agents."
 ---
-> `rimz agents -p` is `claude -p` for every agent RimZ supports: one prompt, one supervised turn, one exit code — with the turn running in a real pane you can watch, answer, and steer. This page is how you drop an agent into a shell script, a `Makefile`, a cron line, or a CI job. The run records, wakeup socket, and pane cleanup underneath it are [scripting.md](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/scripting.md?ref=docs).
+> `rimz agents -p` is `claude -p` for every agent RimZ supports: one prompt, one supervised turn, one exit code — with the turn running in a real pane you can watch, answer, and steer. This page is how you drop an agent into a shell script, a `Makefile`, a cron line, or a CI job. The run records, wakeup socket, and pane cleanup underneath it are [scripting.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/scripting.md?ref=docs).
 
 ## Why `rimz agents -p`
 
@@ -214,4 +214,4 @@ Supervised runs need installed and trusted hooks, because hooks are the completi
 - [Agents](/docs/agents/fleet) — the profile, handle, and layout vocabulary these examples use.
 - [Worktrees](/docs/harness/worktrees) — the isolated branches behind `--worktree` runs.
 - [Agent control CLI](/docs/reference/cli/agents#supervised-runs--p) — every flag on `-p`, `wait`, `show`, `stop`, and `pane`.
-- [scripting.md](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/scripting.md?ref=docs) — run records, the wakeup socket, streaming, and pane cleanup.
+- [scripting.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/scripting.md?ref=docs) — run records, the wakeup socket, streaming, and pane cleanup.

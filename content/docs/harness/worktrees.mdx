@@ -60,7 +60,7 @@ It resolves the host's PR ref for you: GitHub, Gitea, and Forgejo use `refs/pull
 A tracked checkout alone rarely runs. Two committed, optional files at the repository root tell RimZ what else every new tree carries, so an agent can start working immediately:
 
 - **`.worktreeinclude`** lists globs for untracked files to copy in: `.env`, local config, credentials the tests need. One pattern per line.
-- **`.worktreelink`** lists directories to symlink-share rather than copy: heavy machine-local data whose contents are intentionally branch-independent, such as downloaded model or fixture caches. One path per line. Sharing them keeps a new tree cheap instead of duplicating gigabytes. Keep build outputs branch-local: Cargo contributors share compiler work through `sccache` and leave `target/` out of this file because divergent worktrees can overwrite its fingerprints and executables ([contributor cache setup](https://github.com/rimio-ai/rimz/blob/v0.4/CONTRIBUTING.md?ref=docs#fast-local-builds)).
+- **`.worktreelink`** lists directories to symlink-share rather than copy: heavy machine-local data whose contents are intentionally branch-independent, such as downloaded model or fixture caches. One path per line. Sharing them keeps a new tree cheap instead of duplicating gigabytes. Keep build outputs branch-local: Cargo contributors share compiler work through `sccache` and leave `target/` out of this file because divergent worktrees can overwrite its fingerprints and executables ([contributor cache setup](https://github.com/rimio-ai/rimz/blob/v0.4.1/CONTRIBUTING.md?ref=docs#fast-local-builds)).
 
 Because both files are committed, every teammate's worktrees seed the same way, and every create reports what it brought in:
 
@@ -75,7 +75,7 @@ created feat-a
   linked : 1 dir(s) from .worktreelink
 ```
 
-Neither file runs a command; sources are confined to the project root, and a pattern that matches nothing skips with a warning while the launch continues. The exact copy, symlink, and safety rules are in [the worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/worktrees.md?ref=docs#seeding-worktreeinclude-and-worktreelink).
+Neither file runs a command; sources are confined to the project root, and a pattern that matches nothing skips with a warning while the launch continues. The exact copy, symlink, and safety rules are in [the worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/worktrees.md?ref=docs#seeding-worktreeinclude-and-worktreelink).
 
 ## Common workflows
 
@@ -113,7 +113,7 @@ removed feat-a
 
 `remove` guards three things, in that order: an agent or a shell still working in the tree, uncommitted changes, and work not proven landed. Once `@coder` is gone, the same command refuses again for the dirty tree, this time with `worktree `auth` has local changes or work not proven landed`. A stale record left behind by a crashed agent does not count as in use, so a crash never leaves you unable to reclaim the tree.
 
-`--force` overrides the refusal when you have decided the work is disposable, and warns first when it is overriding a live agent. `rimz gc` sweeps what automatic cleanup could not reach — trees left by a crash, or ones that became safe only after a later merge or fetch: it removes every clean, landed tree that no live pane or agent occupies, reports the disk it reclaimed, and previews with `--dry-run`. The full landed-content proof is in [the worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/worktrees.md?ref=docs#the-content-landed-ladder).
+`--force` overrides the refusal when you have decided the work is disposable, and warns first when it is overriding a live agent. `rimz gc` sweeps what automatic cleanup could not reach — trees left by a crash, or ones that became safe only after a later merge or fetch: it removes every clean, landed tree that no live pane or agent occupies, reports the disk it reclaimed, and previews with `--dry-run`. The full landed-content proof is in [the worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/worktrees.md?ref=docs#the-content-landed-ladder).
 
 ## Under the hood
 
@@ -131,7 +131,7 @@ rimz config set agents.worktree.dir "../{repo}-worktrees"   # where sibling tree
 rimz config set agents.worktree.base fresh                  # branch from origin/HEAD, not local HEAD
 ```
 
-`dir` is a directory template: a relative path resolves from the repository root, and `{repo}` expands to its basename. `base` is `head` (branch from local `HEAD`, the default), `fresh` (branch from `origin/HEAD`), or any Git ref; `rimz worktree new --base <ref> --branch <name>` overrides both for a single tree. The full field reference is [configuration → worktrees](/docs/customization/configuration#worktrees), and the complete mechanics live in [the worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/worktrees.md?ref=docs).
+`dir` is a directory template: a relative path resolves from the repository root, and `{repo}` expands to its basename. `base` is `head` (branch from local `HEAD`, the default), `fresh` (branch from `origin/HEAD`), or any Git ref; `rimz worktree new --base <ref> --branch <name>` overrides both for a single tree. The full field reference is [configuration → worktrees](/docs/customization/configuration#worktrees), and the complete mechanics live in [the worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/worktrees.md?ref=docs).
 
 ## See also
 
@@ -139,4 +139,4 @@ rimz config set agents.worktree.base fresh                  # branch from origin
 - [Teams](/docs/harness/teams) — a named team is the common unit to isolate on its own branch.
 - [Messaging](/docs/harness/messaging) — a worktree's name is its channel; reach agents there by handle.
 - [Worktree CLI reference](/docs/reference/cli/worktree) — the complete `rimz worktree` and `rimz gc` surface.
-- [Worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4/docs/internals/harness/worktrees.md?ref=docs) — the ownership marker, file seeding, and the landed-content proof.
+- [Worktree internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/worktrees.md?ref=docs) — the ownership marker, file seeding, and the landed-content proof.
