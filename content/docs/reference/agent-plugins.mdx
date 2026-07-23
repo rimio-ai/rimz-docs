@@ -4,7 +4,7 @@ description: "Agent plugins let an external agent CLI join RimZ without compilin
 ---
 Agent plugins let an external agent CLI join RimZ without compiling provider-specific Rust into RimZ. A plugin bundle declares identity, branding, launch behavior, emitted events, transcript discovery, and optional pull probes; an agent-side shim translates its native protocol into one canonical JSON envelope.
 
-> **Early surface, not ready for public use.** The bundle format, the canonical wire, and the probe contracts are under active development and change without notice. Treat this as experimental: prototype against it and send feedback, but do not depend on it in production. A stable third-party integration ships as a [built-in adapter](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/model.md?ref=docs) today.
+> **Early surface, not ready for public use.** The bundle format, the canonical wire, and the probe contracts are under active development and change without notice. Treat this as experimental: prototype against it and send feedback, but do not depend on it in production. A stable third-party integration ships as a [built-in adapter](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/model.md?ref=docs) today.
 
 Plugins are machine configuration and may execute the launch and probe commands they declare. Install only bundles you trust. Project configuration does not register plugins, so plugin commands stay outside the project trust hash.
 
@@ -21,7 +21,7 @@ rimz doctor
 
 `rimz agents register` creates `agent.toml`, `README.md`, `shim.sh`, and stub probe executables. RimZ loads every `agents.d/*/agent.toml` once per process. A malformed manifest is skipped on read-only and hook paths; `rimz start` refuses before room side effects and names the manifest and fix.
 
-The complete runnable [ScriptBot example](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/agent-plugin/README.md?ref=docs) supplies a fake agent, canonical shim, priced spend probe, account probe, and fixture transcript.
+The complete runnable [ScriptBot example](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/agent-plugin/README.md?ref=docs) supplies a fake agent, canonical shim, priced spend probe, account probe, and fixture transcript.
 
 ## Validate a plugin
 
@@ -153,7 +153,7 @@ The event vocabulary maps directly onto RimZ lifecycle signals:
 | `session_end` | none | End the session, hide its card, and retain its durable row for explicit resume. |
 | `context` | shared fields plus normalized context fields | Merge rich display-only context without a lifecycle transition. |
 
-`context` also accepts the optional fields in the serialized [`AgentContext`](https://github.com/rimio-ai/rimz/blob/v0.4.1/crates/rimz/src/agents/context.rs) shape, including `session_name`, `session_preview`, `model_id`, `model_display_name`, `thinking_enabled`, `output_style`, `vim_mode`, `agent_version`, `cost`, `tokens`, `rate_limits`, `pr`, and `account`. RimZ stamps `source` and `observed_at`; the shim omits them. Top-level `model`, token split, gauge, cost, and rate-limit fields normalize into the same shape.
+`context` also accepts the optional fields in the serialized [`AgentContext`](https://github.com/rimio-ai/rimz/blob/v0.4.2/crates/rimz/src/agents/context.rs) shape, including `session_name`, `session_preview`, `model_id`, `model_display_name`, `thinking_enabled`, `output_style`, `vim_mode`, `agent_version`, `cost`, `tokens`, `rate_limits`, `pr`, and `account`. RimZ stamps `source` and `observed_at`; the shim omits them. Top-level `model`, token split, gauge, cost, and rate-limit fields normalize into the same shape.
 
 Unknown event names and event payloads from a different protocol version are dropped at debug level. A known event with malformed typed fields is also dropped. This keeps a newer shim forward-compatible while preventing malformed input from mutating a row. `rimz agents check --replay` exposes those otherwise-quiet parser decisions while leaving ingestion behavior unchanged.
 

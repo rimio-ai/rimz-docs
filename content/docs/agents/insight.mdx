@@ -44,7 +44,7 @@ Spend and tokens speak one small vocabulary across `rimz stats`, the provider da
 | `◌` | cache-read tokens: context re-read from the provider's cache |
 | `$` | dollar spend, in green, whether reported directly or priced locally |
 
-Cache reads are usually most of the volume, so a busy day is mostly `◌`. The complete glyph legend, with every meter and tone, is the [interface reference](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs#reading-the-glyphs).
+Cache reads are usually most of the volume, so a busy day is mostly `◌`. The complete glyph legend, with every meter and tone, is the [interface reference](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs#reading-the-glyphs).
 
 ### Per account: the provider dashboard
 
@@ -70,7 +70,7 @@ These totals are account-global, like `rimz stats`: they count every project on 
 
 The `5h` and `7d` bars measure a different thing from the dollar figures. They are the included budget of your subscription plan, draining toward the reset printed beside them (`↻ 1h47m`), and they fill with what is left. A plan like Claude Max or ChatGPT Pro refills on its duration windows automatically, so those bars are your read on pace, not a bill. An API-key account has no such window, so its block shows a single `api` budget row instead; an uncapped key is a full bar with `∞`.
 
-When a window empties mid-turn the agent parks rather than fails, and with auto-continue it resumes itself the moment the window resets ([loops → keep the fleet moving](/docs/harness/loops#keep-the-fleet-moving)). The exact bar tones, the reset colouring, and the not-yet-started window are drawn in the [interface reference](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs#zone-3--the-provider-dashboard); where the readings come from is [providers internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/providers.md?ref=docs).
+When a window empties mid-turn the agent parks rather than fails, and with auto-continue it resumes itself the moment the window resets ([loops → keep the fleet moving](/docs/harness/loops#keep-the-fleet-moving)). The exact bar tones, the reset colouring, and the not-yet-started window are drawn in the [interface reference](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs#zone-3--the-provider-dashboard); where the readings come from is [providers internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs).
 
 #### Cap the spend you read here
 
@@ -110,7 +110,7 @@ Two scopes and a set of windows keep the surfaces honest:
 - The cockpit is scoped to the room you are in. The provider dashboard totals and everything in `rimz stats` are account-global, summed per provider account across every project on the machine.
 - The cockpit window is `session`, `24h`, or `today` (above). The dashboard's totals rows are the trailing week and month, `rimz stats` adds year and all-time, and the heatmap buckets by calendar day.
 
-None of this can fail into a wrong-looking number. Spend is enrichment, so a missing binary, a logged-out account, or an unpriced model degrades to an explicitly absent field or a zero inside a real historical tally, never a bad figure dressed up as a real one. Provider totals and locally priced token counters render identically as dollars. For the mechanism in full, the caches, the price-table precedence, and the window fusion, see [providers internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/providers.md?ref=docs).
+None of this can fail into a wrong-looking number. Spend is enrichment, so a missing binary, a logged-out account, or an unpriced model degrades to an explicitly absent field or a zero inside a real historical tally, never a bad figure dressed up as a real one. Provider totals and locally priced token counters render identically as dollars. For the mechanism in full, the caches, the price-table precedence, and the window fusion, see [providers internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs).
 
 ## Configuration
 
@@ -127,5 +127,5 @@ A few knobs, all plain TOML ([configuration](/docs/customization/configuration))
 - [Agents](/docs/agents/fleet#manage-a-running-room): one agent's token split and cost with `rimz agents show`.
 - [Loops](/docs/harness/loops#keep-the-fleet-moving): auto-continue when a budget window empties mid-turn.
 - [Configuration](/docs/customization/configuration#sidebar-rendering): the spend window, timezone, and provider-display knobs.
-- [The sidebar on screen](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs#zone-3--the-provider-dashboard): every bar, tone, and glyph drawn exactly.
-- [Providers internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/providers.md?ref=docs): accounts, budgets, spend, and the price table in depth.
+- [The sidebar on screen](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs#zone-3--the-provider-dashboard): every bar, tone, and glyph drawn exactly.
+- [Providers internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs): accounts, budgets, spend, and the price table in depth.

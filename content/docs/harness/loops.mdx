@@ -2,7 +2,7 @@
 title: "Loops"
 description: "You already run things on a clock."
 ---
-> `rimz loop` is cron for your agents. A task is a name, a schedule, and one action: an agent turn in a real pane, a wake to an agent that is already running, or a shell command that guards either. It fires while the room is open. The clock, the state files, and the run log underneath are in [loops.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/loops.md?ref=docs).
+> `rimz loop` is cron for your agents. A task is a name, a schedule, and one action: an agent turn in a real pane, a wake to an agent that is already running, or a shell command that guards either. It fires while the room is open. The clock, the state files, and the run log underneath are in [loops.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/loops.md?ref=docs).
 
 ## Why rimz loop
 
@@ -122,7 +122,7 @@ The certified cause then picks the clock:
 
 Each attempt is a keystroke you could have typed yourself: when the clock fires and the agent is still parked, RimZ sends the configured nudge (`continue` by default, `resume.auto_continue_text`) into the agent's live pane through the same send path as `rimz message --steer`. All causes share one attempt cap (`resume.auto_continue_max_retries`, default 12, just under an hour on the default ramp); when it exhausts, the row goes `failed` and routes to you like any other actionable card. Every attempt appends the park time, delivery verdict, and message id to the assist log.
 
-The ramp and retry keys are in [configuration.md → Resume](/docs/customization/configuration#resume); the full arm, fire, and exhaust state machine is [providers.md → Auto-continue](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/providers.md?ref=docs#auto-continue).
+The ramp and retry keys are in [configuration.md → Resume](/docs/customization/configuration#resume); the full arm, fire, and exhaust state machine is [providers.md → Auto-continue](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs#auto-continue).
 
 ### Auto-redeem
 
@@ -133,7 +133,7 @@ A Codex plan grants reset credits: redeem one and a spent usage window refills o
 - Doomed credit. The natural reset is near, but the credit would keep less than twenty-four hours of useful life after it. Waiting for the free reset would strand the credit, so it goes first.
 - Scheduled redeem. Several credits approach expiry together. RimZ measures from your own recent usage how long a fresh window takes to fill and spaces the redemptions that far apart, working back from each credit's expiry, so each credit lands on a window with room to absorb it. A redemption or a natural reset moves the next attempt later, keeping the chain paced to real capacity.
 
-The reflex fails closed and paces itself. Every rule starts from a credit in hand, blocked gain and doomed credit additionally require a readable reset time, and attempts are throttled account-wide across every room on the machine: ten minutes between attempts, thirty after a success. A successful redemption immediately refreshes the account reading, and because a refilled window is certified recovered capacity, [auto-continue](#auto-continue) wakes the parked turns on it. The verdict and pacing model in full are [providers.md → Auto-redeem](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/providers.md?ref=docs#auto-redeem).
+The reflex fails closed and paces itself. Every rule starts from a credit in hand, blocked gain and doomed credit additionally require a readable reset time, and attempts are throttled account-wide across every room on the machine: ten minutes between attempts, thirty after a success. A successful redemption immediately refreshes the account reading, and because a refilled window is certified recovered capacity, [auto-continue](#auto-continue) wakes the parked turns on it. The verdict and pacing model in full are [providers.md → Auto-redeem](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs#auto-redeem).
 
 ### Smart compaction
 
@@ -228,4 +228,4 @@ Leave the room open, detached on your workstation or on a server you reach with 
 - [Loop CLI](/docs/reference/cli/loop): every flag on `add`, `fire`, `list`, `show`, `rename`, and `remove`.
 - [Configuration](/docs/customization/configuration): the `[resume]` and `[harness]` keys, and the `loop.toml` shape.
 - [Security and trust](/docs/help/security): the safety posture for bypass flags and project trust.
-- [loops.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/loops.md?ref=docs): the clock, state files, and run log underneath.
+- [loops.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/loops.md?ref=docs): the clock, state files, and run log underneath.

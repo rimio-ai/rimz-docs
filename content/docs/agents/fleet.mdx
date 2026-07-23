@@ -48,7 +48,7 @@ Beyond the preset, the launcher carries three habits that build on it, each with
 
 ## Compose a layout
 
-Launching three agents by hand is three pane splits and three commands typed. One spec does it in one line: **commas split columns, plus signs tile rows, slashes stack rows** (a Zellij stack; tmux tiles them). Each cell is an agent kind, a `<kind>-<mode>` cell ([permission modes](#set-a-permission-mode)), a [profile](#profiles-shape-an-agent-for-one-job), a configured command, or `term` for a plain shell; suffix an agent cell with `:role` to give it an ad-hoc role handle. An optional trailing prompt goes to one leader: a named team's configured `leader` role, its first declared role by default, or otherwise the first agent cell. Give a repeated first cell an inline role to make that target unambiguous; use `rimz message @all` after launch when every agent needs the same text.
+Launching three agents by hand is three pane splits and three commands typed. One spec does it in one line: **commas split columns, plus signs tile rows, slashes stack rows** (a Zellij stack; tmux tiles them). Each cell is an agent kind, a `<kind>-<mode>` cell ([permission modes](#set-a-permission-mode)), a [profile](#profiles-shape-an-agent-for-one-job), a configured command, any executable on your PATH, or `term` for a plain shell; configured commands and profiles win over a same-named binary. Suffix an agent cell with `:role` to give it an ad-hoc role handle. An optional trailing prompt goes to one leader: a named team's configured `leader` role, its first declared role by default, or otherwise the first agent cell. Give a repeated first cell an inline role to make that target unambiguous; use `rimz message @all` after launch when every agent needs the same text.
 
 ```sh
 rimz agents claude,codex                     # two agents, side by side
@@ -59,7 +59,7 @@ rimz agents 'vim,codex+term'                 # your editor beside an agent stack
 rimz agents claude,codex "Draft the API shape."   # the prompt lands on the first cell, Claude
 ```
 
-Quote a spec whenever it contains a `+`, a space, or anything your shell would otherwise expand. Profiles and kinds compose the same way, so `rimz agents planner,coder+reviewer` lays out three of your presets. The full grammar and how cells compile to panes is [harness.md → The layout IR](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/harness.md?ref=docs#the-layout-ir).
+Quote a spec whenever it contains a `+`, a space, or anything your shell would otherwise expand. Profiles and kinds compose the same way, so `rimz agents planner,coder+reviewer` lays out three of your presets. The full grammar and how cells compile to panes is [harness.md → The layout IR](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/harness.md?ref=docs#the-layout-ir).
 
 Add `-w` and the whole layout lands in an isolated Git worktree, the pattern for running several agents in parallel without stepping on each other: see [Worktrees](/docs/harness/worktrees).
 

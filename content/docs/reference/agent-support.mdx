@@ -1,7 +1,7 @@
 ---
 title: "Agent support"
 ---
-RimZ watches the coding agents you already run — Claude Code, Codex, and the alpha and experimental set (Pi, OpenCode, Antigravity, Copilot, Droid, Cursor, Amp, Kiro, Qwen Code, Kimi, and Grok Build) — through one uniform adapter each. An adapter translates that agent's own hooks, transcripts, and APIs into the vocabulary the rest of RimZ speaks, so `rimz agents` launches, `rimz message` steers, and `rimz agents … -p` scripts every built-in that exposes it, all through the same boundary. It reads what the agent does and classifies it; you answer in the agent's own UI, the CLI runs stock, and the official web, desktop, and mobile apps keep working untouched. The boundary in depth is [the agent model](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/model.md?ref=docs).
+RimZ watches the coding agents you already run — Claude Code, Codex, and the alpha and experimental set (Pi, OpenCode, Antigravity, Copilot, Droid, Cursor, Amp, Kiro, Qwen Code, Kimi, and Grok Build) — through one uniform adapter each. An adapter translates that agent's own hooks, transcripts, and APIs into the vocabulary the rest of RimZ speaks, so `rimz agents` launches, `rimz message` steers, and `rimz agents … -p` scripts every built-in that exposes it, all through the same boundary. It reads what the agent does and classifies it; you answer in the agent's own UI, the CLI runs stock, and the official web, desktop, and mobile apps keep working untouched. The boundary in depth is [the agent model](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/model.md?ref=docs).
 
 Read the support level honestly. **Claude Code and Codex are the supported daily drivers** — wired end to end and run constantly. **Pi and OpenCode are alpha**, close behind the daily drivers; the remaining agents are experimental, wired against their documented hook and transcript surface and covered by tests but not yet dogfooded enough by the author. Treat alpha and experimental integrations as best-effort: run them anyway, since they mostly just work, and please report the bugs you hit. Support tier tracks lived confidence, not mechanical breadth — an early-tier agent can still wire up a wide surface, as the matrix below shows.
 
@@ -99,7 +99,7 @@ Claude Code is the reference integration and reads full across all six; each oth
 
 ## The wiring matrix
 
-Under the six capabilities sits the mechanism: sixteen integration concerns naming what each adapter reads from its agent. This is the grid to consult when a capability reads partial and you want the specific reason, or when you are [building an adapter](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/contributing/agent-adapters.md?ref=docs).
+Under the six capabilities sits the mechanism: sixteen integration concerns naming what each adapter reads from its agent. This is the grid to consult when a capability reads partial and you want the specific reason, or when you are [building an adapter](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/contributing/agent-adapters.md?ref=docs).
 
 A cell reads **wired** (✓, the concern reaches a user-complete state), **partial** (◐, coverage is incomplete and the adapter names the gap), or **unsupported** (✗, unreachable from the agent's current protocol).
 
@@ -160,23 +160,23 @@ Under the concern matrix sits the raw event surface: the eleven lifecycle signal
 
 ## Per-agent mappings
 
-The detail for each agent — its full coverage rationale, permission-mode mapping, effort levels, install target, resume/fork surface, and account probing — lives in that agent's mapping doc, with its upstream protocol in the matching external reference. Adding an agent means implementing only its supported workflow capabilities, declaring an `AgentSpec`, and composing one registry definition ([adding an agent](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/adapter.md?ref=docs#adding-an-agent)).
+The detail for each agent — its full coverage rationale, permission-mode mapping, effort levels, install target, resume/fork surface, and account probing — lives in that agent's mapping doc, with its upstream protocol in the matching external reference. Adding an agent means implementing only its supported workflow capabilities, declaring an `AgentSpec`, and composing one registry definition ([adding an agent](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/adapter.md?ref=docs#adding-an-agent)).
 
 | Agent | Mapping | Upstream protocol |
 | --- | --- | --- |
-| Claude Code | [claude.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/claude.md?ref=docs) | [claude-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/claude-reference.md?ref=docs) |
-| Codex | [codex.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/codex.md?ref=docs) | [codex-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/codex-reference.md?ref=docs) |
-| Pi | [pi.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/pi.md?ref=docs) | [pi-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/pi-reference.md?ref=docs) |
-| OpenCode | [opencode.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/opencode.md?ref=docs) | [opencode-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/opencode-reference.md?ref=docs) |
-| Antigravity CLI | [antigravity.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/antigravity.md?ref=docs) | [antigravity-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/antigravity-reference.md?ref=docs) |
-| Copilot | [copilot.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/copilot.md?ref=docs) | [copilot-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/copilot-reference.md?ref=docs) |
-| Droid | [droid.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/droid.md?ref=docs) | [droid-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/droid-reference.md?ref=docs) |
-| Cursor | [cursor.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/cursor.md?ref=docs) | [cursor-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/cursor-reference.md?ref=docs) |
-| Amp | [amp.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/amp.md?ref=docs) | [amp-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/amp-reference.md?ref=docs) |
-| Kiro CLI | [kiro.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/kiro.md?ref=docs) | [kiro-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/kiro-reference.md?ref=docs) |
-| Qwen Code | [qwen.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/qwen.md?ref=docs) | [qwen-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/qwen-reference.md?ref=docs) |
-| Kimi | [kimi.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/kimi.md?ref=docs) | [kimi-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/kimi-reference.md?ref=docs) |
-| Grok Build | [grok.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/grok.md?ref=docs) | [grok-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/agent-adapter/grok-reference.md?ref=docs) |
+| Claude Code | [claude.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/claude.md?ref=docs) | [claude-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/claude-reference.md?ref=docs) |
+| Codex | [codex.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/codex.md?ref=docs) | [codex-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/codex-reference.md?ref=docs) |
+| Pi | [pi.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/pi.md?ref=docs) | [pi-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/pi-reference.md?ref=docs) |
+| OpenCode | [opencode.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/opencode.md?ref=docs) | [opencode-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/opencode-reference.md?ref=docs) |
+| Antigravity CLI | [antigravity.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/antigravity.md?ref=docs) | [antigravity-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/antigravity-reference.md?ref=docs) |
+| Copilot | [copilot.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/copilot.md?ref=docs) | [copilot-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/copilot-reference.md?ref=docs) |
+| Droid | [droid.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/droid.md?ref=docs) | [droid-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/droid-reference.md?ref=docs) |
+| Cursor | [cursor.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/cursor.md?ref=docs) | [cursor-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/cursor-reference.md?ref=docs) |
+| Amp | [amp.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/amp.md?ref=docs) | [amp-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/amp-reference.md?ref=docs) |
+| Kiro CLI | [kiro.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/kiro.md?ref=docs) | [kiro-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/kiro-reference.md?ref=docs) |
+| Qwen Code | [qwen.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/qwen.md?ref=docs) | [qwen-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/qwen-reference.md?ref=docs) |
+| Kimi | [kimi.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/kimi.md?ref=docs) | [kimi-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/kimi-reference.md?ref=docs) |
+| Grok Build | [grok.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/grok.md?ref=docs) | [grok-reference.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/agent-adapter/grok-reference.md?ref=docs) |
 
 ## Versions
 
@@ -184,7 +184,7 @@ RimZ tracks each agent's own release surface, and behaviour can shift with the a
 
 ## Agents not yet supported
 
-An agent RimZ doesn't recognize runs fine in a pane; it renders as a plain process row rather than an agent card, with no live state or attention routing. New agents land the same way the built-ins here did — one adapter over their verified hook or local-store surface ([adding an agent](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/adapter.md?ref=docs#adding-an-agent)). Two categories are known gaps: **remote agents** with no local pane (a `claude remote-control --spawn` worktree, or a Codex thread started from the web) are tracked but not yet rendered, and an agent whose hooks you declined at the consent gate reports nothing until you wire it with `rimz hooks install`.
+An agent RimZ doesn't recognize runs fine in a pane; it renders as a plain process row rather than an agent card, with no live state or attention routing. New agents land the same way the built-ins here did — one adapter over their verified hook or local-store surface ([adding an agent](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/adapter.md?ref=docs#adding-an-agent)). Two categories are known gaps: **remote agents** with no local pane (a `claude remote-control --spawn` worktree, or a Codex thread started from the web) are tracked but not yet rendered, and an agent whose hooks you declined at the consent gate reports nothing until you wire it with `rimz hooks install`.
 
 ## Third-party plugins
 
@@ -196,6 +196,6 @@ A machine-tier process-plugin path lets a third-party agent reach the same adapt
 - [Teams](/docs/harness/teams) — pairing models by role across supported kinds.
 - [Messaging](/docs/harness/messaging) — steering and queuing agents by handle.
 - [Token insight](/docs/agents/insight) — where the `live$` and `spend` figures surface, and how each is calculated.
-- [The agent model](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/model.md?ref=docs) — the rollup, state machine, and adapter boundary in depth.
+- [The agent model](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/model.md?ref=docs) — the rollup, state machine, and adapter boundary in depth.
 - [Configuration](/docs/customization/configuration#agent-profiles-commands-and-teams) — profiles, effort, and per-agent launch args.
 - [Troubleshooting](/docs/help/troubleshooting) — `rimz doctor`, hooks not reporting, and version drift.

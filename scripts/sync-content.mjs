@@ -66,6 +66,7 @@ const mappings = [
   // Reference
   ['docs/reference/cli.md', 'reference/cli/index.mdx'],
   ['docs/reference/cli/getting-started.md', 'reference/cli/getting-started.mdx'],
+  ['docs/reference/cli/events.md', 'reference/cli/events.mdx'],
   ['docs/reference/cli/config.md', 'reference/cli/config.mdx'],
   ['docs/reference/cli/agents.md', 'reference/cli/agents.mdx'],
   ['docs/reference/cli/asks.md', 'reference/cli/asks.mdx'],

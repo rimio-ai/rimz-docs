@@ -10,7 +10,7 @@ RimZ reads color schemes from [iTerm2-Color-Schemes](https://github.com/mbadolat
 rimz config set theme "Catppuccin Mocha"   # any bundled scheme; rimz list-themes shows them all
 ```
 
-Every element carries its state by shape first (the [glyph legend](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs#reading-the-glyphs) is the meaning table), so color reinforces meaning rather than carrying it, and any palette stays readable, including no color at all. This page is the knobs; [interface/sidebar.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs) is what every tone and glyph *means* on screen.
+Every element carries its state by shape first (the [glyph legend](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs#reading-the-glyphs) is the meaning table), so color reinforces meaning rather than carrying it, and any palette stays readable, including no color at all. This page is the knobs; [interface/sidebar.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs) is what every tone and glyph *means* on screen.
 
 ## Common changes
 
@@ -165,7 +165,7 @@ indexed = 4
 
 ## Animations
 
-`[theme.animations]` themes the status heads the sidebar paints (what each head means is in [the glyph legend](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs#reading-the-glyphs)). The roles are `thinking`, `working`, `compacting`, `delegating`, `resolving`, `idle`, `success`, `paused`, `waiting`, and `failed`. Each role takes four optional fields (`frames`, `color`, `effect`, `speed`), and an omitted field keeps the built-in, so a one-line override leaves the rest alone. The template lists every built-in head.
+`[theme.animations]` themes the status heads the sidebar paints (what each head means is in [the glyph legend](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs#reading-the-glyphs)). The roles are `thinking`, `working`, `compacting`, `delegating`, `resolving`, `idle`, `success`, `paused`, `waiting`, and `failed`. Each role takes four optional fields (`frames`, `color`, `effect`, `speed`), and an omitted field keeps the built-in, so a one-line override leaves the rest alone. The template lists every built-in head.
 
 ```toml
 [theme.animations.thinking]
@@ -201,7 +201,7 @@ The continuous signal is reserved for the **one row that most needs you**, the o
 
 ## Glyphs
 
-`[theme.glyphs]` shapes the sidebar's glyph vocabulary; the [glyph legend](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/interface/sidebar.md?ref=docs#reading-the-glyphs) stays the canonical meaning table. `set` chooses the active preset, `unicode` (default) or `nerd_font`, and the matching inline tables overlay it. Glyphs are grouped by the sidebar's on-screen reading order, and the template lists every role in both shipped sets, so customizing is uncomment-and-edit. Each glyph must occupy exactly one cell, or two when a trailing space pads a double-width icon.
+`[theme.glyphs]` shapes the sidebar's glyph vocabulary; the [glyph legend](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/interface/sidebar.md?ref=docs#reading-the-glyphs) stays the canonical meaning table. `set` chooses the active preset, `unicode` (default) or `nerd_font`, and the matching inline tables overlay it. Glyphs are grouped by the sidebar's on-screen reading order, and the template lists every role in both shipped sets, so customizing is uncomment-and-edit. Each glyph must occupy exactly one cell, or two when a trailing space pads a double-width icon.
 
 ```toml
 [theme.glyphs]

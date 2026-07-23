@@ -58,11 +58,11 @@ The same `pet` key takes bring-your-own art:
 - `pet = "https://example.com/my-pet.webp"` fetches an HTTPS WebP or PNG sheet once and caches it. Plain `http://` is refused.
 - `pet = "~/art/my-pet.png"` reads a local WebP or PNG sheet; a directory path is read as a [petdex](#petdex) install.
 
-Every source uses the petdex sheet geometry — a `1536x1872` image holding an `8x9` grid of `192x208` frames — with each row an animation the pet plays. The row-by-row catalog, cache layout, and decode pipeline live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/pets.md?ref=docs#assets).
+Every source uses the petdex sheet geometry — a `1536x1872` image holding an `8x9` grid of `192x208` frames — with each row an animation the pet plays. The row-by-row catalog, cache layout, and decode pipeline live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/pets.md?ref=docs#assets).
 
 ## Crisp pixels and cell art
 
-Two tiers render the same sheet. **Pixel** draws the sprite through the kitty graphics protocol, crisp at native resolution: it needs a Ghostty or kitty terminal ([installation](/docs/getting-started/installation#truecolor-terminal-and-a-nerd-font-optional) sets one up), and inside tmux also tmux 3.6+ with `allow-passthrough on` (or `all`). **Sextant** draws the sprite as cell art, each terminal cell split into a 2x3 pixel grid, and works everywhere: Zellij, SSH, and any terminal that shows color.
+Two tiers render the same sheet. **Pixel** draws the sprite through the kitty graphics protocol, crisp at native resolution: it works in Ghostty and kitty ([installation](/docs/getting-started/installation#truecolor-terminal-and-a-nerd-font-optional) sets one up), and in the RimZ browser page for tmux rooms; tmux 3.6+ with `allow-passthrough on` (or `all`) remains required. **Sextant** draws the sprite as cell art, each terminal cell split into a 2x3 pixel grid, and works everywhere: Zellij, SSH, stock ttyd pages, and any terminal that shows color.
 
 <p align="center">
   <img src="/docs-assets/rimz-pets-sexant.png" alt="rimz list-pets in Alacritty: the same built-in pets rendered as sextant cell art" width="100%"/>
@@ -77,6 +77,8 @@ Two tiers render the same sheet. **Pixel** draws the sprite through the kitty gr
 | `pixel` | opts past the terminal-name allowlist for newer kitty-compatible terminals, while hard gates such as tmux passthrough still apply |
 | `sextant` | the most portable cell art, on every backend |
 
+`auto` requires every rendering client attached to the tmux room to support RimZ's Kitty subset. Attaching a plain terminal drops the room to sextant within ten seconds; detaching it restores pixels. `glyphs = "sextant"` remains authoritative in the browser, and Zellij remains on sextant.
+
 Sextant pets fit their source proportions inside the fixed dashboard footprint. RimZ probes the terminal's cell pixel dimensions when the pty exposes them; Zellij reports no pixel dimensions, so set the ratio manually when its font makes pets look tall or wide: `rimz config set theme.pets.cell_aspect 2.5`. Explicit config wins over the probe, and a neutral `13/6` fallback preserves the previous rendering when neither fact is available.
 
 On macOS, terminal graphics updates can make AppKit re-evaluate the pointer shape while pixel pets animate; RimZ transmits each sprite image once to minimize that traffic, and `glyphs = "sextant"` switches to the flicker-free cell-art path when you want it fully gone.
@@ -87,4 +89,4 @@ Built-in and URL sheets fetch once over HTTPS into the per-machine cache; `RIMZ_
 
 Pets run no commands. Asset loading sends only the configured asset request; prompts, transcripts, pane text, workspace paths, and provider credentials stay local. The pet's place in the threat model is one bullet in [security.md](/docs/help/security#what-leaves-your-machine).
 
-Sheet geometry, the cache layout, and the pixel gates live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/pets.md?ref=docs).
+Sheet geometry, the cache layout, and the pixel gates live in the [pets internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/pets.md?ref=docs).

@@ -33,7 +33,7 @@ Pass `RIMZ_INSTALL_DIR` or `RIMZ_VERSION` to the `sh` command on the right side 
 brew install rimio-ai/rimz/rimz
 ```
 
-Homebrew adds the `rimio-ai/rimz` tap automatically. `brew upgrade rimz` picks up new releases. The install script reaches this path automatically on macOS when its Homebrew delegation conditions hold.
+Homebrew adds the `rimio-ai/rimz` tap automatically. Run `rimz update` to refresh formula data and upgrade `rimio-ai/rimz/rimz`. The install script reaches this path automatically on macOS when its Homebrew delegation conditions hold.
 
 ## Install a prebuilt binary
 
@@ -86,7 +86,7 @@ Whichever install path you chose, update it from the same command:
 rimz update
 ```
 
-`rimz update` detects the current binary's install path. A Homebrew install, including a macOS script install that delegated to Homebrew, runs `brew upgrade rimz`, and a Cargo install runs `cargo install --locked rimz`. Direct-download script and manually installed prebuilt binaries download the matching release archive, verify it against `SHA256SUMS`, extract only the RimZ binary, require its `--version` smoke test to pass, then atomically replace the current binary in place. When the binary changes, the new build runs `rimz reload` so live sidebars and held stats dashboards converge immediately.
+`rimz update` detects the current binary's install path. A Homebrew install, including a macOS script install that delegated to Homebrew, refreshes formula data with `brew update` and then runs `brew upgrade rimio-ai/rimz/rimz`, so stale tap data cannot skip a released build; a Cargo install runs `cargo install --locked rimz`. Direct-download script and manually installed prebuilt binaries download the matching release archive, verify it against `SHA256SUMS`, extract only the RimZ binary, require its `--version` smoke test to pass, then atomically replace the current binary in place. When the binary changes, the new build runs `rimz reload` so live sidebars and held stats dashboards converge immediately.
 
 Pass `--version <TAG>` to install a standalone release such as `v0.3.1`, roll back to an older tag, or follow the rolling `latest-main` build. Cargo accepts numbered release tags and normalizes short tags such as `v0.3` to `0.3.0`; crates.io has no `latest-main` build. Homebrew owns its selected formula version, so pin a standalone install through the install script instead.
 
@@ -163,9 +163,9 @@ cd rimz
 cargo xtask install
 ```
 
-`cargo xtask install` builds the Zellij presence plugin (a WebAssembly artifact embedded into the binary), builds `rimz`, copies it into `~/.cargo/bin`, and prints the installed version and path. The repo's [rust-toolchain.toml](https://github.com/rimio-ai/rimz/blob/v0.4.1/rust-toolchain.toml) pins the toolchain channel, components, and the `wasm32-wasip1` target, and `rustup` applies it on the first build — there is no manual target setup.
+`cargo xtask install` builds the Zellij presence plugin (a WebAssembly artifact embedded into the binary), builds `rimz`, copies it into `~/.cargo/bin`, and prints the installed version and path. The repo's [rust-toolchain.toml](https://github.com/rimio-ai/rimz/blob/v0.4.2/rust-toolchain.toml) pins the toolchain channel, components, and the `wasm32-wasip1` target, and `rustup` applies it on the first build — there is no manual target setup.
 
-To work on RimZ itself (debug builds, tests, the gate stack), continue with [the Rust conventions](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/contributing/rust-conventions.md?ref=docs).
+To work on RimZ itself (debug builds, tests, the gate stack), continue with [the Rust conventions](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/contributing/rust-conventions.md?ref=docs).
 
 ## Uninstall
 

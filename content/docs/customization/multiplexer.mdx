@@ -44,7 +44,7 @@ An optional key left unset falls through to your own Zellij or tmux config. A ke
 
 ## Adopt the baseline
 
-You need none of the configuration on this page: a freshly installed multiplexer works because the room sets its own options. The baselines are for your comfort and for the sessions you run outside RimZ. The fastest good config is the one RimZ ships under [examples/](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/README.md?ref=docs), Zellij as a complete starting file and tmux as sourceable modules:
+You need none of the configuration on this page: a freshly installed multiplexer works because the room sets its own options. The baselines are for your comfort and for the sessions you run outside RimZ. The fastest good config is the one RimZ ships under [examples/](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/README.md?ref=docs), Zellij as a complete starting file and tmux as sourceable modules:
 
 ```sh
 # From the rimz checkout
@@ -64,9 +64,9 @@ An agent is a plain process in an ordinary pane. A layout spec is pane splits: `
 
 ## Zellij
 
-The file is `~/.config/zellij/config.kdl`. `zellij setup --dump-config` prints the full default set, and `zellij setup --check` validates your edits. Every key here is catalogued in the [Zellij upstream reference](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/mux-adapter/zellij-reference.md?ref=docs#configuration).
+The file is `~/.config/zellij/config.kdl`. `zellij setup --dump-config` prints the full default set, and `zellij setup --check` validates your edits. Every key here is catalogued in the [Zellij upstream reference](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/mux-adapter/zellij-reference.md?ref=docs#configuration).
 
-[examples/zellij/config.kdl](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/zellij/config.kdl) is the whole baseline, the [essentials](/docs/getting-started/setup#zellij) plus every block below and the `tokyo-night` theme, as one file, since Zellij reads a single config. Starting fresh, copy it; with an existing `config.kdl`, lift the blocks you want. Unlisted keys keep Zellij's defaults either way.
+[examples/zellij/config.kdl](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/zellij/config.kdl) is the whole baseline, the [essentials](/docs/getting-started/setup#zellij) plus every block below and the `tokyo-night` theme, as one file, since Zellij reads a single config. Starting fresh, copy it; with an existing `config.kdl`, lift the blocks you want. Unlisted keys keep Zellij's defaults either way.
 
 Clipboard travels over OSC52 by default, so yanking works through SSH to your local clipboard. A terminal that needs a helper can set one explicitly:
 
@@ -128,15 +128,15 @@ A chord bound here no longer reaches the app in the pane, so it shadows zsh's `A
 
 ### A note on resurrection
 
-RimZ disables Zellij session serialization inside its room, because it owns rebuilding a room after a reboot or crash: it re-seeds the prior agents itself ([resume on rebirth](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth)) rather than resurrecting a wall of suspended command panes that come back dead. Setting `session_serialization false` in your own `config.kdl` gives non-RimZ sessions the same clean-birth posture when you prefer running panes over resurrection.
+RimZ disables Zellij session serialization inside its room, because it owns rebuilding a room after a reboot or crash: it re-seeds the prior agents itself ([resume on rebirth](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth)) rather than resurrecting a wall of suspended command panes that come back dead. Setting `session_serialization false` in your own `config.kdl` gives non-RimZ sessions the same clean-birth posture when you prefer running panes over resurrection.
 
 RimZ also disables Zellij's session metadata loop inside its room. At roughly 100 panes on Zellij 0.44.3 that loop rewrites `session-metadata.kdl` every few seconds and runs process discovery through `ps`, a visible share of the Zellij server CPU. RimZ starts and attaches rooms with `disable_session_metadata true` so that work stays out of the room.
 
 ## tmux
 
-The file is `~/.tmux.conf` (or `~/.config/tmux/tmux.conf`); reload it with `tmux source-file ~/.tmux.conf` or the `prefix` + `r` binding below. Every option here is catalogued in the [tmux upstream reference](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/mux-adapter/tmux-reference.md?ref=docs#options).
+The file is `~/.tmux.conf` (or `~/.config/tmux/tmux.conf`); reload it with `tmux source-file ~/.tmux.conf` or the `prefix` + `r` binding below. Every option here is catalogued in the [tmux upstream reference](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/mux-adapter/tmux-reference.md?ref=docs#options).
 
-tmux is the spartan one out of the box: no mouse, a short scrollback, and thin, untitled pane borders. The blocks below ship as four self-contained modules under [examples/tmux/](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/README.md?ref=docs#tmux--tmux), [`agents.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/tmux/agents.conf) (the [essentials](/docs/getting-started/setup#tmux)), [`quality-of-life.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/tmux/quality-of-life.conf) (copy-mode, window names, splits), [`zellij-keys.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/tmux/zellij-keys.conf) (the parity chords), and [`theme-tokyonight.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/tmux/theme-tokyonight.conf) (frames and status bar), so your `~/.tmux.conf` stays yours and adopts by reference:
+tmux is the spartan one out of the box: no mouse, a short scrollback, and thin, untitled pane borders. The blocks below ship as four self-contained modules under [examples/tmux/](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/README.md?ref=docs#tmux--tmux), [`agents.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/tmux/agents.conf) (the [essentials](/docs/getting-started/setup#tmux)), [`quality-of-life.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/tmux/quality-of-life.conf) (copy-mode, window names, splits), [`zellij-keys.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/tmux/zellij-keys.conf) (the parity chords), and [`theme-tokyonight.conf`](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/tmux/theme-tokyonight.conf) (frames and status bar), so your `~/.tmux.conf` stays yours and adopts by reference:
 
 ```sh
 # From the rimz checkout: source the modules you want; drop any line.
@@ -221,7 +221,7 @@ bind -n M-d detach-client
 
 ### Titled pane borders and a themed status bar
 
-tmux draws thin, untitled pane borders and a plain status bar by default. This module gives panes titled frames, the closest tmux gets to Zellij's, and styles the status bar as Powerline tabs in TokyoNight Night, the palette of RimZ's default sidebar scheme, so the whole room reads as one surface. It assumes the outer terminal uses a Nerd Font or another Powerline-capable face. The full palette is [theme-tokyonight.conf](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/tmux/theme-tokyonight.conf); the pieces that carry it:
+tmux draws thin, untitled pane borders and a plain status bar by default. This module gives panes titled frames, the closest tmux gets to Zellij's, and styles the status bar as Powerline tabs in TokyoNight Night, the palette of RimZ's default sidebar scheme, so the whole room reads as one surface. It assumes the outer terminal uses a Nerd Font or another Powerline-capable face. The full palette is [theme-tokyonight.conf](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/tmux/theme-tokyonight.conf); the pieces that carry it:
 
 ```text
 # Titled pane borders: the tmux analog of Zellij's pane frames.
@@ -245,6 +245,6 @@ Swap the hex values for your own scheme's palette; `rimz list-themes` names ever
 
 - [Set up your machine → configure your multiplexer](/docs/getting-started/setup#configure-your-multiplexer): the short list of settings the room applies, one by one.
 - [Configuration → multiplexer room options](/docs/customization/configuration#multiplexer-room-options): every `[zellij]` and `[tmux]` key with its default.
-- [examples/](https://github.com/rimio-ai/rimz/blob/v0.4.1/examples/README.md?ref=docs): the shipped baseline files these blocks come from.
+- [examples/](https://github.com/rimio-ai/rimz/blob/v0.4.2/examples/README.md?ref=docs): the shipped baseline files these blocks come from.
 - [Security and trust → the Zellij presence plugin](/docs/help/security#the-zellij-presence-plugin): the one permission grant RimZ seeds, and how to revoke it.
-- [Zellij](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/mux-adapter/zellij-reference.md?ref=docs) and [tmux](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/externals/mux-adapter/tmux-reference.md?ref=docs) upstream references: every option catalogued at the source.
+- [Zellij](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/mux-adapter/zellij-reference.md?ref=docs) and [tmux](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/externals/mux-adapter/tmux-reference.md?ref=docs) upstream references: every option catalogued at the source.

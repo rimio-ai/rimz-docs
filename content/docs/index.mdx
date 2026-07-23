@@ -22,7 +22,7 @@ That same small footprint carries the primitives **harness engineering** and **l
 {/* sync:project-status:start */}
 ## Project status
 
-RimZ is **alpha software**, moving fast. Expect rough edges and the occasional bug, and expect the surface to shift: commands, flags, config keys, and output formats can change between releases while the design settles. The [changelog](https://github.com/rimio-ai/rimz/blob/v0.4.1/CHANGELOG.md?ref=docs) records what moved in each release.
+RimZ is **beta software**: the basic features work smoothly for daily use, and it is still moving fast. Expect the occasional rough edge, and expect the surface to keep shifting while the design settles — commands, flags, config keys, and output formats can change between releases. The [changelog](https://github.com/rimio-ai/rimz/blob/v0.4.2/CHANGELOG.md?ref=docs) records what moved in each release.
 
 It is also heavily used, on itself. RimZ is built with RimZ: the fleet behind this repository routinely runs 50–100 concurrent agents across 10–30 parallel worktrees and PRs, and a single room stays responsive with 100+ agents from multiple providers working at once. Driven through teams and loops, most of the routine engineering here — features, bug fixes, CI repair — already flows through the harness with little hand-holding.
 
@@ -74,7 +74,7 @@ Read that as: ready for personal, daily use today; for production workflows that
 - **RimZ drives the panes:** messages, steering, and `-p` harness runs land as keystrokes in the agent's own pane, so every agent runs its stock CLI in a full terminal, exactly as if you typed
 - **RimZ fuses every channel:** agent events, git churn, process stats, and account state combine into one live picture, and the sidebar renders it
 
-→ [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/DESIGN.md?ref=docs) · [ARCHITECTURE.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/ARCHITECTURE.md?ref=docs)
+→ [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/DESIGN.md?ref=docs) · [ARCHITECTURE.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/ARCHITECTURE.md?ref=docs)
 {/* sync:how-it-works:end */}
 
 {/* sync:agent-compatibility:start */}

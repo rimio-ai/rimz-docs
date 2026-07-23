@@ -4,6 +4,7 @@
   "pages": [
     "index",
     "getting-started",
+    "events",
     "remote",
     "web",
     "agents",

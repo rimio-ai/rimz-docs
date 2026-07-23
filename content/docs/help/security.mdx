@@ -4,7 +4,7 @@ description: "RimZ runs as you: no daemon, no elevated privileges, no account of
 ---
 RimZ runs as you: no daemon, no elevated privileges, no account of its own. It reports on the agents you already run, inside the terminal you already use. Its security model follows from that. RimZ asks before it changes anything on your machine, every change has a matching undo, and the only places a config file can make RimZ run a command are decisions you make by hand.
 
-This page covers three questions: what RimZ touches, what can execute, and what leaves your machine. The design commitments behind them are in [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.1/DESIGN.md?ref=docs).
+This page covers three questions: what RimZ touches, what can execute, and what leaves your machine. The design commitments behind them are in [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/DESIGN.md?ref=docs).
 
 ## What RimZ changes on your machine
 
@@ -39,17 +39,17 @@ The hashed surface is every field that can cause a process to run:
 - `[[hooks]]`: `event`, `command`
 - `[env]`: every key and value
 
-Room layout stays out of a repo's reach: a project config carrying a `[layout]` table (including tmux status `#(...)` and popup commands) is refused, with the fix to move it to your per-machine config. Any field RimZ can execute must enter this hash, and a unit test fails if one slips out. The mechanics, the grant record, and the diff are in [the trust internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/harness/trust.md?ref=docs); the command is in [the trust reference](/docs/reference/cli/hooks-trust#project-trust).
+Room layout stays out of a repo's reach: a project config carrying a `[layout]` table (including tmux status `#(...)` and popup commands) is refused, with the fix to move it to your per-machine config. Any field RimZ can execute must enter this hash, and a unit test fails if one slips out. The mechanics, the grant record, and the diff are in [the trust internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/trust.md?ref=docs); the command is in [the trust reference](/docs/reference/cli/hooks-trust#project-trust).
 
 Per-machine loop schedules are separate: a `check = "<shell>"` line in your own `~/.config/rimz/loop.toml` is your command, not a repo's. A clone can supply only project `[tasks]`, and those stay inert until you grant, unless a same-named machine task is already the one that runs.
 
 ### Notification handlers
 
-Notification handlers run a command of your choosing when a row needs attention (`[[notifications.handler]]`, or the legacy `[notifications].command`). They live only in your per-machine `~/.config/rimz/config.toml`, so a clone can never supply one. They run under your user id, spawned by the sidebar process, and often carry local push credentials. A handler that acts back on the room should treat pane text and transcripts as untrusted data: match a bounded prompt shape, and stay silent on anything else. Wiring is in [the notifications internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/sidebar/notifications.md?ref=docs).
+Notification handlers run a command of your choosing when a row needs attention (`[[notifications.handler]]`, or the legacy `[notifications].command`). They live only in your per-machine `~/.config/rimz/config.toml`, so a clone can never supply one. They run under your user id, spawned by the sidebar process, and often carry local push credentials. A handler that acts back on the room should treat pane text and transcripts as untrusted data: match a bounded prompt shape, and stay silent on anything else. Wiring is in [the notifications internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/notifications.md?ref=docs).
 
 ### The Zellij presence plugin
 
-On Zellij, RimZ loads a small presence plugin into each session so the sidebar learns pane layout by push, and a tab switch lands back on your work instead of the sidebar ([internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/multiplexers.md?ref=docs#the-zellij-presence-plugin)). Zellij normally prompts before a plugin gets permissions; RimZ seeds that grant ahead of load, keyed to the exact plugin path it materializes, so the first attach is not interrupted. The grant covers:
+On Zellij, RimZ loads a small presence plugin into each session so the sidebar learns pane layout by push, and a tab switch lands back on your work instead of the sidebar ([internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/multiplexers.md?ref=docs#the-zellij-presence-plugin)). Zellij normally prompts before a plugin gets permissions; RimZ seeds that grant ahead of load, keyed to the exact plugin path it materializes, so the first attach is not interrupted. The grant covers:
 
 - **Access Zellij state**: the plugin watches pane and tab shape.
 - **Run commands**: it runs the RimZ-owned `rimz sidebar wake` and `rimz sidebar focus` calls, and nothing else.
@@ -57,6 +57,16 @@ On Zellij, RimZ loads a small presence plugin into each session so the sidebar l
 - **Start web server**: added only when `[web] enabled`, so `rimz web open` can share a running session.
 
 The plugin's code, argv, and configuration are all RimZ-owned, never your `config.kdl`, and it ships no pane content anywhere. The grant lives in Zellij's own permission store, where its plugin manager can revoke it; revoking stops pane discovery until you restore it, and `rimz doctor` names the fix.
+
+### Browser listener
+
+Browser access defaults to a loopback ttyd listener with one machine-wide Basic-Auth credential. That credential reaches every live RimZ room on the machine and grants a shell as the serving user, so handle it like a machine-wide SSH key.
+
+`[web] auth_header` delegates the public decision to an authenticating reverse proxy. RimZ's gate validates the proxy source, requires exactly one non-empty header on every request, optionally matches its trimmed value exactly and case-sensitively against `[web] auth_users`, strips client-supplied `Authorization`, and injects the machine's Basic credential before forwarding to ttyd. The identity provider's application policy remains the primary access control; `auth_users` provides defense in depth using canonical username spellings. The proxy strips client-supplied copies of the identity header, injects its own value after authentication, and remains the only non-loopback source that can reach the gate.
+
+`[web] trusted_proxies` admits matching IPv4 or IPv6 CIDRs to this gate; an empty list leaves only loopback sources admitted. Pair the CIDRs with the host firewall, and account for the source address produced by container or host networking. Loopback bypasses only the source-address check: trusted-header requests still need the configured header, and the private ttyd listener still needs Basic Auth. On a multi-user host, use host-level user isolation when another local user can read the serving user's credential or execute as that user.
+
+The [web guide](/docs/agents/web#behind-a-reverse-proxy) configures Traefik and Authentik for this path.
 
 ## What leaves your machine
 
@@ -69,13 +79,13 @@ RimZ keeps your work local. Your prompts, transcripts, pane text, file paths, an
 
 ### Hook payload privacy
 
-Hook payloads can carry prompts, tool inputs, file paths, command arguments, and errors. They stay in RimZ's local state, and nothing forwards them off the box. Payload-fidelity and retention controls (a `[privacy]` block with `payload_mode` and `retention_days`) are a planned project surface, tracked in [configuration.md](/docs/customization/configuration) against the [hook adapter boundary](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
+Hook payloads can carry prompts, tool inputs, file paths, command arguments, and errors. They stay in RimZ's local state, and nothing forwards them off the box. Payload-fidelity and retention controls (a `[privacy]` block with `payload_mode` and `retention_days`) are a planned project surface, tracked in [configuration.md](/docs/customization/configuration) against the [hook adapter boundary](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
 
 ### Off-box error reporting
 
 Release binaries ship without the reporting code, so a stock install makes no Sentry calls whatever the config. Reporting compiles in only under `--features sentry`, and even then it is off until you set `[sentry] dsn` (or `RIMZ_SENTRY_DSN`). The DSN is per-machine and never the committed project config, so a clone or pull cannot redirect a contributor's telemetry.
 
-When on, it sends RimZ's own `warn!` and `error!` events and the provider conditions RimZ observes (rate limits, overload), tagged with low-cardinality facts: the release and build id, the running command, a fault class, and the agent or session id when known. The hostname is stripped, Sentry's default personal-data collection is off, and hook payloads, prompts, and transcripts never ride along. A failed account-usage probe reports the request's host, never its path or query. The full payload and the config knobs are in [the diagnostics internals](https://github.com/rimio-ai/rimz/blob/v0.4.1/docs/internals/diagnostics.md?ref=docs#off-box-error-reporting) and [configuration.md](/docs/customization/configuration#off-box-error-reporting).
+When on, it sends RimZ's own `warn!` and `error!` events and the provider conditions RimZ observes (rate limits, overload), tagged with low-cardinality facts: the release and build id, the running command, a fault class, and the agent or session id when known. The hostname is stripped, Sentry's default personal-data collection is off, and hook payloads, prompts, and transcripts never ride along. A failed account-usage probe reports the request's host, never its path or query. The full payload and the config knobs are in [the diagnostics internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/diagnostics.md?ref=docs#off-box-error-reporting) and [configuration.md](/docs/customization/configuration#off-box-error-reporting).
 
 ## Pane text is data, not instructions
 
