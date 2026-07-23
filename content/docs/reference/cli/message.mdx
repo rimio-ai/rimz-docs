@@ -1,5 +1,6 @@
 ---
 title: "Message CLI"
+description: "rimz message routes text to a running agent through the same path a keystroke takes: it types into the agent's own pane, exactly as if you typed there, and records the…"
 ---
 `rimz message` routes text to a running agent through the same path a keystroke takes: it types into the agent's own pane, exactly as if you typed there, and records the message durably so delivery is auditable and reversible. `rimz msg` is a visible alias for the whole command, including its subcommands. The default parks text for the next safe turn boundary, sending immediately only when the agent is already open to receive; `--steer` interrupts the live pane now; `--schedule` sets the earliest delivery time before the usual `--on` gate opens. A parked message is a `queued` record you can inspect, edit, or cancel before it lands. Addresses, park-vs-steer, channels, and agent-to-agent chat as a concept are the [messaging guide](/docs/harness/messaging).
 

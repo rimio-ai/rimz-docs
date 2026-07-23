@@ -1,6 +1,6 @@
 ---
 title: "Loop CLI"
-description: "rimz loop puts agent turns on a clock."
+description: "rimz loop puts agent turns on a clock. A task is a durable schedule: rimz loop add writes recurring machine tasks to loop.toml, writes project tasks to the repo's…"
 ---
 `rimz loop` puts agent turns on a clock. A task is a durable schedule: `rimz loop add` writes recurring machine tasks to `loop.toml`, writes project tasks to the repo's `.rimz/config.toml`, and stores one-shots and poll-until deadlines in state. The room's sidebar elder fires tasks while a room for the task's project is open. Nothing fires when no room is open, and `loop remove` deletes the task from whichever store owns it. A task uses `--agent` to spawn one supervised transient pane, `--wake` to deliver a prompt to one live agent session through the message path, `--check` to run a scheduled command, or `--check` as a guard before an agent action. Why you schedule turns, guard them with watchdogs, and pace them against the provider's window is the [loops guide](/docs/harness/loops).
 

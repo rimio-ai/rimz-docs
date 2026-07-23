@@ -1,5 +1,6 @@
 ---
 title: "Worktrees"
+description: "Agents working in parallel need isolation, and Git already ships the primitive for it: a worktree (git worktree) is a second checkout of your repository, in its own…"
 ---
 Agents working in parallel need isolation, and Git already ships the primitive for it: a worktree (`git worktree`) is a second checkout of your repository, in its own directory, on its own branch, sharing the same history. RimZ turns that primitive into a one-flag habit: add `-w` to any launch and the whole layout — agents, your editor, a shell — opens inside a fresh tree, seeded and ready to work.
 

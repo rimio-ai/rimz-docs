@@ -20,6 +20,7 @@ await assertFile('llms.txt');
 await assertFile('llms-full.txt');
 await assertFile('sitemap.xml');
 await assertFile('robots.txt');
+await assertFile('icon.svg');
 await assertFile('.nojekyll');
 
 for (const page of pages) {
@@ -36,6 +37,58 @@ for (const page of pages) {
 }
 
 assert.deepEqual(broken, [], `broken static links:\n${broken.join('\n')}`);
+
+const indexablePages = pages.filter((page) => page === 'index.html' || page.startsWith('docs/'));
+const pageTitles = new Map();
+const pageDescriptions = new Map();
+
+for (const page of indexablePages) {
+  const html = await readFile(path.join(outputRoot, page), 'utf8');
+  const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
+  const description = html.match(/<meta name="description" content="([^"]+)"\/?>/)?.[1];
+
+  assert.ok(title, `${page} has no title`);
+  assert.ok(description, `${page} has no meta description`);
+  assert.ok(!/\(v[0-9]/.test(title), `${page} puts a release number in its search title`);
+  assert.ok(!pageTitles.has(title), `${page} and ${pageTitles.get(title)} have the same title`);
+  assert.ok(
+    !pageDescriptions.has(description),
+    `${page} and ${pageDescriptions.get(description)} have the same meta description`,
+  );
+  pageTitles.set(title, page);
+  pageDescriptions.set(description, page);
+
+  for (const tag of [
+    /<link rel="canonical" href="https?:\/\/[^"]+"\/?>/,
+    /<meta property="og:title" content="[^"]+"\/?>/,
+    /<meta property="og:description" content="[^"]+"\/?>/,
+    /<meta property="og:url" content="https?:\/\/[^"]+"\/?>/,
+    /<meta property="og:image" content="https?:\/\/[^"]+"\/?>/,
+    /<meta name="twitter:card" content="summary_large_image"\/?>/,
+    /<meta name="twitter:title" content="[^"]+"\/?>/,
+    /<meta name="twitter:description" content="[^"]+"\/?>/,
+    /<meta name="twitter:image" content="https?:\/\/[^"]+"\/?>/,
+    /<link rel="icon" href="\/icon\.svg[^"]*"[^>]*>/,
+  ]) {
+    assert.match(html, tag, `${page} is missing search or social metadata: ${tag}`);
+  }
+
+  assert.equal(
+    [...html.matchAll(/<h1(?:\s|>)/g)].length,
+    1,
+    `${page} does not have exactly one h1`,
+  );
+  assert.ok(!/<meta name="robots"[^>]*noindex/i.test(html), `${page} is marked noindex`);
+
+  if (page === 'index.html') {
+    assert.ok(html.includes('"@type":"WebSite"'), 'the homepage has no WebSite structured data');
+  } else if (page !== 'docs/index.html') {
+    assert.ok(
+      html.includes('"@type":"BreadcrumbList"'),
+      `${page} has no breadcrumb structured data`,
+    );
+  }
+}
 
 const docsHtml = await readFile(path.join(outputRoot, 'docs', 'index.html'), 'utf8');
 assert.ok(

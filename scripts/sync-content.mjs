@@ -13,6 +13,7 @@ const publicRoot = path.join(repoRoot, 'public', 'docs-assets');
 const docsRouteBase = '/docs';
 const assetRouteBase = '/docs-assets';
 const githubBase = `https://github.com/rimio-ai/rimz/blob/${sourceRef}`;
+const maxDescriptionLength = 170;
 const voidHtmlTags = new Set([
   'area',
   'base',
@@ -343,10 +344,10 @@ function descriptionFrom(body) {
     }
     if (inFence) continue;
 
-    const trimmed = line.trim();
+    const trimmed = line.trim().replace(/^>\s?/, '');
     if (!trimmed) {
       const description = cleanDescription(paragraph.join(' '));
-      if (description) return firstSentence(description);
+      if (description) return descriptionExcerpt(description);
       paragraph = [];
       continue;
     }
@@ -359,7 +360,7 @@ function descriptionFrom(body) {
   }
 
   const description = cleanDescription(paragraph.join(' '));
-  return description ? firstSentence(description) : undefined;
+  return description ? descriptionExcerpt(description) : undefined;
 }
 
 function isNonProseLine(line) {
@@ -384,10 +385,26 @@ function cleanDescription(text) {
     .trim();
 }
 
-function firstSentence(text) {
-  const match = text.match(/^(.+?[.!?])(?:\s|$)/);
-  const sentence = match?.[1] ?? text;
-  return sentence.length > 180 ? undefined : sentence;
+function descriptionExcerpt(text) {
+  if (text.length <= maxDescriptionLength) return text;
+
+  const sentences = text.match(/.+?[.!?](?:\s|$)/g) ?? [];
+  let excerpt = '';
+
+  for (const sentence of sentences) {
+    const candidate = `${excerpt} ${sentence}`.trim();
+    if (candidate.length > maxDescriptionLength) break;
+    excerpt = candidate;
+  }
+
+  // A lone short opener ("You already script agents.") says very little in a
+  // search result. In that case, prefer a useful word-bounded excerpt from the
+  // whole lead paragraph, even when it needs an ellipsis.
+  if (excerpt.length >= 80) return excerpt;
+
+  const prefix = text.slice(0, maxDescriptionLength - 1);
+  const wordBounded = prefix.replace(/\s+\S*$/, '').replace(/[\s,;:—-]+$/, '');
+  return `${wordBounded}…`;
 }
 
 function rewriteLinks(markdown, sourcePath) {
@@ -656,7 +673,13 @@ function selfCheck() {
     ].join('\n'), 'README.md'),
     '<p align="center"><sub><b>AI agents / LLMs:</b> fetch <a href="/llms.txt">the live index</a>.</sub></p>\n\nIntroduction copy.',
   );
-  assert.equal(descriptionFrom(`${'word '.repeat(37)}.`), undefined);
+  const longDescription = descriptionFrom(`${'word '.repeat(37)}.`);
+  assert.ok(longDescription.endsWith('…'));
+  assert.ok(longDescription.length <= maxDescriptionLength);
+  assert.equal(
+    descriptionFrom('> A useful summary for a page that starts with a blockquote.'),
+    'A useful summary for a page that starts with a blockquote.',
+  );
   assert.throws(
     () => transformDocument('# Title\n\n<<<<<<< Updated upstream\nold\n=======\nnew\n>>>>>>> Stashed changes\n', 'docs/guide/conflict.md'),
     /docs\/guide\/conflict\.md:3: unresolved merge conflict marker/,

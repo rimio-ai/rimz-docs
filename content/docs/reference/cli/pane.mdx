@@ -1,6 +1,6 @@
 ---
 title: "Pane CLI"
-description: "rimz pane exposes the public pane primitives that humans and scripts share: see the room as panes, measure pane output, read what is on screen, type into one, and move focus."
+description: "rimz pane exposes the public pane primitives that humans and scripts share: see the room as panes, measure pane output, read what is on screen, type into one, and move…"
 ---
 `rimz pane` exposes the public pane primitives that humans and scripts share: see the room as panes, measure pane output, read what is on screen, type into one, and move focus. `pane send` is the same explicit input path as `message --steer` — literal keystrokes into a real pane, nothing more — and `pane capture` reads back the visible buffer, so a script observes and drives a pane exactly as a person at the keyboard would. It targets panes by id or by the [agent-address grammar](/docs/reference/cli/agents#addressing-agents). The operator-facing safety rules for treating captured text as untrusted are in [security.md](/docs/help/security).
 

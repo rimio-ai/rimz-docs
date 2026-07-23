@@ -50,4 +50,6 @@ RIMZ_SRC=../rimz pnpm sync
 
 The sync script picks the highest stable `v*` tag, checks it out into a temporary worktree, and regenerates `content/docs/` and `public/docs-assets/` from it. Patch releases such as `v0.4.1` supersede `v0.4` automatically; prereleases such as `v0.5.0-rc.1` are ignored. Hand-written scaffolding under `content/template/` seeds the generated tree.
 
+Search descriptions for imported pages are generated from each upstream document's opening prose, while hand-written pages keep their descriptions in `content/template/`. Keep lead paragraphs specific and useful: content checks reject missing, thin, overly long, or duplicate descriptions.
+
 Run `pnpm check:content` to verify page completeness, link and image targets, the release source ref, and `content/version.json`.

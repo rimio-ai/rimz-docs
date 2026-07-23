@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Geist, JetBrains_Mono } from 'next/font/google';
 import {
+  appName,
   appDescription,
   docsRoute,
   productGitHubUrl,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/shared';
 import { Gallery, InstallTabs, SceneTabs } from '@/components/landing/interactive';
 import { agentMarks } from '@/components/landing/agent-logos';
+import { JsonLd } from '@/components/json-ld';
 import {
   featureGroups,
   gallery,
@@ -37,6 +39,15 @@ const assetBase = '/docs-assets';
 
 const title = 'RimZ: the control room for your coding agents';
 const heading = 'The control room for your coding agents';
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: appName,
+  alternateName: 'RimZ Documentation',
+  url: `${siteUrl}/`,
+  description: appDescription,
+  sameAs: productGitHubUrl,
+};
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -65,6 +76,7 @@ export default function HomePage() {
 
   return (
     <div className={`landing ${sans.variable} ${mono.variable}`}>
+      <JsonLd data={websiteJsonLd} />
       <header className="nav">
         <div className="nav-inner">
           <Link className="wordmark" href="/">

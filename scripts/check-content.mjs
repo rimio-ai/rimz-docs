@@ -15,12 +15,32 @@ assert.match(version.sourceCommit, /^[0-9a-f]{40}$/);
 const docsRoot = path.join(repoRoot, 'content', 'docs');
 const files = await filesBelow(docsRoot);
 const pages = files.filter((file) => file.endsWith('.mdx'));
+const descriptions = new Map();
 
 assert.ok(pages.length > 0, 'there are no documentation pages');
 assert.ok(files.includes('meta.json'), 'there is no root meta.json');
 
 for (const page of pages) {
   const markdown = await readFile(path.join(docsRoot, page), 'utf8');
+  const frontmatter = markdown.match(/^---\n([\s\S]*?)\n---(?:\n|$)/)?.[1];
+  assert.ok(frontmatter, `${page} has no frontmatter`);
+
+  const descriptionLiteral = frontmatter.match(/^description:\s*(.+)$/m)?.[1];
+  assert.ok(descriptionLiteral, `${page} has no meta description`);
+
+  let description;
+  try {
+    description = JSON.parse(descriptionLiteral);
+  } catch {
+    assert.fail(`${page} has an invalid JSON-string meta description`);
+  }
+  assert.equal(typeof description, 'string', `${page} has a non-string meta description`);
+  assert.ok(description.length >= 70, `${page} has a meta description that is too thin`);
+  assert.ok(description.length <= 180, `${page} has a meta description longer than 180 characters`);
+
+  const duplicate = descriptions.get(description);
+  assert.ok(!duplicate, `${page} and ${duplicate} have the same meta description`);
+  descriptions.set(description, page);
 
   // Nothing may link into a version-prefixed route now that the site serves a
   // single release from unprefixed paths.

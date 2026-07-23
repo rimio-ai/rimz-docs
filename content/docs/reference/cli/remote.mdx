@@ -1,6 +1,6 @@
 ---
 title: "Remote CLI"
-description: "rimz remote attaches to a room on another host over SSH."
+description: "rimz remote attaches to a room on another host over SSH. remote connect builds a guarded ssh -t command on your machine and runs the remote host's own rimz, so your…"
 ---
 `rimz remote` attaches to a room on another host over SSH. `remote connect` builds a guarded `ssh -t` command on your machine and runs the remote host's own `rimz`, so your `~/.ssh/config`, keys, ports, and jump hosts apply through normal SSH resolution. An ordinary terminal attach adds no daemon; `--web` ensures the remote host's shared ttyd daemon. A supervised connection opens loopback-only local forwards when it detects new remote dev-server listeners. It changes nothing on the remote host until you ask: `remote setup` is the only subcommand that installs a binary there, and aliases are plain lines in `~/.config/rimz/remote.toml` you remove with `remote rm`. Why you attach this way, and how the link heals itself, is the [remote guide](/docs/agents/remote).
 

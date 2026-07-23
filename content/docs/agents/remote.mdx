@@ -1,6 +1,6 @@
 ---
 title: "Remote"
-description: "Remote is your multiplexer attach, run over SSH."
+description: "Remote is your multiplexer attach, run over SSH. A RimZ room is a plain Zellij or tmux session that lives on one host: a fleet on a server, or the room you left running…"
 ---
 Remote is your multiplexer attach, run over SSH. A RimZ room is a plain Zellij or tmux session that lives on one host: a fleet on a server, or the room you left running on the machine at home. It keeps working headless while no one is attached. `rimz remote connect` opens an SSH session to that host and attaches to the room there, so your local terminal renders exactly what the host is running, sidebar and agent panes alike. The room, its agents, and its state never leave the host; SSH just carries the screen. `rimz remote connect dev --web` instead opens the same room through a local browser tunnel, uniformly across Basic and trusted-header configurations on the remote host; the tunnel supplies authentication without a browser password prompt and supports Safari as well as Chrome. See [Web](/docs/agents/web). To answer an agent's questions from the provider's mobile app without attaching at all, see [answer asks from your phone](#answer-asks-from-your-phone).
 

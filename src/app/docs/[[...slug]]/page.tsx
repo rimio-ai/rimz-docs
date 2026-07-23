@@ -14,7 +14,7 @@ import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { absoluteUrl, docsGitConfig, docsRoute } from '@/lib/shared';
 import { baseOptions } from '@/lib/layout.shared';
-import { docsVersion } from '@/lib/version';
+import { JsonLd } from '@/components/json-ld';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
@@ -23,10 +23,38 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;
+  const canonical = pageCanonical(page.slugs);
+  const searchTitle = plainTextTitle(page.data.title);
+  const breadcrumbJsonLd =
+    page.slugs.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'RimZ Documentation',
+              item: absoluteUrl(`${docsRoute}/`),
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: searchTitle,
+              item: canonical,
+            },
+          ],
+        }
+      : undefined;
 
   return (
     <DocsLayout tree={source.getPageTree()} {...baseOptions()}>
-      <DocsPage toc={page.data.toc} full={page.data.full}>
+      {breadcrumbJsonLd ? <JsonLd data={breadcrumbJsonLd} /> : null}
+      <DocsPage
+        toc={page.data.toc}
+        full={page.data.full}
+        breadcrumb={{ includeRoot: true, includePage: true }}
+      >
         <DocsTitle>{page.data.title}</DocsTitle>
         <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
         <div className="flex flex-row gap-2 items-center border-b pb-6">
@@ -57,15 +85,13 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  const canonical = absoluteUrl(
-    `${docsRoute}${page.slugs.length > 0 ? `/${page.slugs.join('/')}` : ''}/`,
-  );
+  const canonical = pageCanonical(page.slugs);
   const isIntroduction = page.slugs.length === 0;
 
   return {
     title: isIntroduction
-      ? `RimZ documentation (${docsVersion.id})`
-      : `${page.data.title} (${docsVersion.id})`,
+      ? { absolute: 'RimZ Documentation: Installation, CLI, and Agent Guides' }
+      : plainTextTitle(page.data.title),
     description: page.data.description,
     alternates: { canonical },
     openGraph: {
@@ -73,4 +99,12 @@ export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): P
       images: absoluteUrl(getPageImage(page).url),
     },
   };
+}
+
+function pageCanonical(slugs: string[]) {
+  return absoluteUrl(`${docsRoute}${slugs.length > 0 ? `/${slugs.join('/')}` : ''}/`);
+}
+
+function plainTextTitle(title: string) {
+  return title.replace(/`([^`]+)`/g, '$1');
 }
