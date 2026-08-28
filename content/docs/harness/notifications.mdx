@@ -2,7 +2,7 @@
 title: "Notifications"
 description: "When an agent needs you and you are not looking, RimZ taps you: a desktop banner, a terminal bell, and — through notification handlers — any channel or script you own."
 ---
-> When an agent needs you and you are not looking, RimZ taps you: a desktop banner, a terminal bell, and — through notification handlers — any channel or script you own. This page wires the tap to your phone, your chat, or a script that clears routine prompts itself. The trigger model, debounce, and delivery plumbing are [internals → notifications](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/notifications.md?ref=docs).
+> When an agent needs you and you are not looking, RimZ taps you: a desktop banner, a terminal bell, and — through notification handlers — any channel or script you own. This page wires the tap to your phone, your chat, or a script that clears routine prompts itself. The trigger model, debounce, and delivery plumbing are [internals → notifications](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/sidebar/notifications.md?ref=docs).
 
 ## Why notifications
 
@@ -29,7 +29,7 @@ when = { kind = ["waiting", "failed"] }
 
 That is the whole feature: `waiting` and `failed` are the default triggers (add `paused` or `success` via `notifications.triggers`), and the command is anything — a push CLI, a webhook `curl`, a script. The event arrives twice over: as template variables (`{{title}}`, `{{body}}`, `{{agent}}`, `{{kind}}`, `{{worktree}}`, `{{pane}}`, `{{root}}`), each substituted as one shell-quoted token so you write them bare, and as environment variables (`RIMZ_NOTIFY_AGENT`, `RIMZ_NOTIFY_KIND`, `RIMZ_NOTIFY_PANE`, `RIMZ_NOTIFY_ROOT`, plus `RIMZ_NOTIFY_ASK` on a single-agent waiting notification and `RIMZ_NOTIFY_UNREAD` on reminders) for scripts that prefer reading the environment.
 
-A `when` clause narrows a handler; its present conditions all have to match, and an empty `when` matches everything. `kind` names the notification kinds — the agent statuses plus `coalesced`, `reminder`, `loop_paused` when a scheduled task reaches its strike threshold, and the `link_lost`/`link_restored` pair that [`rimz remote connect`](/docs/agents/remote) fires when an SSH link drops or recovers. `worktree` glob-matches the agent's branch, and `handle` glob-matches its handle or role, so the noisy experiment stays quiet while `@planner` on `release/*` reaches your phone.
+A `when` clause narrows a handler; its present conditions all have to match, and an empty `when` matches everything. `kind` names the notification kinds — the agent statuses plus `coalesced`, `reminder`, `loop_disabled` when a scheduled task reaches its strike threshold, and the `link_lost`/`link_restored` pair that [`rimz remote connect`](/docs/agents/remote) fires when an SSH link drops or recovers. `worktree` glob-matches the agent's branch, and `handle` glob-matches its handle or role, so the noisy experiment stays quiet while `@planner` on `release/*` reaches your phone.
 
 Handlers live in per-machine config and stay outside project trust, because they are personal routing that often carries host-specific push credentials — a cloned repository never brings its own ([security](/docs/help/security)). The payoff of the phone route: a failing migration at 3 a.m. becomes a push notification, you open the room from wherever you are ([remote](/docs/agents/remote), [web](/docs/agents/web)), answer in the agent's own UI, and the pipeline is green by morning.
 
@@ -55,4 +55,4 @@ A handler can match the prompt against patterns your script owns and answer only
 - [Remote](/docs/agents/remote) and [web](/docs/agents/web) — answering from another machine or a phone once the push lands.
 - [Troubleshooting](/docs/help/troubleshooting#notifications-dont-fire) — when no desktop banner appears.
 - [Configuration](/docs/customization/configuration#notifications) — every `[notifications]` key: triggers, debounce, coalescing, reminders, templates.
-- [internals → notifications](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/notifications.md?ref=docs) — the producer/renderer split, the unread model, and the trace log.
+- [internals → notifications](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/sidebar/notifications.md?ref=docs) — the producer/renderer split, the unread model, and the trace log.

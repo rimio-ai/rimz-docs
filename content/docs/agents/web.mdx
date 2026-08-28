@@ -48,7 +48,7 @@ With `[web] enabled = true`, every normal `rimz start` also asks for the shared 
 
 ## Session manager
 
-Open the base address without `?room=` to choose among every live RimZ room on the machine. An unknown or stopped session argument opens the same switcher with a notice; a valid argument continues to attach directly.
+Open the base address without `?room=` to choose among every live RimZ room on the machine. An unknown or stopped session argument opens the same switcher with a notice; a valid argument continues to attach directly. The browser reuses the same picker as the first-class [`rimz sessions`](/docs/reference/cli/getting-started#pick-a-session) terminal command.
 
 <p align="center">
   <img src="/docs-assets/rimz-sessions.png" alt="The session manager: a RIMZ banner over a bordered sessions box, one card per live room with repository name, path, provider agent counts, session count, tokens, and spend" width="720"/>
@@ -57,7 +57,7 @@ Open the base address without `?room=` to choose among every live RimZ room on t
 
 The switcher centers its room cards in a fixed 24-row panel beneath a RIMZ banner when the terminal has space, using 40% of the terminal width within its 58- to 84-column bounds. Empty rows keep the box stable when only a few rooms are live; small screens fall back to a compact full-frame list. Rooms with prompt activity in the last 24 hours lead, newest prompt first; the rest follow by the most recent room start or attach.
 
-Use ↑/↓ or j/k and the mouse wheel to move, Enter or a second click on the selected card to attach, and printable keys to filter repository names and paths. Backspace edits the filter, Esc clears it before quitting, and Ctrl-C quits immediately.
+Use ↑/↓ or j/k and the mouse wheel to move, Enter or a second click on the selected card to attach, and printable keys to filter repository names and paths. Backspace edits the filter, Esc clears it before quitting, and Ctrl-C quits immediately. Press `n` to choose a dormant workspace or browse from `$HOME`; Enter births and attaches its room, while arrows and Tab navigate directories.
 
 Each two-line card leads with the repository name and path, then shows live root-agent counts by provider. The red `●` count marks agents that need attention; `◎`, `◇`, and `$` show the headline session count, tokens, and spend from `[sidebar] spend_window`. An unreadable room snapshot leaves the stats line at `–` until the next probe.
 
@@ -100,6 +100,8 @@ rimz web restart
 ## Behind a reverse proxy
 
 A reverse proxy can terminate HTTPS and let an Authentik forward-auth decision identify the user while ttyd keeps its machine-wide Basic Auth behind that public edge. Set Authentik's Traefik forward-auth middleware to return `X-Authentik-Username` in its auth response headers, attach that middleware to the router serving RimZ, and make the proxy overwrite or remove any client-supplied copy of that header before forwarding.
+
+Set the proxy's idle read timeout above ttyd's one-hour ping interval so a genuinely idle browser tab remains attached. For nginx, set `proxy_read_timeout` above 3600 seconds. Cloudflare's 100-second timeout is not configurable on lower plans, so idle tabs behind those plans periodically reattach.
 
 Bind an Authentik access policy to the RimZ application as the primary control over who reaches the proxy. RimZ's `auth_users` allowlist adds defense in depth at the writable terminal itself; list each allowed identity with the exact canonical username spelling Authentik emits.
 
@@ -200,5 +202,5 @@ browser -> HTTPS authenticating proxy -> authorization gate -> Basic-authenticat
 - [Remote](/docs/agents/remote) — saved aliases and reconnect behavior.
 - [Web CLI reference](/docs/reference/cli/web) — every subcommand and flag.
 - [Configuration](/docs/customization/configuration#web-access) — per-machine settings.
-- [Web internals](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/web.md?ref=docs) — daemon argv, state, validation, and remote wire format.
+- [Web internals](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/web.md?ref=docs) — daemon argv, state, validation, and remote wire format.
 - [Troubleshooting](/docs/help/troubleshooting) — missing ttyd and failed starts.

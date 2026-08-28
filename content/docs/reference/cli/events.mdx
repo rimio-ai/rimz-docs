@@ -36,7 +36,7 @@ Every line has this shape:
 | `agent_id` | Provider session identity for the root agent or subagent. |
 | `agent_name` | RimZ card name when the observation carries one; omitted otherwise. |
 | `parent_agent_id` | Root session identity for a subagent event; omitted for root agents. |
-| `signal` | The complete [`LifecycleSignal`](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/model.md?ref=docs#the-state-machine) object, including variant-specific fields. |
+| `signal` | The complete [`LifecycleSignal`](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/agents/model.md?ref=docs#the-state-machine) object, including variant-specific fields. |
 | `prior_status` | Raw lifecycle status immediately before this signal; omitted when no prior state exists in the followed generation. |
 | `status` | Raw lifecycle status after the transition. |
 | `phase` | Turn phase after the transition: `idle`, `reasoning`, `acting`, or `parked`. |

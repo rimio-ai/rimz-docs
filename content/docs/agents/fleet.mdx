@@ -34,6 +34,7 @@ That flag stack is what `rimz agents` bottles. A [profile](#profiles-shape-an-ag
 
 ```sh
 rimz agents claude            # the flag stack above, as one word — and a @claude handle
+rimz agents launch claude     # explicit launch verb, same agent payload
 rimz agents claude,codex      # two agents, side by side in one line
 rimz agents forge -w feat-x   # a whole team, isolated in its own worktree
 ```
@@ -59,7 +60,7 @@ rimz agents 'vim,codex+term'                 # your editor beside an agent stack
 rimz agents claude,codex "Draft the API shape."   # the prompt lands on the first cell, Claude
 ```
 
-Quote a spec whenever it contains a `+`, a space, or anything your shell would otherwise expand. Profiles and kinds compose the same way, so `rimz agents planner,coder+reviewer` lays out three of your presets. The full grammar and how cells compile to panes is [harness.md → The layout IR](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/harness.md?ref=docs#the-layout-ir).
+Quote a spec whenever it contains a `+`, a space, or anything your shell would otherwise expand. Profiles and kinds compose the same way, so `rimz agents planner,coder+reviewer` lays out three of your presets. The full grammar and how cells compile to panes is [harness.md → The layout IR](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/harness.md?ref=docs#the-layout-ir).
 
 Add `-w` and the whole layout lands in an isolated Git worktree, the pattern for running several agents in parallel without stepping on each other: see [Worktrees](/docs/harness/worktrees).
 
@@ -106,7 +107,7 @@ query-engine
 ```console
 $ rimz agents show @coder
 Agent
-  handle:  @coder#auth-refresh
+  handle:  @coder
   kind:    codex
   role:    coder
   team:    forge
@@ -130,13 +131,13 @@ Context
   cache_write_tokens:  1920
   output_tokens:       510
   compactions:         0
+  active:              12m
   cost:                $0.87
 
 Placement
   channel:  auth-refresh
   worktree: ~/code/query-engine-auth-refresh
   pane:     tmux:%14
-  tab:      auth-refresh
 
 Recent transcript
 you  15:38
@@ -173,6 +174,27 @@ START             DUR  TOKENS       COST     OUTCOME  PROMPT
 2026-07-08 15:38   3m  ↘1k ↗284     $0.2870  done     add coverage for expiry edge cases
 2026-07-08 15:44  12s  ↘320 ↗0      $0.0310  open     run the focused integration tests
 3 turns · 54k tokens · $0.7390
+```
+
+**Credit the people and models behind the change.** A pull request usually opens after the first teammate has already exited, so live agent cards cannot supply a complete byline. `rimz agents attribution` reads the lane's audit records and provider transcripts instead; `--md` prints a collapsed block ready to append to the pull-request body, while the default panel is useful before you ship:
+
+```console
+$ rimz agents attribution
+forge team · 3 agents · 36m active · $29.39
+
+  @planner · Claude · claude-opus-5@xhigh
+      effort: 15m active · $16.72 · 84 tool calls, no compactions
+      tokens: 11k input, 148k output, 16m cache read
+
+  @coder · Codex · gpt-5.6-sol@xhigh
+      effort: 21m active · $12.67 · 106 tool calls, no compactions
+      tokens: 294k input, 41k output, 19m cache read
+
+  @reviewer · Claude · claude-opus-5@xhigh
+      effort: active unknown · cost unknown · no tool calls, no compactions
+      tokens: none recorded
+
+Total · 3 agents · 36m active · $29.39
 ```
 
 **Find what is burning CPU or tokens.** When the machine gets loud, `rimz agents top` ranks the live fleet by the resources each agent's pane process tree is using. It streams by default; `--once` takes a sample and exits for a script:

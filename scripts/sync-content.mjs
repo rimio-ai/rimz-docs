@@ -70,6 +70,7 @@ const mappings = [
   ['docs/reference/cli/events.md', 'reference/cli/events.mdx'],
   ['docs/reference/cli/config.md', 'reference/cli/config.mdx'],
   ['docs/reference/cli/agents.md', 'reference/cli/agents.mdx'],
+  ['docs/reference/cli/teams.md', 'reference/cli/teams.mdx', 'Teams CLI'],
   ['docs/reference/cli/asks.md', 'reference/cli/asks.mdx'],
   ['docs/reference/cli/message.md', 'reference/cli/message.mdx'],
   ['docs/reference/cli/transcript.md', 'reference/cli/transcript.mdx'],
@@ -88,10 +89,9 @@ const mappings = [
 ];
 
 const sourceScopes = ['docs/guide', 'docs/reference'];
-const excludedSources = new Set([
-  // Intentionally-unmapped files under the scopes above.
-  'docs/guide/AGENTS.md',
-]);
+// Agent contracts can live anywhere under the source scopes, but are never
+// public documentation. CLAUDE.md is the symlinked companion to AGENTS.md.
+const excludedSourceNames = new Set(['AGENTS.md', 'CLAUDE.md']);
 const readmeSections = [
   ['project-status', 'Project status'],
   ['what-it-does', 'What it does'],
@@ -111,9 +111,9 @@ async function main() {
   const activeMappings = await availableMappings();
   await prepareDestination(activeMappings);
 
-  for (const [source, destination] of activeMappings) {
+  for (const [source, destination, titleOverride] of activeMappings) {
     const markdown = await readFile(path.join(rimzRoot, source), 'utf8');
-    const output = transformDocument(markdown, cleanPath(source));
+    const output = transformDocument(markdown, cleanPath(source), titleOverride);
     const target = path.join(docsRoot, destination);
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, output, 'utf8');
@@ -285,7 +285,7 @@ async function assertMappingComplete() {
       if (!entry.endsWith('.md')) continue;
 
       const rel = cleanPath(path.join(scope, entry));
-      if (!mapped.has(rel) && !excludedSources.has(rel)) missing.push(rel);
+      if (!mapped.has(rel) && !excludedSourceNames.has(path.basename(rel))) missing.push(rel);
     }
   }
 
@@ -294,9 +294,10 @@ async function assertMappingComplete() {
   }
 }
 
-function transformDocument(markdown, sourcePath) {
+function transformDocument(markdown, sourcePath, titleOverride) {
   assertNoConflictMarkers(markdown, sourcePath);
-  const { title, body } = stripTitle(markdown);
+  const { title: sourceTitle, body } = stripTitle(markdown);
+  const title = titleOverride ?? sourceTitle;
   const description = descriptionFrom(body);
   const transformed = escapeMdxText(normalizeFenceLanguages(rewriteHtmlImageSources(rewriteLinks(body, sourcePath), sourcePath))).trimEnd();
   const frontmatter = [

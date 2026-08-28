@@ -6,7 +6,7 @@ RimZ runs with zero configuration: start it and you have a working room, nothing
 
 Change something when you have a reason to, one line at a time: pin a theme, save a launch profile, route a notification. This page is the whole model. It opens with the settings most people touch and exactly what changing one does to your disk, then maps where configuration lives and how the layers combine, then gives a section per file so you can jump to the one you are editing. For the guided first pass on a new machine, read [set up your machine](/docs/getting-started/setup) first; this page is the reference it links into.
 
-> The invariants behind this model are in [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/DESIGN.md?ref=docs#invariants).
+> The invariants behind this model are in [DESIGN.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/DESIGN.md?ref=docs#invariants).
 
 ## Common changes
 
@@ -18,6 +18,7 @@ rimz config set theme.style modern             # truecolor plus Nerd Font glyphs
 rimz config set theme.pets.enabled true        # an animated companion on the provider dashboard
 rimz config set resume.auto_continue true      # resume rate-limit and API-error parks on their own
 rimz config set harness.smart_compact 200k     # compact before a message once context passes 200k tokens
+rimz config set harness.idle_compact auto      # compact warm idle contexts while work may return
 rimz config set notifications.triggers '["waiting", "failed"]'   # which rows raise a banner
 rimz config set sidebar.focus_key "Alt+p"      # the chord that jumps to the sidebar from any pane
 rimz config set timezone "America/New_York"    # transcript times, scheduling, and the "today" cutoff
@@ -121,7 +122,7 @@ Notifications deliver attention off-screen, best-effort, over the sidebar inbox.
 
 `title` and `body` are optional templates for agent-status and coalesced desktop or banner text. Templates substitute `{{kind}}`, `{{agent}}`, `{{handle}}`, `{{status}}`, `{{worktree}}`, `{{task}}`, `{{count}}`, and `{{unread}}`; `agent` and `handle` are the agent handles or roles joined for multi-agent notifications, and a value unavailable for a notification kind renders empty. Reminder and remote-link notifications keep their built-in text.
 
-Each `[[notifications.handler]]` runs locally through `sh -c` when all present `when` clauses match. `kind` names notification kinds (`waiting`, `failed`, `paused`, `success`, `coalesced`, `reminder`, `loop_paused`, `link_lost`, `link_restored`), `worktree` glob-matches an agent branch or path, and `handle` glob-matches the agent handle or role (a leading `@` in the pattern is accepted as the usual address sigil). A `command` template may also use `{{title}}` and `{{body}}`, the rendered banner strings. Each substituted command value is shell-quoted as one token, so write `ntfy publish --title {{title}} rimz {{body}}`, not `--title "{{title}}"`. The legacy `command = "..."` key is shorthand for one unconditional handler, and every handler receives `RIMZ_NOTIFY_TITLE`, `RIMZ_NOTIFY_BODY`, `RIMZ_NOTIFY_AGENT`, and `RIMZ_NOTIFY_KIND` in the environment; reminders also get `RIMZ_NOTIFY_UNREAD`. The debounce, coalesce, and remind model is in [notifications.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/notifications.md?ref=docs), and the guide is [notifications.md](/docs/harness/notifications).
+Each `[[notifications.handler]]` runs locally through `sh -c` when all present `when` clauses match. `kind` names notification kinds (`waiting`, `failed`, `paused`, `success`, `coalesced`, `reminder`, `loop_disabled`, `link_lost`, `link_restored`), `worktree` glob-matches an agent branch or path, and `handle` glob-matches the agent handle or role (a leading `@` in the pattern is accepted as the usual address sigil). A `command` template may also use `{{title}}` and `{{body}}`, the rendered banner strings. Each substituted command value is shell-quoted as one token, so write `ntfy publish --title {{title}} rimz {{body}}`, not `--title "{{title}}"`. The legacy `command = "..."` key is shorthand for one unconditional handler, and every handler receives `RIMZ_NOTIFY_TITLE`, `RIMZ_NOTIFY_BODY`, `RIMZ_NOTIFY_AGENT`, and `RIMZ_NOTIFY_KIND` in the environment; reminders also get `RIMZ_NOTIFY_UNREAD`. The debounce, coalesce, and remind model is in [notifications.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/sidebar/notifications.md?ref=docs), and the guide is [notifications.md](/docs/harness/notifications).
 
 ### Resume
 
@@ -151,24 +152,25 @@ First-run setup offers to enable `auto_continue` and `auto_redeem` together.
 
 Codex reset-credit expiry rescue is always active within 30 minutes of a credit's expiry, and the provider-header reset marker blinks whenever a spent window makes manual redemption useful. `auto_redeem` opts into automatic redemption when a spent duration window recovers enough blocked time and also schedules partial-usage redemptions early enough to use a chain of expiring credits, pacing each scheduled attempt from the last natural or credit-driven window reset. `auto_redeem_min_gain` accepts `s`, `m`, `h`, or `d` and sets the recovered-time threshold (default `12h`); a credit that would retain less than 24 hours after the natural reset redeems regardless of the threshold, while a nearer free reset defers chain scheduling when the credit comfortably survives it.
 
-The rebirth path is in [sidebar.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth), and the live paths are in [provider internals → Auto-continue](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs#auto-continue) and [Auto-redeem](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs#auto-redeem).
+The rebirth path is in [sidebar.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/sidebar/sidebar.md?ref=docs#resume-on-rebirth), and the live paths are in [provider internals → Auto-continue](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/agents/providers.md?ref=docs#auto-continue) and [Auto-redeem](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/agents/providers.md?ref=docs#auto-redeem).
 
-### Daily dollar budgets
+### Dollar budgets
 
 ```toml
 timezone = "America/New_York"
 
 [harness]
 budget = "50/day"
+turn_budget = "3"
 
 [accounts.budget]
 claude = "100/day"
 codex = "100/day"
 ```
 
-`harness.budget` turns on a cap for each room's whole fleet, while `[accounts.budget]` turns on a cap for one provider login across every room on the machine. An account key requires wired authoritative account-spend history; subscription quota bars and point-in-time or partial estimates do not qualify, so `config set`, strict loading, room start, and account-budget commands reject unknown and ineligible kinds such as Antigravity with the key to remove or fix. Cursor remains eligible for per-agent/session and room caps, but not an account-day cap. Supported daily caps read spend since local midnight in `timezone` and require the `/day` suffix; a bare amount is rejected with the form to use. These keys run no command and stay outside the project trust hash.
+`harness.turn_budget` caps each agent turn in the room and accepts a plain dollar amount such as `"3"` or `"$2.50"`; a new prompt starts a fresh turn baseline. `harness.budget` turns on a cap for each room's whole fleet, while `[accounts.budget]` turns on a cap for one provider login across every room on the machine. An account key requires wired authoritative account-spend history; subscription quota bars and point-in-time or partial estimates do not qualify, so `config set`, strict loading, room start, and account-budget commands reject unknown and ineligible kinds such as Antigravity with the key to remove or fix. Cursor remains eligible for per-agent/session and room caps, but not an account-day cap. Supported daily caps read spend since local midnight in `timezone` and require the `/day` suffix; a bare amount is rejected with the form to use. These keys run no command and stay outside the project trust hash.
 
-These keys are the on-switch; `rimz budget` inspects and adjusts an armed cap at runtime without touching them, and refuses to arm a cap they never set. The full cap model — the per-agent and loop-task scopes, what a park does, and what resumes it — is the [budgets guide](/docs/agents/budget).
+The daily keys are the on-switch; `rimz budget` inspects and adjusts an armed daily cap at runtime without touching them, and refuses to arm a cap they never set. The command displays `harness.turn_budget` read-only; change that standing per-turn cap with `rimz config set harness.turn_budget 3` or remove the key. The full cap model — the per-turn, per-agent, and loop-task scopes, what a park does, and what resumes it — is the [budgets guide](/docs/agents/budget).
 
 ### Smart compaction
 
@@ -177,7 +179,17 @@ These keys are the on-switch; `rimz budget` inspects and adjusts an armed cap at
 smart_compact = "200k"
 ```
 
-`smart_compact` sets the default threshold for compact-first `rimz message` sends and scheduled loop wakes, as an occupied-token count (`"200k"` or `"120000"`) or a percentage of the window (`"70%"`). When an agent's context window has reached the threshold, RimZ submits its `/compact` ahead of the text so the prompt lands against a fresh window. Leave it unset to keep compaction opt-in through the per-command `--smart-compact` flag for messages, which overrides this value. The mechanics are in [messaging.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/messaging.md?ref=docs#smart-compaction).
+`smart_compact` sets the default threshold for compact-first `rimz message` sends and scheduled loop wakes, as an occupied-token count (`"200k"` or `"120000"`) or a percentage of the window (`"70%"`). When an agent's context window has reached the threshold, RimZ submits its `/compact` ahead of the text so the prompt lands against a fresh window. Leave it unset to keep compaction opt-in through the per-command `--smart-compact` flag for messages, which overrides this value. The mechanics are in [messaging.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/messaging.md?ref=docs#smart-compaction).
+
+### Idle compaction
+
+```toml
+[harness]
+idle_compact = "auto"
+idle_compact_after = "59m"
+```
+
+`idle_compact` is `off` by default. `auto` compacts an eligible idle agent while a same-channel teammate is working or its worktree pull request is open; `always` ignores those re-engagement signals. `idle_compact_after` accepts `s`, `m`, `h`, or `d` and defaults to `59m`. The reflex requires at least 50,000 occupied context tokens, uses each adapter's native compact command, and fires at most once in one idle stretch. The behavior model is in [loops.md](/docs/harness/loops#idle-compaction), and the durable delivery mechanics are in [messaging.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/messaging.md?ref=docs#idle-compaction).
 
 ### rtk output compression
 
@@ -196,7 +208,7 @@ claude = false
 codex = false
 ```
 
-Remote control is the bridge the providers' official mobile apps drive: with a host up, an agent's ask pushes to your phone and you answer it in the official app ([remote.md → Answer asks from your phone](/docs/agents/remote#answer-asks-from-your-phone)). These opt this machine into the background remote-control infrastructure shown in the `rimzd` daemon view. `rimz config set remote_control.claude true` adds `claude remote-control` to every running room's live `rimzd` view immediately when `claude` is on `PATH`, and `false` closes those managed host panes; a deliberately closed whole view stays closed until the next room start. `rimz config set remote_control.codex true` starts the managed standalone Codex daemon immediately, and `false` stops it. Each change wakes the running sidebars so the provider-dashboard flag follows the saved value. Direct file edits converge Claude hosts on the daemon-view repair pass. Direct Codex edits change future auto-start decisions; use `rimz config set` to transition an already-running daemon. A `codex` CLI on `PATH` already adds the per-session app-server broker independently of this toggle. `rimz start` and the live Claude enable path refuse when an installed, enabled host has a fixable misconfiguration such as an incompatible Claude version or settings. An enabled host whose agent is not installed is skipped so the room still starts, and `rimz doctor` reports that advisory with the install fix. The mechanics are in [providers.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs), and the security boundary in [security.md](/docs/help/security).
+Remote control is the bridge the providers' official mobile apps drive: with a host up, an agent's ask pushes to your phone and you answer it in the official app ([remote.md → Answer asks from your phone](/docs/agents/remote#answer-asks-from-your-phone)). These opt this machine into the background remote-control infrastructure shown in the `rimzd` daemon view. `rimz config set remote_control.claude true` adds `claude remote-control` to every running room's live `rimzd` view immediately when `claude` is on `PATH`, and `false` closes those managed host panes; a deliberately closed whole view stays closed until the next room start. `rimz config set remote_control.codex true` starts the managed standalone Codex daemon immediately, and `false` stops it. Each change wakes the running sidebars so the provider-dashboard flag follows the saved value. Direct file edits converge Claude hosts on the daemon-view repair pass. Direct Codex edits change future auto-start decisions; use `rimz config set` to transition an already-running daemon. A `codex` CLI on `PATH` already adds the per-session app-server broker independently of this toggle. `rimz start` and the live Claude enable path refuse when an installed, enabled host has a fixable misconfiguration such as an incompatible Claude version or settings. An enabled host whose agent is not installed is skipped so the room still starts, and `rimz doctor` reports that advisory with the install fix. The mechanics are in [providers.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/agents/providers.md?ref=docs), and the security boundary in [security.md](/docs/help/security).
 
 ### Web access
 
@@ -218,7 +230,7 @@ style_client = true
 
 `[web] enabled` defaults to true and gates `rimz web open` plus `rimz remote connect --web`. A normal `rimz start` best-effort starts one ttyd daemon for every Zellij and tmux room on the machine; a missing or pre-1.7.5 ttyd or an occupied port warns without blocking the room. When disabled, web commands fail before any room change and tell you to change the config on the machine serving the room.
 
-`interface` selects the bind address for both browser daemons; `port` defaults the writable listener to 8200 and `share_port` defaults the unauthenticated read-only broadcast listener to 8201. `base_url` is the URL prefix RimZ prints for `rimz web open` and `rimz web url`; `share_base_url` is the prefix printed by `rimz web share`. A non-empty `auth_header` delegates the writable listener's public decision to a proxy-injected header at RimZ's gate while ttyd retains its machine-wide Basic Auth. `auth_users` optionally restricts that header to trimmed, case-sensitive exact matches of the identity provider's canonical usernames and requires `auth_header`. A non-empty `trusted_proxies` list accepts bare IPs or IPv4 and IPv6 CIDRs at that gate; these three fields apply only to the writable listener. `style_client` passes the active theme and `font` family to both browser terminals. The built-in `JetBrainsMono Nerd Font Mono` and `CaskaydiaCove Nerd Font Mono` families download and cache verified regular and bold faces automatically; `font_source` instead names one local font file or HTTPS font URL, while an unrecognized `font` with no source passes through for browser-local resolution. Install ttyd 1.7.5 or newer with `brew install ttyd` or an apt source that provides a current package. These fields execute nothing, so the section stays outside the trust hash. Command detail is in [web.md](/docs/reference/cli/web), and remote browser tunnels in [remote.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/remote.md?ref=docs#web-tunnels).
+`interface` selects the bind address for both browser daemons; `port` defaults the writable listener to 8200 and `share_port` defaults the unauthenticated read-only broadcast listener to 8201. `base_url` is the URL prefix RimZ prints for `rimz web open` and `rimz web url`; `share_base_url` is the prefix printed by `rimz web share`. A non-empty `auth_header` delegates the writable listener's public decision to a proxy-injected header at RimZ's gate while ttyd retains its machine-wide Basic Auth. `auth_users` optionally restricts that header to trimmed, case-sensitive exact matches of the identity provider's canonical usernames and requires `auth_header`. A non-empty `trusted_proxies` list accepts bare IPs or IPv4 and IPv6 CIDRs at that gate; these three fields apply only to the writable listener. `style_client` passes the active theme and `font` family to both browser terminals. The built-in `JetBrainsMono Nerd Font Mono` and `CaskaydiaCove Nerd Font Mono` families download and cache verified regular and bold faces automatically; `font_source` instead names one local font file or HTTPS font URL, while an unrecognized `font` with no source passes through for browser-local resolution. Install ttyd 1.7.5 or newer with `brew install ttyd` or an apt source that provides a current package. These fields execute nothing, so the section stays outside the trust hash. Command detail is in [web.md](/docs/reference/cli/web), and remote browser tunnels in [remote.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/remote.md?ref=docs#web-tunnels).
 
 ### Daemon view
 
@@ -232,7 +244,7 @@ command = "btop"
 cwd = "/var/log"
 ```
 
-`[daemon]` configures the middle column of the `rimzd` daemon view, beside the sidebar and any managed hosts. Unset or empty keeps the built-in held-live stats pane (`rimz stats --refresh --hold`). Listing `[[daemon.pane]]` entries replaces that default, so include `command = "stats"` when you want live stats plus extra panes. The reserved command token `"stats"` expands to the built-in stats argv; any other `command` is split into argv and run directly without a shell. `cwd` is optional: absent runs from the worktree root, an absolute path is used as-is, and a relative path is joined onto the worktree root. A running room reloads command and cwd edits when `config.toml` is saved; adding or removing `[[daemon.pane]]` entries changes the pane count and takes effect on room restart. A pane with an empty or unparseable command is skipped, and if every configured pane is skipped, RimZ falls back to the built-in stats pane. How the view is specified and kept alive is in [rimzd.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/rimzd.md?ref=docs).
+`[daemon]` configures the middle column of the `rimzd` daemon view, beside the sidebar and any managed hosts. Unset or empty keeps the built-in held-live stats pane (`rimz stats --refresh --hold`). Listing `[[daemon.pane]]` entries replaces that default, so include `command = "stats"` when you want live stats plus extra panes. The reserved command token `"stats"` expands to the built-in stats argv; any other `command` is split into argv and run directly without a shell. `cwd` is optional: absent runs from the worktree root, an absolute path is used as-is, and a relative path is joined onto the worktree root. A running room reloads command and cwd edits when `config.toml` is saved; adding or removing `[[daemon.pane]]` entries changes the pane count and takes effect on room restart. A pane with an empty or unparseable command is skipped, and if every configured pane is skipped, RimZ falls back to the built-in stats pane. How the view is specified and kept alive is in [rimzd.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/rimzd.md?ref=docs).
 
 ### Accounts
 
@@ -245,7 +257,7 @@ claude = 50.0
 codex = 25.0
 ```
 
-`budget` sets the enforced local-day dollar cap described in [Daily dollar budgets](#daily-dollar-budgets) for descriptor-gated providers with durable spend; an unsupported entry refuses room birth instead of disappearing into lenient defaults. `usage_limit_usd` is separate, display-only, and has no account-spend eligibility gate, so Cursor remains valid there: its monthly ceiling scales the provider dashboard's `ex`/`api` bar when the provider reports no real cap, while the provider still enforces real spend and agents keep running. Account enrichment is local, read-only, and best-effort; `RIMZ_OAUTH_USAGE_OFFLINE=1` disables the live fetches for one process tree without touching transcript-derived totals or credential files.
+`budget` sets the enforced local-day dollar cap described in [Dollar budgets](#dollar-budgets) for descriptor-gated providers with durable spend; an unsupported entry refuses room birth instead of disappearing into lenient defaults. `usage_limit_usd` is separate, display-only, and has no account-spend eligibility gate, so Cursor remains valid there: its monthly ceiling scales the provider dashboard's `ex`/`api` bar when the provider reports no real cap, while the provider still enforces real spend and agents keep running. Account enrichment is local, read-only, and best-effort; `RIMZ_OAUTH_USAGE_OFFLINE=1` disables the live fetches for one process tree without touching transcript-derived totals or credential files.
 
 ### Off-box error reporting
 
@@ -255,11 +267,11 @@ dsn         = "https://examplePublicKey@o0.ingest.sentry.io/0"
 environment = "production"
 ```
 
-This section applies only to RimZ builds compiled with the non-default `sentry` feature, and it is deliberately omitted from the generated per-machine template. Set a `dsn` to report RimZ `warn!` and `error!` events and observed agent rate-limit or overload conditions to a Sentry project. With no `dsn`, reporting stays off and RimZ makes no network calls; without the feature, the block is inert. `RIMZ_SENTRY_DSN` and `RIMZ_SENTRY_ENVIRONMENT` override the config for one invocation, and `environment` defaults by build profile (an installed release reports as `production`, a dev or CI build as `development`). The DSN lives per-machine, never in committed project config, so a clone never inherits it; events carry low-cardinality tags (workspace, command, build, fault class, and agent or session when known) with the hostname and personal data withheld. The full telemetry surface is in [security.md](/docs/help/security#off-box-error-reporting) and the mechanics in [diagnostics.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/diagnostics.md?ref=docs#off-box-error-reporting).
+This section applies only to RimZ builds compiled with the non-default `sentry` feature, and it is deliberately omitted from the generated per-machine template. Set a `dsn` to report RimZ `warn!` and `error!` events and observed agent rate-limit or overload conditions to a Sentry project. With no `dsn`, reporting stays off and RimZ makes no network calls; without the feature, the block is inert. `RIMZ_SENTRY_DSN` and `RIMZ_SENTRY_ENVIRONMENT` override the config for one invocation, and `environment` defaults by build profile (an installed release reports as `production`, a dev or CI build as `development`). The DSN lives per-machine, never in committed project config, so a clone never inherits it; events carry low-cardinality tags (workspace, command, build, fault class, and agent or session when known) with the hostname and personal data withheld. The full telemetry surface is in [security.md](/docs/help/security#off-box-error-reporting) and the mechanics in [diagnostics.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/diagnostics.md?ref=docs#off-box-error-reporting).
 
 ### Multiplexer room options
 
-RimZ applies room-scoped multiplexer settings when it creates or reattaches a session, so the room behaves the way agents need without editing your global Zellij or tmux config. The `[zellij]` and `[tmux]` tables tune those settings; `rimz config init --print` lists every key with its default, and the per-backend mapping is in [multiplexers.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/multiplexers.md?ref=docs).
+RimZ applies room-scoped multiplexer settings when it creates or reattaches a session, so the room behaves the way agents need without editing your global Zellij or tmux config. The `[zellij]` and `[tmux]` tables tune those settings; `rimz config init --print` lists every key with its default, and the per-backend mapping is in [multiplexers.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/multiplexers.md?ref=docs).
 
 The `[mux]` table selects the default backend after the `--mux <name>` selection, its `--zellij`/`--tmux` shorthands, and active Zellij/tmux environment checks. Leave `default` unset to choose tmux when both backends are installed, or set it to `"zellij"` or `"tmux"` to require that backend. A configured backend that is not installed makes `rimz start` refuse with a fix message.
 
@@ -307,14 +319,17 @@ screen_top = "H"
 screen_bottom = "L"
 
 [agents.attention]
+active_grace_secs = 180
 stalled_after_secs = 1800
+tool_repeat_warn_after = 3
+tool_repeat_attention_after = 20
 inactive_after_secs = 3600
 archive_after_secs = 86400
 ```
 
 `timezone` is an optional IANA zone for displayed transcript times, wall-clock scheduling, and the `"today"` spend cutoff; unset or unknown uses the system local zone. `focus_key` is the global multiplexer chord that focuses the sidebar from any pane and toggles back to your last working pane; both backends bind it at session birth, the default is `Alt+p`, and `""` or `off` registers nothing. `afk_after_secs` sets the input-idle window before the footer shows `zᶻ idle` on tmux, adding `· Nm` after the first minute; Zellij reports attach state only, so it shows `zᶻ away` on full detach regardless of this value, and the default is 900 seconds (15 minutes). `trunk` is a preferred comparison branch for the worktree header's git stats, falling back to `main` → `master` → the remote default when it does not resolve.
 
-`[agents.attention]` tunes attention timing: `stalled_after_secs` is when a silent running agent escalates to the actionable `!` bucket (30 minutes by default), `inactive_after_secs` is when a card leaves hot work (one hour, the prompt-cache boundary, so a cold card reads as cold), and `archive_after_secs` is when a card parks below hot and warm work (24 hours by default). Set `archive_after_secs` greater than `inactive_after_secs`; a lower value is lifted to the first second after the inactive window. The `[theme.display]` knobs that share this area (render cadence, sizing, `scrollbar`, and `card_density`) are theme settings; see [theme.md → Display](/docs/customization/theme#display).
+`[agents.attention]` tunes attention timing: `active_grace_secs` bounds how much silence an open working span adds to the root session's estimated active time (three minutes by default), `stalled_after_secs` is when a silent running agent escalates to the actionable `!` bucket (30 minutes by default), `tool_repeat_warn_after` marks a consecutive identical-tool run with `⟲` (3 calls), `tool_repeat_attention_after` escalates that run to `!` (20 calls), `inactive_after_secs` is when a card leaves hot work (one hour, the prompt-cache boundary, so a cold card reads as cold), and `archive_after_secs` is when a card parks below hot and warm work (24 hours by default). Set `archive_after_secs` greater than `inactive_after_secs`; a lower value is lifted to the first second after the inactive window. The `[theme.display]` knobs that share this area (render cadence, sizing, `scrollbar`, and `card_density`) are theme settings; see [theme.md → Display](/docs/customization/theme#display).
 
 `spend_window` sets the cockpit and provider headline row: `"session"` is the default and starts at your latest prompt after a five-hour idle gap, with every provider row sharing one machine-global burst opened by your prompt to any agent and the cockpit applying the same rule within its workspace scope; loop-fired turns and agent-to-agent messages count inside an open burst and keep it alive but never open one. `"24h"` keeps a trailing-24-hour window, and `"today"` starts at calendar midnight in `timezone`.
 
@@ -417,7 +432,7 @@ dir = "../{repo}-worktrees"
 base = "fresh"
 ```
 
-`rimz worktree` and `rimz agents --worktree` create RimZ-owned Git worktrees here. A relative `dir` resolves from the repository root and `{repo}` expands to the root basename. `base = "head"` branches from local `HEAD`, `base = "fresh"` branches from `origin/HEAD`, and any other string is passed to Git as the base ref. Seeding untracked files into a new worktree and symlink-sharing directories are committed, repo-level concerns covered in the [worktrees guide](/docs/harness/worktrees); the seeding, symlink, and cleanup mechanics are in [worktrees.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/worktrees.md?ref=docs).
+`rimz worktree` and `rimz agents --worktree` create RimZ-owned Git worktrees here. A relative `dir` resolves from the repository root and `{repo}` expands to the root basename. `base = "head"` branches from local `HEAD`, `base = "fresh"` branches from `origin/HEAD`, and any other string is passed to Git as the base ref. Seeding untracked files into a new worktree and symlink-sharing directories are committed, repo-level concerns covered in the [worktrees guide](/docs/harness/worktrees); the seeding, symlink, and cleanup mechanics are in [worktrees.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/worktrees.md?ref=docs).
 
 ## loop.toml: scheduled turns
 
@@ -471,7 +486,7 @@ session = "sess-abc123"
 handle = "@planner"
 ```
 
-Loop tasks live in `~/.config/rimz/loop.toml` under `[tasks.<name>]`; shared project tasks use the same shape in `<repo>/.rimz/config.toml`, are trust-hashed, and stay inert until `rimz trust grant`. The scheduling model (shapes, watchdogs, self-wakes) is [loops.md](/docs/harness/loops); this section is the field shape.
+Loop tasks live in `~/.config/rimz/loop.toml` under `[tasks.<name>]`; shared project tasks use the same shape in `<repo>/.rimz/config.toml`, are trust-hashed, and need both `rimz trust grant` and a machine-local `rimz loop enable <name>` before they run unattended. The scheduling model (shapes, watchdogs, self-wakes) is [loops.md](/docs/harness/loops); this section is the field shape.
 
 `default-timeout` bounds scheduled supervised turns whose task omits `timeout`; it accepts positive `s`, `m`, `h`, and `d` durations and defaults to `2h`. Set it with `rimz config set loop.default-timeout 3h`. Task-specific `timeout` wins, and a manual `rimz loop fire` without one remains unbounded.
 
@@ -481,7 +496,7 @@ Each task chooses `agent`, `wake`, `check`, or `check` plus one agent action:
 - `[tasks.<name>.wake]` pins delivery to one live agent session through the message path: `kind` supports hook preflight, `session` is the durable target, and `handle` is display-only.
 - `check` runs a shell command at the task root before the agent action; `on = "fail"` wakes on non-zero exit or timeout, `on = "success"` on zero exit. Check output is appended to the agent prompt when the guard fires.
 - `verify` runs a shell command after a spawned agent turn and re-prompts that same supervised session on failure; `max-attempts` is the total agent-turn cap and defaults to `3`.
-- `max-strikes` auto-pauses the task after that many consecutive failed or no-progress fires, defaults to `3`, and accepts `0` to disable; `rimz loop resume` clears the machine-local counter.
+- `max-strikes` auto-disables the task after that many consecutive failed or no-progress fires, defaults to `3`, and accepts `0` to disable the strike gate; `rimz loop enable` clears the machine-local counter.
 - `deadline` is normally written by `rimz loop add --until 30m` into the instance state store for poll-until tasks, not hand-authored in `loop.toml`.
 - `budget` caps each spawned supervised run; `budget-per-day` requires it and skips a fire when today's recorded task spend, plus the next run's cap, would exceed the daily amount.
 - `surplus` requires forward headroom in the provider's longest running budget window; `surplus-after` adds an elapsed floor and implies at least `1.0x` headroom when used alone. Both fields apply to `agent` and `wake` actions and fail closed without a complete window reading; the headroom model is [budgets → the surplus gate](/docs/agents/budget#the-surplus-gate).
@@ -491,10 +506,10 @@ Field notes:
 - Calendar and cron wall-clock fields resolve in the top-level `timezone`, falling back to the system zone when unset.
 - Machine tasks carry a `root`: `rimz loop add` writes an absolute path, and a hand-edited `~` or relative root is normalized before room matching, firing, and display.
 - Project tasks run at the project root implicitly, resolve `prompt-file` and `system-prompt-file` relative to `.rimz/`, reject `root`, `wake`, and `deadline`, and require `every` or `cron` because one-shots are machine state.
-- Trusted project tasks win over same-named machine tasks and state instances; an untrusted or stale project task stays visible but inert, so a same-named machine task keeps running until grant. `rimz loop add --project` writes `.rimz/config.toml`, and removing or renaming a project-owned task edits that file and prints the `rimz trust grant` follow-up.
-- RimZ-generated one-shots, self-wakes, and poll-until instances live in `~/.local/state/rimz/loop-instances.json` rather than this file.
+- Trusted project tasks win over same-named machine tasks and state instances but default disabled until locally enabled; an untrusted or stale project task stays visible but inert, so a same-named machine task keeps running until grant. `rimz loop add --project` writes `.rimz/config.toml`, enables that task for its author, and removing or renaming a project-owned task edits the project file.
+- RimZ-generated one-shots, self-wakes, and poll-until instances live in `~/.local/state/rimz/loop-instances.json`; machine-local task enablement and bounded pauses live in `~/.local/state/rimz/loop-arming.json`.
 
-The full model is in [loops.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/loops.md?ref=docs), and the CLI is in [loop.md](/docs/reference/cli/loop).
+The full model is in [loops.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/loops.md?ref=docs), and the CLI is in [loop.md](/docs/reference/cli/loop).
 
 ## theme.toml: appearance and pets
 
@@ -511,7 +526,7 @@ glyphs = "auto"
 voice = true
 ```
 
-An opt-in animated companion in the provider dashboard. The first-run and setup pet question writes `enabled = true` for the default `rocky` pet. Full setup is in the [pets guide](/docs/customization/pets); render mechanics, cache layout, and sheet geometry are in [pets.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/pets.md?ref=docs).
+An opt-in animated companion in the provider dashboard. The first-run and setup pet question writes `enabled = true` for the default `rocky` pet. Full setup is in the [pets guide](/docs/customization/pets); render mechanics, cache layout, and sheet geometry are in [pets.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/sidebar/pets.md?ref=docs).
 
 | key | does |
 | --- | --- |
@@ -527,11 +542,11 @@ The agent-card context meter and the provider budget bar interpolate across colo
 
 ### Provider dashboard
 
-Which providers appear, their order, and their brand styling are theme and discovery settings (`[theme.display] provider_tabs` / `provider_list` / `max_provider_blocks`, and `[theme.providers.<kind>]`). The layout model is in [theme.md → Display](/docs/customization/theme#display) and the styling fields in [theme.md → Provider styling](/docs/customization/theme#provider-styling); account and budget sourcing is in [providers.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/providers.md?ref=docs).
+Which providers appear, their order, and their brand styling are theme and discovery settings (`[theme.display] provider_tabs` / `provider_list` / `max_provider_blocks`, and `[theme.providers.<kind>]`). The layout model is in [theme.md → Display](/docs/customization/theme#display) and the styling fields in [theme.md → Provider styling](/docs/customization/theme#provider-styling); account and budget sourcing is in [providers.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/agents/providers.md?ref=docs).
 
 ## Project config
 
-The committed `<repo>/.rimz/config.toml` declares the workspace shape a team shares. RimZ computes the executable-surface trust hash from it, and on a trusted workspace it injects each `[[agents]]` `env` table into that agent's process at launch, applies top-level `[profiles]` and `[agents.teams]` to `rimz agents` launches, and loads `[tasks]` for `rimz loop`. Use one `agents` shape per project config: `[[agents]]` for env entries, or `[agents.teams]` for shared teams. Applying the declared hooks and agent launch command is planned project-config behavior. Room layout is per-machine config: a project config carrying a `[layout]` table is refused with the fix to move it to `$XDG_CONFIG_HOME/rimz/config.toml`. RimZ's own [`.rimz/config.toml`](https://github.com/rimio-ai/rimz/blob/v0.4.2/.rimz/config.toml) is a living project-task example; its repository sync task assumes push rights on the remote.
+The committed `<repo>/.rimz/config.toml` declares the workspace shape a team shares. RimZ computes the executable-surface trust hash from it, and on a trusted workspace it injects each `[[agents]]` `env` table into that agent's process at launch, applies top-level `[profiles]` and `[agents.teams]` to `rimz agents` launches, and loads `[tasks]` for `rimz loop`. Use one `agents` shape per project config: `[[agents]]` for env entries, or `[agents.teams]` for shared teams. Applying the declared hooks and agent launch command is planned project-config behavior. Room layout is per-machine config: a project config carrying a `[layout]` table is refused with the fix to move it to `$XDG_CONFIG_HOME/rimz/config.toml`. RimZ's own [`.rimz/config.toml`](https://github.com/rimio-ai/rimz/blob/v0.4.3/.rimz/config.toml) is a living project-task example; its repository sync task assumes push rights on the remote.
 
 ```toml
 [[agents]]
@@ -550,10 +565,10 @@ at = "08:00"
 every = "day"
 ```
 
-Command-running fields enter the trust hash, so a clone with project config reads `untrusted` until `rimz trust grant` pins the current surface on this machine. A trusted repo profile, team, or task overlays machine config and wins on a name collision; a repo profile may inherit only another repo profile or a built-in kind, and a repo team role may bind only a repo profile, keeping the hashed surface closed and machine-independent. An `untrusted` or `stale` workspace refuses a launch or project-only task run that would consume project config, with the `rimz trust grant` fix; a same-named machine task continues to run, `rimz loop list` and `rimz loop show` still display project tasks with their trust state, and a `stale` report shows a field-level diff of what changed since the grant, so the re-grant is informed. The hash contract, stored surface, and launch-time enforcement are in [trust.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/trust.md?ref=docs); the threat model is in [security.md](/docs/help/security).
+Command-running fields enter the trust hash, so a clone with project config reads `untrusted` until `rimz trust grant` pins the current surface on this machine. A trusted repo profile, team, or task overlays machine config and wins on a name collision; a repo profile may inherit only another repo profile or a built-in kind, and a repo team role may bind only a repo profile, keeping the hashed surface closed and machine-independent. An `untrusted` or `stale` workspace refuses a launch or project-only task run that would consume project config, with the `rimz trust grant` fix; a same-named machine task continues to run, `rimz loop list` and `rimz loop show` still display project tasks with their trust state, and a `stale` report shows a field-level diff of what changed since the grant, so the re-grant is informed. The hash contract, stored surface, and launch-time enforcement are in [trust.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/trust.md?ref=docs); the threat model is in [security.md](/docs/help/security).
 
 ## Sidecars and privacy
 
-Notification handlers, remote aliases, and trust records each have their own reference: [notifications.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/sidebar/notifications.md?ref=docs), `rimz remote` ([remote CLI](/docs/reference/cli/remote#remote-rooms)), and `rimz trust` ([trust.md](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/harness/trust.md?ref=docs)).
+Notification handlers, remote aliases, and trust records each have their own reference: [notifications.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/sidebar/notifications.md?ref=docs), `rimz remote` ([remote CLI](/docs/reference/cli/remote#remote-rooms)), and `rimz trust` ([trust.md](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/harness/trust.md?ref=docs)).
 
-Payload-fidelity and retention controls (`[privacy] payload_mode`) are a planned project surface. The design and intended keys are in [security.md](/docs/help/security), and the hook boundary they will govern is in [adapter.md → The hook path](https://github.com/rimio-ai/rimz/blob/v0.4.2/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
+Payload-fidelity and retention controls (`[privacy] payload_mode`) are a planned project surface. The design and intended keys are in [security.md](/docs/help/security), and the hook boundary they will govern is in [adapter.md → The hook path](https://github.com/rimio-ai/rimz/blob/v0.4.3/docs/internals/agents/adapter.md?ref=docs#the-hook-path).
