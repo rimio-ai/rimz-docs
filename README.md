@@ -14,8 +14,8 @@ Open <http://localhost:3000>.
 If `pnpm` is not installed globally, use the pinned package manager through `npx`:
 
 ```sh
-npx pnpm@11.10.0 install
-npx pnpm@11.10.0 dev
+npx pnpm@11.24.0 install
+npx pnpm@11.24.0 dev
 ```
 
 ## Build
