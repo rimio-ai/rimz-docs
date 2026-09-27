@@ -35,7 +35,7 @@ const mono = JetBrains_Mono({
   display: 'swap',
 });
 
-const assetBase = '/docs-assets';
+const assetBase = '/docs-assets/main';
 
 const title = 'RimZ: the control room for your coding agents';
 const heading = 'The control room for your coding agents';

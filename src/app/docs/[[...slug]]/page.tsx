@@ -1,4 +1,10 @@
-import { getDocsStaticParams, getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
+import {
+  getDocsStaticParams,
+  getPageImage,
+  getPageMarkdownUrl,
+  getVersionSwitches,
+  resolveDocsPage,
+} from '@/lib/source';
 import {
   DocsBody,
   DocsDescription,
@@ -12,19 +18,31 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-import { absoluteUrl, docsGitConfig, docsRoute } from '@/lib/shared';
+import Link from 'next/link';
+import { absoluteUrl, docsGitConfig } from '@/lib/shared';
 import { baseOptions } from '@/lib/layout.shared';
 import { JsonLd } from '@/components/json-ld';
+import { VersionSelect } from '@/components/version-select';
+import {
+  defaultVersion,
+  isDefaultVersion,
+  versionBaseUrl,
+  versionDescription,
+  versionLabel,
+  type DocsVersion,
+} from '@/lib/versions';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const { version, source, page } = resolveDocsPage(params.slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
-  const markdownUrl = getPageMarkdownUrl(page).url;
-  const canonical = pageCanonical(page.slugs);
+  const markdownUrl = getPageMarkdownUrl(page, version).url;
+  const canonical = pageCanonical(version, page.slugs);
   const searchTitle = plainTextTitle(page.data.title);
+  const switches = getVersionSwitches(page.slugs);
+  const rootName = documentationName(version);
   const breadcrumbJsonLd =
     page.slugs.length > 0
       ? {
@@ -34,8 +52,8 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
             {
               '@type': 'ListItem',
               position: 1,
-              name: 'RimZ Documentation',
-              item: absoluteUrl(`${docsRoute}/`),
+              name: rootName,
+              item: absoluteUrl(`${versionBaseUrl(version)}/`),
             },
             {
               '@type': 'ListItem',
@@ -48,7 +66,23 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
       : undefined;
 
   return (
-    <DocsLayout tree={source.getPageTree()} {...baseOptions()}>
+    <DocsLayout
+      tree={source.getPageTree()}
+      {...baseOptions()}
+      sidebar={{
+        banner: (
+          <VersionSelect
+            current={version.id}
+            options={switches.map((item) => ({
+              id: item.version.id,
+              label: versionLabel(item.version),
+              description: versionDescription(item.version),
+              url: item.url,
+            }))}
+          />
+        ),
+      }}
+    >
       {breadcrumbJsonLd ? <JsonLd data={breadcrumbJsonLd} /> : null}
       <DocsPage
         toc={page.data.toc}
@@ -57,11 +91,15 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
       >
         <DocsTitle>{page.data.title}</DocsTitle>
         <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
+        <VersionNotice
+          version={version}
+          latestUrl={switches.find((item) => isDefaultVersion(item.version))?.url}
+        />
         <div className="flex flex-row gap-2 items-center border-b pb-6">
           <MarkdownCopyButton markdownUrl={markdownUrl} />
           <ViewOptionsPopover
             markdownUrl={markdownUrl}
-            githubUrl={`https://github.com/${docsGitConfig.user}/${docsGitConfig.repo}/blob/${docsGitConfig.branch}/content/docs/${page.path}`}
+            githubUrl={`https://github.com/${docsGitConfig.user}/${docsGitConfig.repo}/blob/${docsGitConfig.branch}/content/versions/${version.id}/${page.path}`}
           />
         </div>
         <DocsBody>
@@ -82,27 +120,55 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): Promise<Metadata> {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const { version, page } = resolveDocsPage(params.slug);
   if (!page) notFound();
 
-  const canonical = pageCanonical(page.slugs);
+  const canonical = pageCanonical(version, page.slugs);
   const isIntroduction = page.slugs.length === 0;
+  const isDefault = isDefaultVersion(version);
+  const title = isIntroduction
+    ? isDefault
+      ? 'RimZ Documentation: Installation, CLI, and Agent Guides'
+      : documentationName(version)
+    : isDefault
+      ? plainTextTitle(page.data.title)
+      : `${plainTextTitle(page.data.title)} (${version.id})`;
 
   return {
-    title: isIntroduction
-      ? { absolute: 'RimZ Documentation: Installation, CLI, and Agent Guides' }
-      : plainTextTitle(page.data.title),
+    title: isIntroduction ? { absolute: title } : title,
     description: page.data.description,
     alternates: { canonical },
+    // Release snapshots stay reachable but out of search results, which would
+    // otherwise fill with near-duplicates of the current documentation.
+    robots: isDefault ? undefined : { index: false, follow: true },
     openGraph: {
       url: canonical,
-      images: absoluteUrl(getPageImage(page).url),
+      images: absoluteUrl(getPageImage(page, version).url),
     },
   };
 }
 
-function pageCanonical(slugs: string[]) {
-  return absoluteUrl(`${docsRoute}${slugs.length > 0 ? `/${slugs.join('/')}` : ''}/`);
+function VersionNotice({ version, latestUrl }: { version: DocsVersion; latestUrl?: string }) {
+  if (isDefaultVersion(version)) return null;
+
+  return (
+    <div className="rounded-lg border border-fd-primary/30 bg-fd-primary/10 px-4 py-3 text-sm">
+      You are reading the documentation for RimZ <code>{version.id}</code>.{' '}
+      {latestUrl ? (
+        <Link className="font-medium underline underline-offset-4" href={latestUrl}>
+          Read the {versionLabel(defaultVersion)} documentation.
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function documentationName(version: DocsVersion) {
+  return isDefaultVersion(version) ? 'RimZ Documentation' : `RimZ Documentation (${version.id})`;
+}
+
+function pageCanonical(version: DocsVersion, slugs: string[]) {
+  return absoluteUrl(`${[versionBaseUrl(version), ...slugs].join('/')}/`);
 }
 
 function plainTextTitle(title: string) {

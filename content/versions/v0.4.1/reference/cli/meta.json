@@ -1,0 +1,23 @@
+{
+  "title": "CLI",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "getting-started",
+    "remote",
+    "web",
+    "agents",
+    "asks",
+    "message",
+    "transcript",
+    "pane",
+    "stats",
+    "providers",
+    "channel",
+    "worktree",
+    "loop",
+    "hooks-trust",
+    "config",
+    "maintenance"
+  ]
+}

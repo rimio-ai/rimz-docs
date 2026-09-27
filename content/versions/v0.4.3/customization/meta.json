@@ -1,0 +1,10 @@
+{
+  "title": "Customization",
+  "defaultOpen": true,
+  "pages": [
+    "configuration",
+    "theme",
+    "pets",
+    "multiplexer"
+  ]
+}

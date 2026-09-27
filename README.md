@@ -36,9 +36,14 @@ NEXT_PUBLIC_BASE_PATH=/REPO NEXT_PUBLIC_SITE_URL=https://USER.github.io/REPO pnp
 
 Every push to `main` deploys the static export to GitHub Pages at <https://rimz.rimio.ai> through [the deploy workflow](./.github/workflows/deploy.yml).
 
-[The sync workflow](./.github/workflows/sync.yml) rebuilds the documentation from the highest stable `v*` release tag after a README or docs update, when a release is published, and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
+[The sync workflow](./.github/workflows/sync.yml) rebuilds the documentation from RimZ `main` and every stable `v*` release tag after a README or docs update, when a release is published, and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
 
-The site publishes exactly one release at a time under `/docs`, with no version in the URL. The tag it was built from is recorded in `content/version.json` and shown in the navigation bar. Keep the `github.com/rimio-ai/rimz` mirror and its release tags current with the primary Gitea remote so the published site stays current; dispatches fire only for GitHub pushes, and the scheduled sync also reads GitHub.
+The site publishes several documentation sets, chosen with the version dropdown at the top of the docs sidebar:
+
+- `latest`: RimZ trunk (`main`), served at `/docs`. This is the default set, the one in the sitemap and `llms.txt`, and the only one search engines index.
+- One set per stable release tag, served at `/docs/<tag>`, for example `/docs/v0.4.3`. Release pages carry a notice that links back to `latest`, and are marked `noindex`. Prereleases such as `v0.5.0-rc.1` are never published.
+
+Switching versions keeps the reader on the same page when it exists in the target version, and falls back to that version's introduction otherwise. Each version has its own static search index at `/api/search/<version>`. `content/versions.json` records every set and the commit it was built from. Keep the `github.com/rimio-ai/rimz` mirror, its `main` branch, and its release tags current with the primary Gitea remote so the published site stays current; dispatches fire only for GitHub pushes, and the scheduled sync also reads GitHub.
 
 ## Sync content
 
@@ -48,8 +53,8 @@ Generated docs are committed so this site builds without a RimZ source checkout.
 RIMZ_SRC=../rimz pnpm sync
 ```
 
-The sync script picks the highest stable `v*` tag, checks it out into a temporary worktree, and regenerates `content/docs/` and `public/docs-assets/` from it. Patch releases such as `v0.4.1` supersede `v0.4` automatically; prereleases such as `v0.5.0-rc.1` are ignored. Hand-written scaffolding under `content/template/` seeds the generated tree.
+The sync script checks out `main` and every stable `v*` tag into temporary worktrees and regenerates `content/versions/<version>/` and `public/docs-assets/<version>/` from each, rebuilding every set from scratch so a transform change reaches old releases too. Hand-written scaffolding under `content/template/` seeds each set; pages that a release predates are dropped from its navigation. A new upstream page under `docs/guide` or `docs/reference` must be mapped in `scripts/sync-content.mjs` and listed in the template `meta.json`, or the sync fails.
 
 Search descriptions for imported pages are generated from each upstream document's opening prose, while hand-written pages keep their descriptions in `content/template/`. Keep lead paragraphs specific and useful: content checks reject missing, thin, overly long, or duplicate descriptions.
 
-Run `pnpm check:content` to verify page completeness, link and image targets, the release source ref, and `content/version.json`.
+Run `pnpm check:content` to verify every version's pages, that links and images stay inside their own version, the source refs, and `content/versions.json`.

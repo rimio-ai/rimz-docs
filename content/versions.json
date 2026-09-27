@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 3,
+  "versions": [
+    {
+      "id": "main",
+      "ref": "main",
+      "sourceCommit": "b2d62c934016026ff7d6433f8a155149baf9217e",
+      "kind": "development"
+    },
+    {
+      "id": "v0.4.3",
+      "ref": "v0.4.3",
+      "sourceCommit": "fe2dcf3ed546476b7f9d0e0439e0b08dbd961b05",
+      "kind": "release"
+    },
+    {
+      "id": "v0.4.2",
+      "ref": "v0.4.2",
+      "sourceCommit": "afdc18f6688344a83967b3f6841874446c20b148",
+      "kind": "release"
+    },
+    {
+      "id": "v0.4.1",
+      "ref": "v0.4.1",
+      "sourceCommit": "732e547fc0f75c11e04dca9509e9aae9eeedca28",
+      "kind": "release"
+    },
+    {
+      "id": "v0.4",
+      "ref": "v0.4",
+      "sourceCommit": "f64d970aec0c519e71b2f53b81297a87dafa71cd",
+      "kind": "release"
+    },
+    {
+      "id": "v0.3",
+      "ref": "v0.3",
+      "sourceCommit": "ecb1f62fb2a7ec3994842c99ea43b84fd7f3b7cc",
+      "kind": "release"
+    },
+    {
+      "id": "v0.2",
+      "ref": "v0.2",
+      "sourceCommit": "3560f4ba363361f720ce88d8299c14217f463f10",
+      "kind": "release"
+    }
+  ]
+}

@@ -6,16 +6,25 @@ import path from 'node:path';
 
 const repoRoot = process.cwd();
 const outputRoot = path.join(repoRoot, 'out');
-const version = JSON.parse(await readFile(path.join(repoRoot, 'content', 'version.json'), 'utf8'));
+const catalog = JSON.parse(await readFile(path.join(repoRoot, 'content', 'versions.json'), 'utf8'));
+const releases = catalog.versions.filter((version) => version.kind === 'release');
+const releasePrefixes = releases.map((version) => `docs/${version.id}/`);
+const isReleasePage = (page) => releasePrefixes.some((prefix) => page.startsWith(prefix));
 const pages = await filesBelow(outputRoot, '.html');
 const broken = [];
 
 await assertFile('docs/index.html');
 await assertFile('docs/getting-started/quickstart/index.html');
-await assertFile('docs-assets/rimz-sidebar.png');
+await assertFile('docs-assets/main/rimz-sidebar.png');
 await assertFile('llms.mdx/docs/content.md');
 await assertFile('og/docs/image.png');
-await assertFile('api/search');
+for (const version of catalog.versions) {
+  const prefix = version.id === 'main' ? '' : `${version.id}/`;
+  await assertFile(`docs/${prefix}index.html`);
+  await assertFile(`llms.mdx/docs/${prefix}content.md`);
+  await assertFile(`og/docs/${prefix}image.png`);
+  await assertFile(`api/search/${version.id}`);
+}
 await assertFile('llms.txt');
 await assertFile('llms-full.txt');
 await assertFile('sitemap.xml');
@@ -38,7 +47,17 @@ for (const page of pages) {
 
 assert.deepEqual(broken, [], `broken static links:\n${broken.join('\n')}`);
 
-const indexablePages = pages.filter((page) => page === 'index.html' || page.startsWith('docs/'));
+// Trunk is the indexed documentation; release snapshots are noindex.
+const indexablePages = pages.filter(
+  (page) => page === 'index.html' || (page.startsWith('docs/') && !isReleasePage(page)),
+);
+
+for (const page of pages.filter(isReleasePage)) {
+  const html = await readFile(path.join(outputRoot, page), 'utf8');
+  assert.match(html, /<meta name="robots" content="noindex, follow"\/?>/, `${page} is indexable`);
+  const canonical = html.match(/<link rel="canonical" href="https?:\/\/[^"/]+\/([^"]*)"/)?.[1];
+  assert.equal(`${canonical}index.html`, page, `${page} does not canonicalize to itself`);
+}
 const pageTitles = new Map();
 const pageDescriptions = new Map();
 
@@ -95,10 +114,9 @@ assert.ok(
   /rel="canonical" href="https?:\/\/[^"/]+\/docs\/"/.test(docsHtml),
   'the docs root does not canonicalize to itself',
 );
-assert.ok(docsHtml.includes(version.id), 'the docs shell does not name the release it documents');
 assert.ok(
-  !/href="\/docs\/v[0-9]/.test(docsHtml),
-  'the docs shell still links to a version-prefixed route',
+  docsHtml.includes('aria-label="Documentation version"'),
+  'the docs shell has no version dropdown',
 );
 
 const homeHtml = await readFile(path.join(outputRoot, 'index.html'), 'utf8');

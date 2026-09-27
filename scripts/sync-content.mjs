@@ -7,11 +7,17 @@ import path from 'node:path';
 const repoRoot = process.cwd();
 const rimzRoot = path.resolve(process.env.RIMZ_SRC ?? path.join(repoRoot, '..', 'rimz'));
 const sourceRef = process.env.RIMZ_REF ?? 'main';
+// The documentation set this run writes: `main` for trunk, served at /docs, or
+// a release tag such as `v0.4.3`, served at /docs/v0.4.3.
+const versionId = process.env.RIMZ_VERSION ?? 'main';
+if (!/^(?:main|v[0-9][0-9A-Za-z.+-]*)$/.test(versionId)) {
+  throw new Error(`not a documentation version: ${versionId}`);
+}
 const templateRoot = path.join(repoRoot, 'content', 'template');
-const docsRoot = path.join(repoRoot, 'content', 'docs');
-const publicRoot = path.join(repoRoot, 'public', 'docs-assets');
-const docsRouteBase = '/docs';
-const assetRouteBase = '/docs-assets';
+const docsRoot = path.join(repoRoot, 'content', 'versions', versionId);
+const publicRoot = path.join(repoRoot, 'public', 'docs-assets', versionId);
+const docsRouteBase = versionId === 'main' ? '/docs' : `/docs/${versionId}`;
+const assetRouteBase = `/docs-assets/${versionId}`;
 const githubBase = `https://github.com/rimio-ai/rimz/blob/${sourceRef}`;
 const maxDescriptionLength = 170;
 const voidHtmlTags = new Set([
@@ -56,11 +62,14 @@ const mappings = [
   ['docs/guide/scripting.md', 'harness/scripting.mdx'],
   ['docs/guide/loops.md', 'harness/loops.mdx'],
   ['docs/guide/notifications.md', 'harness/notifications.mdx'],
+  ['docs/guide/subagents.md', 'harness/subagents.mdx'],
+  ['docs/guide/lsp.md', 'harness/lsp.mdx'],
   // Customization
   ['docs/guide/configuration.md', 'customization/configuration.mdx'],
   ['docs/guide/theme.md', 'customization/theme.mdx'],
   ['docs/guide/pets.md', 'customization/pets.mdx'],
   ['docs/guide/multiplexer.md', 'customization/multiplexer.mdx'],
+  ['docs/guide/accounts.md', 'customization/accounts.mdx'],
   // Help
   ['docs/guide/troubleshooting.md', 'help/troubleshooting.mdx'],
   ['docs/guide/security.md', 'help/security.mdx'],
@@ -70,20 +79,27 @@ const mappings = [
   ['docs/reference/cli/events.md', 'reference/cli/events.mdx'],
   ['docs/reference/cli/config.md', 'reference/cli/config.mdx'],
   ['docs/reference/cli/agents.md', 'reference/cli/agents.mdx'],
+  ['docs/reference/cli/subagents.md', 'reference/cli/subagents.mdx', 'Subagents CLI'],
   ['docs/reference/cli/teams.md', 'reference/cli/teams.mdx', 'Teams CLI'],
   ['docs/reference/cli/asks.md', 'reference/cli/asks.mdx'],
   ['docs/reference/cli/message.md', 'reference/cli/message.mdx'],
+  ['docs/reference/cli/wait.md', 'reference/cli/wait.mdx'],
   ['docs/reference/cli/transcript.md', 'reference/cli/transcript.mdx'],
   ['docs/reference/cli/pane.md', 'reference/cli/pane.mdx'],
   ['docs/reference/cli/remote.md', 'reference/cli/remote.mdx'],
+  ['docs/reference/cli/accounts.md', 'reference/cli/accounts.mdx'],
   ['docs/reference/cli/stats.md', 'reference/cli/stats.mdx'],
+  ['docs/reference/cli/budget.md', 'reference/cli/budget.mdx'],
   ['docs/reference/cli/providers.md', 'reference/cli/providers.mdx'],
   ['docs/reference/cli/loop.md', 'reference/cli/loop.mdx'],
+  ['docs/reference/cli/lsp.md', 'reference/cli/lsp.mdx', 'LSP CLI'],
   ['docs/reference/cli/channel.md', 'reference/cli/channel.mdx'],
   ['docs/reference/cli/worktree.md', 'reference/cli/worktree.mdx'],
   ['docs/reference/cli/web.md', 'reference/cli/web.mdx'],
   ['docs/reference/cli/hooks-trust.md', 'reference/cli/hooks-trust.mdx'],
   ['docs/reference/cli/maintenance.md', 'reference/cli/maintenance.mdx'],
+  ['docs/reference/cli/paths.md', 'reference/cli/paths.mdx'],
+  ['docs/reference/definitions.md', 'reference/definitions.mdx'],
   ['docs/reference/agent-support.md', 'reference/agent-support.mdx'],
   ['docs/reference/agent-plugins.md', 'reference/agent-plugins.mdx'],
 ];
@@ -91,7 +107,8 @@ const mappings = [
 const sourceScopes = ['docs/guide', 'docs/reference'];
 // Agent contracts can live anywhere under the source scopes, but are never
 // public documentation. CLAUDE.md is the symlinked companion to AGENTS.md.
-const excludedSourceNames = new Set(['AGENTS.md', 'CLAUDE.md']);
+// A README.md is a directory index, which the site's sidebar replaces.
+const excludedSourceNames = new Set(['AGENTS.md', 'CLAUDE.md', 'README.md']);
 const readmeSections = [
   ['project-status', 'Project status'],
   ['what-it-does', 'What it does'],
@@ -256,10 +273,10 @@ function replaceSyncedBlock(markdown, id, replacement) {
   const endIndex = markdown.indexOf(end);
 
   if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-    throw new Error(`content/docs/index.mdx: missing sync markers for "${id}"`);
+    throw new Error(`${versionId}/index.mdx: missing sync markers for "${id}"`);
   }
   if (markdown.indexOf(start, startIndex + start.length) !== -1 || markdown.indexOf(end, endIndex + end.length) !== -1) {
-    throw new Error(`content/docs/index.mdx: duplicate sync markers for "${id}"`);
+    throw new Error(`${versionId}/index.mdx: duplicate sync markers for "${id}"`);
   }
 
   return `${markdown.slice(0, startIndex + start.length)}\n${replacement}\n${markdown.slice(endIndex)}`;

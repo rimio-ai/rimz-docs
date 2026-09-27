@@ -8,7 +8,7 @@
     "check:output": "node scripts/check-static-output.mjs",
     "check:content": "node scripts/check-content.mjs",
     "dev": "next dev",
-    "sync": "node scripts/sync-release.mjs",
+    "sync": "node scripts/sync-versions.mjs",
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "postinstall": "fumadocs-mdx",
