@@ -109,11 +109,29 @@ const sourceScopes = ['docs/guide', 'docs/reference'];
 // public documentation. CLAUDE.md is the symlinked companion to AGENTS.md.
 // A README.md is a directory index, which the site's sidebar replaces.
 const excludedSourceNames = new Set(['AGENTS.md', 'CLAUDE.md', 'README.md']);
-const readmeSections = [
-  ['project-status', 'Project status'],
-  ['what-it-does', 'What it does'],
-  ['how-it-works', 'How it works'],
-  ['agent-compatibility', 'Agent compatibility matrix'],
+// README sections cut into hand-written pages, each between
+// `{/* sync:<id>:start */}` and `{/* sync:<id>:end */}` markers. A section
+// marked optional exists only in some releases and syncs empty elsewhere.
+const readmePages = [
+  {
+    target: 'index.mdx',
+    introduction: true,
+    sections: [
+      ['project-status', 'Project status'],
+      ['what-it-does', 'What it does'],
+      ['how-it-works', 'How it works'],
+      ['agent-compatibility', 'Agent compatibility matrix'],
+    ],
+  },
+  {
+    target: 'getting-started/quickstart.mdx',
+    sections: [
+      ['get-started', 'Get started'],
+      ['install', 'Install', { optional: true }],
+      ['everyday-moves', 'Everyday moves'],
+      ['configuration', 'Configuration'],
+    ],
+  },
 ];
 
 const srcToRoute = new Map(
@@ -213,19 +231,82 @@ function rewriteTemplateRoutes(markdown) {
 async function syncReadmeSections() {
   const sourcePath = 'README.md';
   const source = await readFile(path.join(rimzRoot, sourcePath), 'utf8');
-  const target = path.join(docsRoot, 'index.mdx');
-  let index = await readFile(target, 'utf8');
 
-  const introduction = extractIntroduction(source, sourcePath);
-  index = replaceSyncedBlock(index, 'introduction', transformFragment(introduction, sourcePath));
+  // Cut every fragment first, so an in-README `#anchor` can be pointed at
+  // whichever page ends up holding its heading.
+  const pages = readmePages.map((page) => {
+    const fragments = [];
+    if (page.introduction) fragments.push(['introduction', extractIntroduction(source, sourcePath)]);
+    for (const [id, heading, options] of page.sections) {
+      let section = '';
+      try {
+        section = extractSection(source, heading, sourcePath);
+      } catch (error) {
+        if (!options?.optional) throw error;
+      }
+      fragments.push([id, section]);
+    }
+    return { ...page, route: routeForDestination(page.target), fragments };
+  });
 
-  for (const [id, heading] of readmeSections) {
-    const section = extractSection(source, heading, sourcePath);
-    const transformed = transformFragment(section, sourcePath);
-    index = replaceSyncedBlock(index, id, transformed);
+  const anchorRoutes = new Map();
+  for (const page of pages) {
+    for (const [, fragment] of page.fragments) {
+      for (const slug of headingSlugs(fragment)) {
+        if (!anchorRoutes.has(slug)) anchorRoutes.set(slug, page.route);
+      }
+    }
   }
 
-  await writeFile(target, index, 'utf8');
+  for (const page of pages) {
+    const target = path.join(docsRoot, page.target);
+    let markdown = await readFile(target, 'utf8');
+    for (const [id, fragment] of page.fragments) {
+      const transformed = rewriteReadmeAnchors(transformFragment(fragment, sourcePath), page.route, anchorRoutes);
+      markdown = replaceSyncedBlock(markdown, id, transformed, page.target);
+    }
+    await writeFile(target, markdown, 'utf8');
+  }
+}
+
+function headingSlugs(markdown) {
+  const slugs = [];
+  let inFence = false;
+
+  for (const line of markdown.split('\n')) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    const heading = !inFence && line.match(/^#{1,6}\s+(.+?)\s*#*\s*$/);
+    if (heading) slugs.push(slugify(heading[1]));
+  }
+
+  return slugs;
+}
+
+// GitHub's heading slug, which Fumadocs also uses.
+function slugify(text) {
+  return cleanDescription(text)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s_-]/gu, '')
+    .replace(/ /g, '-');
+}
+
+// A README link to its own `#anchor` stays in-page when the heading synced
+// onto the same page, follows the heading to the page that holds it, and
+// otherwise falls back to the README on GitHub.
+function rewriteReadmeAnchors(markdown, pageRoute, anchorRoutes) {
+  const resolve = (anchor) => {
+    const route = anchorRoutes.get(anchor);
+    if (route === pageRoute) return `#${anchor}`;
+    if (route) return `${route}#${anchor}`;
+    return `${githubBase}/README.md#${anchor}`;
+  };
+
+  return markdown
+    .replace(/(\]\()#([^)\s]+)\)/g, (_match, prefix, anchor) => `${prefix}${resolve(anchor)})`)
+    .replace(/(\bhref=(["']))#([^"']+)\2/g, (_match, prefix, quote, anchor) => `${prefix}${resolve(anchor)}${quote}`);
 }
 
 function extractIntroduction(markdown, sourcePath) {
@@ -266,17 +347,17 @@ function transformFragment(markdown, sourcePath) {
   ).trimEnd();
 }
 
-function replaceSyncedBlock(markdown, id, replacement) {
+function replaceSyncedBlock(markdown, id, replacement, page) {
   const start = `{/* sync:${id}:start */}`;
   const end = `{/* sync:${id}:end */}`;
   const startIndex = markdown.indexOf(start);
   const endIndex = markdown.indexOf(end);
 
   if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-    throw new Error(`${versionId}/index.mdx: missing sync markers for "${id}"`);
+    throw new Error(`${versionId}/${page}: missing sync markers for "${id}"`);
   }
   if (markdown.indexOf(start, startIndex + start.length) !== -1 || markdown.indexOf(end, endIndex + end.length) !== -1) {
-    throw new Error(`${versionId}/index.mdx: duplicate sync markers for "${id}"`);
+    throw new Error(`${versionId}/${page}: duplicate sync markers for "${id}"`);
   }
 
   return `${markdown.slice(0, startIndex + start.length)}\n${replacement}\n${markdown.slice(endIndex)}`;
@@ -690,6 +771,15 @@ function selfCheck() {
       '## Project status',
     ].join('\n'), 'README.md'),
     '<p align="center"><sub><b>AI agents / LLMs:</b> fetch <a href="/llms.txt">the live index</a>.</sub></p>\n\nIntroduction copy.',
+  );
+  assert.deepEqual(
+    headingSlugs('## Get started\n```sh\n# 1. Install\n```\n### `rimz agents -p`, scripted'),
+    ['get-started', 'rimz-agents--p-scripted'],
+  );
+  const anchorRoutes = new Map([['step-away', '/q'], ['agent-compatibility-matrix', '/i']]);
+  assert.equal(
+    rewriteReadmeAnchors('[a](#step-away) [b](#agent-compatibility-matrix) <a href="#documentation">c</a>', '/q', anchorRoutes),
+    `[a](#step-away) [b](/i#agent-compatibility-matrix) <a href="${githubBase}/README.md#documentation">c</a>`,
   );
   const longDescription = descriptionFrom(`${'word '.repeat(37)}.`);
   assert.ok(longDescription.endsWith('…'));

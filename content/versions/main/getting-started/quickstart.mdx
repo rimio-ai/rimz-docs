@@ -3,141 +3,266 @@ title: "Quickstart"
 description: "Install RimZ, open a tmux or Zellij control room, launch coding agents in isolated worktrees, and reconnect remotely."
 ---
 
-## Get started in five steps
+{/* sync:get-started:start */}
+## Get started
 
 ```sh
 # 1. Install
-cargo install --locked rimz
+curl -fsSL https://raw.githubusercontent.com/rimio-ai/rimz/main/scripts/install.sh | sh
 
 # 2. Open the room
 cd ~/code/query-engine
 rimz
 
-# 3. Launch agents and work
+# 3. Launch agents and work; the sidebar surfaces whoever needs you
 claude
-# or: codex, pi, opencode
+codex
 
-# 4. Worktrees, teams, dynamic layout
-rimz agents claude,codex --worktree=feat-x
-rimz agents 'vim,claude+term' --worktree=feat-y
+# 4. Worktrees, dynamic layouts, agent teams
+rimz agents claude,codex --worktree=feat-x       # Claude + Codex, side by side
+rimz agents 'vim,claude+term' --worktree=feat-y  # editor, agent, shell in one tab
 
-# 5. Native SSH remote with reconnect
+# 5. Native SSH remote, with self-healing reconnect
 rimz remote connect dev-box:~/code/query-engine
 ```
 
-Hooks install on first `rimz` run, with consent and a diff preview. The [sidebar guide](/docs/agents/sidebar) shows what happens after the room opens.
+### Other ways to install
 
+```sh
+brew install rimio-ai/rimz/rimz     # Homebrew
+cargo install --locked rimz         # Cargo, from crates.io
+rimz update                         # later: update in place, whichever way you installed
+```
+
+On macOS, the install script's default latest-release install uses Homebrew automatically when `brew` is available. Prebuilt binaries, building from source, and uninstalling are in the [installation guide](/docs/getting-started/installation). For a self-contained room with RimZ, both multiplexers, ttyd, and the priority agent CLIs preinstalled, [run the Docker image](/docs/getting-started/installation#run-in-docker).
+
+### Hooks
+
+Hooks are how agents report to the room. The first `rimz` run offers to install them, with a summary of every file it touches and your consent, and `rimz hooks install` does the same on demand:
+
+```sh
+rimz hooks install --dry-run    # per-agent summary plus a unified diff; writes nothing
+rimz hooks install              # every agent detected on the machine
+rimz doctor                     # verify backend, hooks, and room health
+```
+
+The install is additive (your existing hooks stay), and `rimz hooks uninstall` undoes it. → [set up your machine](/docs/getting-started/setup) · [enable dynamic shell completion](/docs/getting-started/setup#shell-completion) · [security and trust](/docs/help/security)
+{/* sync:get-started:end */}
+
+{/* sync:install:start */}
+
+{/* sync:install:end */}
+
+{/* sync:everyday-moves:start */}
 ## Everyday moves
 
-### Launch agents in layouts
+The commands below run from any pane in the room, and from any script or CI job that reaches it. They compose: a profile becomes a team, the team lands in a worktree, the worktree's agents take messages, and a schedule fires the whole thing while you sleep.
 
-One spec describes the shape: commas split columns, `+` tiles rows, and `/` stacks panes. A trailing prompt goes to the team's configured leader, its first role, or the first agent cell; use `rimz message @all` when everyone needs the same text.
+### Start agents
+
+**Run the official CLIs, untouched.** Every supported agent joins the room the same way: type its own command into any pane, exactly as you do today. The stock binary runs with your flags, your config, and its own session files; the hooks you approved at setup report it to the sidebar, and nothing sits between you and the CLI.
 
 ```sh
-rimz agents claude,codex "Refactor token refresh; keep the public API stable."
-rimz agents 'vim,codex+term'
-rimz agents claude/codex/term
+claude
+codex
 ```
 
-Deep dive: [Agent control CLI](/docs/reference/cli/agents).
-
-### Give each task its own worktree
-
-`--worktree` launches into an isolated RimZ-owned Git worktree. The tab name becomes the agents' channel.
+[`rimz agents`](/docs/agents/fleet) earns its keystrokes when you want more than the default. A `-auto` or `-yolo` suffix sets the permission mode, and a [Markdown definition](/docs/reference/definitions) under `~/.rimz/agents/` pins a model, effort, craft, and tools behind one word, so a planner that reasons hard and edits nothing is a name you reuse.
 
 ```sh
-rimz agents claude,codex --worktree=feat-x
-rimz agents claude --worktree "Take one approach."
-rimz agents codex --from-pr 42 "Review this pull request."
+rimz agents claude          # stock agent, own pane
+rimz agents codex-yolo      # permission modes: -auto, -ask, -plan, -yolo
+rimz agents planner         # your profile: model, effort, system prompt
 ```
 
-Deep dive: [RimZ-owned worktrees](/docs/harness/worktrees).
-
-### Save layouts as teams
-
-A named team in `agents.toml` gives each role a handle. Launch the team, or re-add one role to the running team.
+**Launch layouts into worktrees.** One spec describes the shape: `,` splits, `+` tiles, `/` stacks. Add [`-w`](/docs/harness/worktrees) and the whole layout lands in an isolated RimZ-owned Git worktree, seeded with the untracked files it needs, so two lines of work run side by side without touching each other or your main checkout.
 
 ```sh
-rimz agents peer --worktree=feat-x
-rimz agents forge
-rimz agents forge.reviewer
+rimz agents claude,codex -w feat-a             # two agents, side by side
+rimz agents planner,coder+reviewer -w feat-b   # profiles compose like kinds
+rimz agents 'vim,codex+term' -w feat-c         # editor | agent tiled over a shell
+rimz agents 'claude/codex/term' -w feat-d      # one stack of three rows (a Zellij stack; tmux tiles them)
+rimz agents codex --from-pr 42                 # worktree checked out from a pull request
 ```
 
-Deep dive: [Configuration](/docs/customization/configuration#agent-profiles-commands-and-teams).
-
-### Pick up where you left off
-
-`--resume` reopens the freshest closed session, cohort, or team matching the spec. `rimz start` offers the whole prior room back after a reboot.
+**Combine models as teams.** A named [team](/docs/harness/teams) in `~/.rimz/teams/<name>.md` gives each role a handle and launches the whole set in its layout, each role in its own context window, cooperating over messages. Pair model strengths across providers: one plans, another writes the code, a third reviews the diff blind. A staged team tracks its progress on `blackboard.md` in the worktree, and `rimz teams flip` hands a stage to the next role. RimZ is built this way; `examples/teams/` ships the `forge` team it uses, plus `mill` for refactors and `spot` for small fixes.
 
 ```sh
-rimz agents claude --resume
-rimz agents forge --resume
-rimz agents forge -w feat-x --resume
-rimz start
+rimz agents claude:planner,codex:coder -w feat-once   # one-off roles without a saved team
+rimz teams install forge                              # release-matched shipped team
+rimz teams forge -w feat-complex                      # planner, coder, reviewer on one feature
+rimz teams spot -w fix-expiry                         # coder and reviewer on a small fix
+rimz teams show forge#feat-complex                    # roles, status, and where the run stands
+rimz teams wait forge#feat-complex                    # block until the board reaches Done
+rimz agents attribution --md                          # credit the lane's agents and models in a PR footnote
 ```
 
-Deep dive: [Teams and resume](/docs/harness/teams).
+### Steer the fleet
 
-### Message agents like teammates
-
-Every agent gets a handle such as `@codex#feat-a`. Default delivery parks until the agent's turn ends; `--steer` interrupts now.
+**Message agents like teammates.** Every agent answers to a [handle](/docs/harness/messaging), named by kind, profile, or team role: `@codex` reaches the one in your channel, `@codex#feat-a` reaches across the workspace. Every message becomes a durable record you can read back and steer: parked at the turn boundary by default, `--steer` to write into the live turn now, `--schedule` to deliver later. The same command serves you, your scripts, and the agents themselves, which use it to talk to each other.
 
 ```sh
+# Park at the next turn boundary; address by kind, profile, or team role
 rimz message @claude "add coverage for the expiry edge cases"
-rimz message --steer @claude "stop: the parser test comes first"
-rimz message @coder --after @planner "planner is done — read plan.md and start"
+rimz message @planner "draft the implementation plan"
+rimz message @coder --after @planner "planner's done: read plan-notes.md and start"
+
+# Ask and print the reply from the agent's own context
 rimz message @coder --wait "did the migration land? one line"
+rimz message @all --wait --json "status? one line"     # a labeled reply map for the whole channel
+
+# Write into the live turn now, or schedule for later
+rimz message --steer @claude "stop: the parser test comes first"
+rimz message --interrupt @claude "stop: the user changed direction" # stop the turn, then deliver fresh
 rimz message --schedule 60m @codex#feat-b "run the smoke test"
+
+# Pipe context in, or broadcast to everyone
 git diff main | rimz message @reviewer --stdin "review this"
+rimz message @all "summarize what changed at the next boundary"
 ```
 
-Deep dive: [Messaging](/docs/harness/messaging).
-
-### Script an agent like a CLI
-
-`-p` runs one supervised turn and exits with the run's status code, so scripts and CI can branch on the outcome.
+**Answer a blocked agent without finding its pane.** [`rimz asks`](/docs/reference/cli/asks) lists the prompts that currently block agents, with each question's own text and options, and `rimz answer` submits a choice in the agent's native UI.
 
 ```sh
+rimz asks                        # open prompts in this channel; --all for every channel
+rimz asks show @planner          # one prompt with its context and choices
+rimz answer @planner allow       # submit a choice by label
+rimz answer @coder 2             # or by position
+```
+
+### Automate the routine
+
+**Script an agent like any CLI.** [`rimz agents -p`](/docs/harness/scripting) is `claude -p` with one grammar for every agent that can run headless: one prompt, supervision until the work ends, one exit code a script or CI job branches on, and swapping the provider behind a pipeline is a one-word change. It still runs in a real pane you can watch, answer, and steer while the pipeline waits on it.
+
+```sh
+# One supervised run, one exit code, one JSON result to branch on
 rimz agents codex "Prepare the release checklist." -p --timeout 30m --output-format json
-cat build-error.txt | rimz agents claude -p --stdin 'explain the root cause' > out.txt
+
+# stdin appends to the prompt
+cat build-error.txt | rimz agents claude -p --stdin 'explain the root cause'
+
+# Fire in the background; it returns now and prints the run's name
 rimz agents claude "Run the migration audit." -p --bg
+
+# Block on that run later and tail the answer
 rimz agents wait swift-otter --stream
+
+# Race several runs; the first to finish wins and prints its result
+rimz agents wait otter fox --any
 ```
 
-Deep dive: [Scripting](/docs/harness/scripting).
-
-### Keep the fleet moving
-
-Scheduled pings prime provider budget windows, and check-guarded loops wake agents when tests or CI fail.
+**Let agents launch agents.** [`rimz subagents`](/docs/harness/subagents) is the same path packaged for an agent RimZ launched: one command, the parent's checkout and channel inherited, and a petname printed for a later join. Each child is a full agent with its own pane beside the parent's, a nested row in the sidebar, a run record and transcript that outlive the turn, and a question that routes to you instead of failing silently. Launches return at once and the children work in parallel; a parent that does not join gets one report once every child has settled.
 
 ```sh
-rimz loop add morning --agent claude-ping --prompt ping --every weekday --at 07:00
-rimz loop add watchdog --check "cargo test" --on fail \
-  --agent codex --prompt "fix the failing test" --every 15m
+# From inside an agent's turn
+rimz subagents codex "review this diff for correctness; report concrete findings"
+rimz subagents wait @otter @fox      # collect named children's results
+rimz subagents stop --all            # stop every live child
+
+# Fan one audit across providers, then join all of it
+rimz subagents fanout --wait <<'JSON'
+[
+  {"profile":"codex","prompt":"review correctness; report concrete findings"},
+  {"profile":"claude","prompt":"review the interface; report concrete findings"}
+]
+JSON
 ```
 
-Deep dive: [Set up your machine](/docs/getting-started/setup#keep-the-fleet-moving).
+**Run the fleet on a schedule.** [`rimz loop`](/docs/harness/loops) fires agent turns on a clock: daily at a set time, on an interval, from a cron line, or once after a delay. Add `--check` and the task becomes a watchdog, running the script first and waking the agent only on its result. There is no scheduler daemon: an open room keeps time, and `rimz loop timer install` adds a systemd or launchd timer for the hours when none is open. Switch on [auto-continue and smart compaction](#configuration) and the loop runs hands-off; add `--budget-per-day 20` to bound what hands-off work costs.
 
-### Work from anywhere
+```sh
+# 07:00 every weekday: overnight changes, summarized before you sit down
+rimz loop add standup --agent claude --every weekday --at 07:00 \
+    --prompt "Summarize what landed on main since yesterday and flag anything that needs review"
 
-A room is plain zellij or tmux under SSH. Save an alias, connect with reconnect, or open the room in a browser.
+# Watchdog: run the check first, wake the agent only on failure
+rimz loop add watchdog --check "cargo test" --on fail \
+    --agent codex --prompt "fix the failing test" --every 15m
+```
+
+**Wait without a pane.** [`rimz wait`](/docs/reference/cli/wait) is the alarm an agent sets for itself instead of holding its turn open on `sleep`: it ends the turn, and when the delay elapses, the command finishes, or the file changes, RimZ delivers a message back into the same conversation naming what fired and on what.
+
+```sh
+rimz wait --in 30m                           # one-shot wait after a delay
+rimz wait --check 'nc -z localhost 3000'     # poll until the service answers
+rimz wait --file build.log --grep 'READY'    # a new matching line in a file
+rimz wait --pid 16776                        # an existing process exits
+rimz wait --run 'gh run watch --exit-status' # a command exits, with its output in the message
+```
+
+**Wake on a signal.** A timer guesses when something will happen; a [signal](/docs/harness/loops#signals-the-rooms-event-bus) is the thing itself. RimZ emits `ci.passed` and `ci.failed`, `pr.merged` and `pr.closed`, and agent and team lifecycle signals from what the room already watches, and anything can emit its own. A CI or pull request subscription follows the calling agent's own worktree branch.
+
+```sh
+# Wake me when CI fails on the branch this agent is working on
+rimz loop add ci-red --signal ci.failed --wait
+
+# Wake me once, on the next merge
+rimz loop add merged --signal pr.merged --wait --once
+
+# Your own signal: a git hook, a deploy script, or another agent emits it
+rimz events emit deploy.finished --json '{"env":"prod","version":"1.4.2"}'
+```
+
+### Step away
+
+**Work from anywhere.** A room is plain Zellij or tmux under SSH: save an alias and [reconnect over a link that heals itself](/docs/agents/remote), or [tunnel the room into a local browser](/docs/agents/web), which needs ttyd on the machine that serves the room. Close the laptop mid-run, reattach from another machine, and every agent is where you left it.
 
 ```sh
 rimz remote add dev dev-box:~/code/query-engine
-rimz remote connect dev
-rimz remote connect dev --web
-rimz web open
+rimz remote connect dev          # the room rebuilds, every agent where you left it
+rimz remote connect dev --web    # the same room in your browser at 127.0.0.1
 ```
 
-Deep dive: [Remote attach](/docs/agents/remote) and [Web access](/docs/agents/web).
-
-### Answer asks from your phone
-
-Claude Code and Codex can keep their own remote-control bridges running with the room, so provider-app questions reach your phone and answers return to the same terminal session. Both integrations are off by default.
+**Answer from your phone.** A fleet that runs while you are out still stops to ask: a permission prompt, a plan approval, a question only you can decide. Claude Code and Codex ship remote control, the bridge behind their official mobile apps, and two toggles keep that bridge up with every room. The ask reaches your phone as a push from the provider's own app, your answer lands in the same session on the machine running the room, and the turn moves on as if you had typed it there. RimZ stays out of the path: each toggle starts the provider's own command with the room and nothing more.
 
 ```sh
+rimz config set remote_control.claude true    # keep `claude remote-control` up with the room
+rimz config set remote_control.codex true     # ensure codex's remote-control daemon, once per machine
+```
+
+Both are off by default, and setting one back to `false` undoes it. The [remote guide](/docs/agents/remote#answer-asks-from-your-phone) shows exactly what each toggle runs. For every other agent, a [notification handler](/docs/harness/notifications) pushes the ask anywhere a shell command can reach.
+{/* sync:everyday-moves:end */}
+
+{/* sync:configuration:start */}
+## Configuration
+
+RimZ runs with zero configuration, and everything you can tune is a plain file you own: no config daemon, no bespoke language. `rimz setup` detects the machine and writes commented defaults under `~/.rimz/` (`config.toml`, `theme.toml`, `loop.toml`, `remote.toml`), so the files are their own reference. Agent profiles, teams, and skills are Markdown beside them, under `~/.rimz/agents/`, `~/.rimz/teams/`, and `~/.rimz/skills/`. After setup, [`rimz config set`](/docs/customization/configuration) routes any dotted key to the owning file, validates the value, and writes it durably.
+
+For the best experience, we recommend one pass of these:
+
+```sh
+rimz setup                                    # once: detect the machine, write the commented defaults
+
+# Appearance: truecolor, sharper glyphs, a companion
+rimz config set theme.style modern            # truecolor + Nerd Font icons
+rimz config set theme.pets.enabled true       # an animated pet; `rimz list-pets` previews them
+
+# Hands-off work: recover and keep going while you're away
+rimz config set resume.auto_continue true     # resume rate-limit and API-error parks
+rimz config set harness.smart_compact 200k    # compact before a message once context passes 200k tokens (a percentage like "70%" works too)
+rimz config set harness.budget 50/day         # cap what the room spends in a day
+
+# Answer asks from your phone (the move above)
 rimz config set remote_control.claude true
 rimz config set remote_control.codex true
 ```
 
-Deep dive: [Remote control](/docs/agents/remote#answer-asks-from-your-phone).
+What each group does, with the depth one link away:
+
+- The modern look wants a truecolor terminal (Ghostty, WezTerm, Kitty, Alacritty) and a Nerd Font, inside RimZ tmux rooms and over `rimz remote` too. The color scheme defaults to TokyoNight Night; `rimz config set theme "Catppuccin Mocha"` picks any bundled scheme from `rimz list-themes`. Pets render as crisp pixels in Ghostty and kitty (tmux additionally needs 3.6+ with `allow-passthrough on`) and as cell art everywhere else, Zellij included. → [theming](/docs/customization/theme) · [pets](/docs/customization/pets)
+- Auto-continue resumes a parked agent the moment the provider's budget window resets and retries transient API errors on a backoff ramp; smart compaction sends the agent's compact command ahead of your text once context passes the threshold, so a long turn lands on a fresh window. Between them the pauses that would have stalled the fleet until morning clear themselves, and you are left with the decisions that actually need you. The room budget caps what that freedom costs, and the same cap exists per turn, per agent, per loop task, and per provider account. → [loops → keep the fleet moving](/docs/harness/loops#keep-the-fleet-moving) · [budgets](/docs/agents/budget)
+- The remote-control toggles are the [answer-from-your-phone move](#step-away) above; the [remote guide](/docs/agents/remote#answer-asks-from-your-phone) shows exactly what each one runs.
+
+Two more settings change what a room launches under:
+
+```sh
+rimz accounts add claude work                 # declare a second Claude or Codex account and install its hooks
+rimz start --account claude=work              # a room whose Claude agents all run under `work`
+rimz config set agents.isolation sandbox      # Linux: a bubblewrap mount view for every agent pane
+```
+
+- A [provider account](/docs/customization/accounts) is fixed when the room is born, and everything the room launches (agents, team members, subagents, loop tasks, restarts) runs under it, with its own limits, budget, and sessions. `rimz reset --account claude=default` rebuilds the room on Claude's own home.
+- [Sandbox isolation](/docs/help/security#sandbox-isolation) gives each agent the room's own `/tmp` and the RimZ skill library merged into its provider's skill root, with a profile's `skills:` list deciding which skills the model may call on its own. It is a mount view and not containment: the host filesystem stays writable and your credentials stay readable. `rimz start` refuses to launch when bubblewrap is missing or unusable, and `--isolation host|sandbox` overrides the setting for one launch.
+
+The [setup guide](/docs/getting-started/setup) walks the whole first pass, agent hooks included; the [Zellij and tmux guide](/docs/customization/multiplexer) has a modern baseline with [ready-to-adopt example configs](https://github.com/rimio-ai/rimz/blob/main/examples/README.md?ref=docs), and the full key catalog is the [configuration guide](/docs/customization/configuration).
+{/* sync:configuration:end */}

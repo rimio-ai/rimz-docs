@@ -55,6 +55,8 @@ RIMZ_SRC=../rimz pnpm sync
 
 The sync script checks out `main` and every stable `v*` tag into temporary worktrees and regenerates `content/versions/<version>/` and `public/docs-assets/<version>/` from each, rebuilding every set from scratch so a transform change reaches old releases too. Hand-written scaffolding under `content/template/` seeds each set; pages that a release predates are dropped from its navigation. A new upstream page under `docs/guide` or `docs/reference` must be mapped in `scripts/sync-content.mjs` and listed in the template `meta.json`, or the sync fails.
 
+The introduction and the quickstart are cut from each version's own RimZ `README.md`, between `{/* sync:<id>:start */}` and `{/* sync:<id>:end */}` markers in the template, so each release shows the commands it actually shipped. The introduction takes the README's opening, project status, feature list, compatibility matrix, and architecture; the quickstart takes "Get started", "Install" (older releases only), "Everyday moves", and "Configuration". `readmePages` in `scripts/sync-content.mjs` lists the sections, and a renamed README heading fails the sync. A README link to its own `#anchor` follows the heading to whichever page holds it, or falls back to the README on GitHub.
+
 Search descriptions for imported pages are generated from each upstream document's opening prose, while hand-written pages keep their descriptions in `content/template/`. Keep lead paragraphs specific and useful: content checks reject missing, thin, overly long, or duplicate descriptions.
 
 Run `pnpm check:content` to verify every version's pages, that links and images stay inside their own version, the source refs, and `content/versions.json`.
