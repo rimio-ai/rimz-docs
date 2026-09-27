@@ -154,7 +154,7 @@ when = { kind = ["waiting"], worktree = ["feat/*"], handle = ["@planner"] }
 
 | Key | Default | What it does |
 | --- | --- | --- |
-| `enabled` | `true` | `false` stops banners, bells, nudges, and handlers and leaves the unread cards alone. One thing outlives it: a loop task that disables itself still fires `loop_disabled` handlers. |
+| `enabled` | `true` | `false` stops banners, bells, nudges, and all handlers and leaves the unread cards alone. |
 | `triggers` | `["waiting", "failed"]` | Which newly unread kinds raise a banner or a handler. `paused` and `success` also become unread cards; `running` and `idle` stay quiet. |
 | `desktop` | `"auto"` | `auto` emits terminal OSC notifications under tmux and skips them under Zellij, which drops notification OSCs. `osc` always emits, `off` never does. |
 | `sound` | `"bell"` | `bell` writes a BEL byte and your terminal decides whether it is audible; `off` writes nothing. |
@@ -218,7 +218,7 @@ codex = "100/day"
 
 `harness.turn_budget` caps every agent turn in the room. It takes a plain dollar amount such as `"3"` or `"$2.50"`, and each new prompt starts a fresh turn baseline. `harness.budget` caps a room's whole fleet for one day, and an `[accounts.budget]` entry caps one provider account for one day, shared by every room signed in to it.
 
-A daily cap runs from local midnight in your [`timezone`](#sidebar-rendering) and must carry the `/day` suffix; a bare amount is refused with the form to use. An account entry also needs a provider that publishes a complete dollar history, which [five of them do](/docs/agents/budget#cap-the-room-and-the-account) today. A subscription quota bar or a partial estimate does not qualify, so `rimz config set`, strict config loading, room start, and the `rimz budget` account commands all refuse an ineligible kind such as Antigravity and name the key to remove. Cursor still takes per-agent and room caps, just not an account-day cap. None of these keys runs a command, so none of them enters the project trust hash.
+A daily cap runs from local midnight in your [`timezone`](#sidebar-rendering) and must carry the `/day` suffix; a bare amount is refused with the form to use. An account entry also needs a provider that publishes a complete dollar history, which [five of them do](/docs/agents/budget#cap-the-room-and-the-account) today. A subscription quota bar or a partial estimate does not qualify, so `rimz config set`, strict config loading, and room start refuse an ineligible kind such as Antigravity and name the key to remove. `rimz budget --account KIND` checks only the targeted kind; fleet reports omit ineligible kinds and warn on stderr about each key to remove without blocking adjustments. Cursor still takes per-agent and room caps, just not an account-day cap. None of these keys runs a command, so none of them enters the project trust hash.
 
 The daily keys are the on-switch. `rimz budget` inspects and adjusts a cap that is already armed without touching the file, and refuses to arm one the file never set; it shows `harness.turn_budget` read-only, so change that standing per-turn cap with `rimz config set harness.turn_budget 3` or delete the key. The cap model (the [five scopes](/docs/agents/budget#one-model-five-scopes), what a park does, and what resumes it) is the [budgets guide](/docs/agents/budget).
 
@@ -427,7 +427,7 @@ font = "JetBrainsMono Nerd Font Mono"
 style_client = true
 ```
 
-`enabled` defaults to true and gates `rimz web open`, `rimz web share`, and `rimz remote connect --web`. A normal `rimz start` makes a best-effort start of the shared daemon that every Zellij and tmux room on the machine uses; a missing or pre-1.7.5 ttyd, or an occupied port, warns without blocking the room. With `enabled = false`, the web commands fail before any room changes and tell you to change the config on the machine serving the room. Install ttyd 1.7.5 or newer with `brew install ttyd` or an apt source carrying a current package.
+`enabled` defaults to true and gates `rimz web open`, `share`, `start`, `restart`, and `rimz remote connect --web`. While enabled, a normal `rimz start` makes a best-effort start of the shared daemon that every Zellij and tmux room on the machine uses; a missing or pre-1.7.5 ttyd, or an occupied port, warns without blocking the room. With `enabled = false`, those gated commands fail before any room or daemon changes and tell you to change the config on the machine serving the room. An already-running daemon stays up until `rimz web stop`; `status`, `stop`, and all `token` operations, including revocation, remain usable while disabled. Install ttyd 1.7.5 or newer with `brew install ttyd` or an apt source carrying a current package.
 
 `interface` is the bind address for both daemons. `port` (8200) is the shared daemon, and `share_port` (8201) is the read-only broadcast daemon, which takes no login at all. `base_url` is the URL prefix RimZ prints for `rimz web open` and `rimz web url`, and `share_base_url` the one it prints for `rimz web share`.
 
