@@ -97,6 +97,8 @@ The optional `PROMPT` goes to exactly one leader: the team's configured `leader`
 
 A launch that opens a new pane or tab prints a receipt: the checkout path, then each member's handle, provider, and resolved model (`-` when unset). When you gave a prompt, a shortened echo names its recipient, and non-team launches add copy-ready `Reach` and `Wait` commands for the leader. The receipt records what was launched; the agents start asynchronously. A named team prints the [team receipt](/docs/reference/cli/teams#launch-a-team) instead, and a launch that takes over the current pane prints none.
 
+An agent-launched interactive peer with a nonempty prompt also gets a per-turn run before its pane opens. Only the prompt recipient gets that run in a layout. A team launch instead reports its leader once per `Done` ([team reports](/docs/reference/cli/teams#team-reports)). Its receipt names the launcher-visible response file, the `AGENT_REPORT` that returns when the launcher's fleet settles, and `rimz agents wait <RUN_ID>`. Later launcher messages can open new reportable turns; user-typed turns do not. User launches, promptless launches, and `--resume` create no launch-prompt run. An adapter without native root turn-start and turn-end hooks creates none and its receipt says it will not report back. The peer stays interactive after reporting.
+
 Launches refuse before they create any pane or record when:
 
 - the final prompt exceeds 120 KiB (122880 bytes), counting `--stdin` content and any reminder text appended to it, because the provider receives the prompt as one argument (move detail into a file the agent reads);
@@ -648,6 +650,8 @@ Other kinds, including plugins, cannot fork.
 
 #### `wait`
 
+Immediately after a prompted peer launch, `rimz agents wait @peer` resolves the pending launch run even before provider registration. After a later launcher message, it retains the ordinary turn wait until a prompt-correlated turn-start hook enrolls the new run. Use `rimz message --wait @peer '<text>'` for a message-correlated reply wait. A turn-start hook without prompt text acknowledges delivery but opens no reportable turn.
+
 `rimz agents wait <REF>...` blocks until supervised runs finish or interactive agents finish a turn: `idle`, `success`, or `failed` after a turn has opened. A sleeping agent (one with an armed one-shot wait) and a freshly registered agent that never opened a turn keep the wait blocked. A reference is a run id, a pet name, or any address.
 
 With one reference, `wait` prints the final assistant message: a run's answer, or the message that closed an interactive agent's turn. When a completed turn left no message, stderr says so and stdout stays empty. `--json` prints a run's full record, or for an interactive agent one `{status, exit, cost, transcript_path, last_message}` entry, omitting fields that have no value. `--stream` tails assistant text as it lands, `--stream --json` emits NDJSON run events, and `--from-start` replays the transcript from the top before tailing.
@@ -672,11 +676,15 @@ The exit code is `0` when every target completes; otherwise it is the status cod
 
 `rimz agents stop <REF>` ends an agent's CLI process the way Ctrl+C would. For a live supervised run it cancels the run; for a completed run kept open with `--keep` it reclaims the pane; for an agent it closes the pane. The provider's session files stay on disk, so a stopped agent is one [`--resume`](#resume-agents) away.
 
+An interactive peer still takes the pane-close path when it has a launcher-opened run, whether that run is open or already terminal. An open turn reports failure to its launcher when session-end or the backstop observes the stop; an idle peer with no open turn reports nothing.
+
 Stopping a parent first stops its live children launched with `rimz subagents`, including when [`rimz teams stop`](/docs/reference/cli/teams#drive-a-live-team) reaches the parent. Without `--all`, the reference must match one agent. With `--all`, `stop` acts on every match, prints one result line per agent, and exits `1` if any stop failed.
 
 #### `restart`
 
 `rimz agents restart <REF>` replaces one live agent's pane and resumes its provider session. It focuses the pane, opens the replacement in the same layout position, and closes the old pane; focus follows the replacement on Zellij and tmux.
+
+A peer's open launcher-requested turn is failed before the replacement pane opens and becomes eligible for its launcher's fleet report. The replacement does not continue that turn's run.
 
 The replacement renders the agent's profile from current configuration, including its isolation default, so profile edits take effect, and keeps its role, team, channel, permission mode, and recorded `--isolation`. One-off launch flags (`--model`, `--agent`, passthrough arguments) are not recorded and do not carry over. When the profile now resolves to a different provider, including an agent launched with `--agent`, restart refuses and points to `rimz agents <profile> --agent <kind>` for an explicit fresh launch.
 
