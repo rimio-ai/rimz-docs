@@ -111,8 +111,8 @@ A wait on a timer is a guess about when something will happen. A signal is the t
 
 | Signal | Fires when | Payload carries |
 | --- | --- | --- |
-| `ci.passed`, `ci.failed` | the checks on a commit a worktree branch added settle on success or failure, with or without a pull request | `path`, `branch`, `repo`, plus `head` and `checks_url` when the commit is known, and `number` and `url` when a pull request exists |
-| `pr.merged`, `pr.closed` | the pull request on one of the room's worktree branches leaves the open state | `path`, `branch`, `repo`, `state`, plus `number`, `url`, `head`, and `checks_url` when known |
+| `ci.passed`, `ci.failed` | the checks on a commit on a watched checkout settle on success or failure, with or without a pull request | `path`, `branch`, `repo`, plus `head` and `checks_url` when the commit is known, and `number` and `url` when a pull request exists |
+| `pr.merged`, `pr.closed` | the pull request on one of the room's watched checkouts leaves the open state | `path`, `branch`, `repo`, `state`, plus `number`, `url`, `head`, and `checks_url` when known |
 | `pr.opened` | a successful probe finds a new open PR after monitoring has already observed the branch successfully | the PR payload above with `state: "open"` |
 | `trunk.moved` | the same trunk ref moves to a different commit | `trunk`, `from`, `to`, `repo` |
 | `worktree.created`, `worktree.removed` | a managed worktree is successfully created or removed, not reused or rolled back after a failed creation hook | `name`, `branch`, `path`, `repo`, plus `from_pr` when present; creation adds `base` when known, removal adds `branch_deleted` |
@@ -129,7 +129,7 @@ Subscribe to one name or to a whole family: `--signal ci.failed` for the red ver
 
 `rimz loop add ci-red --signal ci.failed --wait`, run from an agent pane, keeps listening until you remove it; `--once` retires it after one delivery, and a subscription has no deadline. A matching signal arrives from `@rimz` with `Type: SIGNAL`, the signal name and scope, and the JSON payload, followed by an optional loop prompt. If the agent is working, delivery parks for its next turn boundary.
 
-RimZ fills in the scope so the ordinary subscription needs no flags: a CI or PR subscription watches the caller's worktree, a team subscription its own cohort, and a lifecycle subscription has to name another agent. Because the forge poll only watches worktree branches, a CI or PR subscription armed from the root checkout has no branch to follow and is refused; supply an explicit branch or path, work in a linked worktree, or watch `gh run watch --exit-status` as a command instead. The [loop reference](/docs/reference/cli/loop#caller-scoped-defaults) owns these defaults.
+RimZ fills in the scope so the ordinary subscription needs no flags: a CI or PR subscription watches the caller's worktree, a team subscription its own cohort, and a lifecycle subscription has to name another agent. A CI or PR subscription armed from the root checkout requires an explicit scope; supply a branch or path, use `--match branch='*'` for every checkout RimZ watches, work in a linked worktree, or watch `gh run watch --exit-status` as a command instead. The [loop reference](/docs/reference/cli/loop#caller-scoped-defaults) owns these defaults.
 
 Adding the same live target, selector, matches, and root twice reports `already subscribed as <name>` without changing the existing subscription. For team-owned routing, [declare a signal binding](/docs/harness/teams#define-your-own-team): forge sends failed CI directly to its coder, whoever pushed.
 
