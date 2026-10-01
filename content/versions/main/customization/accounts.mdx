@@ -89,11 +89,11 @@ $ rimz start --account claude=work
 error: RimZ hooks are missing for claude account `work` at `/home/me/.rimz/accounts/claude/work`; run `rimz accounts add claude work`
 ```
 
-RimZ sets `CLAUDE_CONFIG_DIR` or `CODEX_HOME` on each provider process from that agent's account. Human launches and loop tasks take the room's current default; an agent launching another agent of the same provider passes on its own account, including `default`. A launch of a different provider takes that provider's room default. Restarts, resumes, and forks keep the source agent's account. `rimz agents explain @coder` prints the account that agent launches under, as `claude@work`. Every other provider has only `default` and launches as it always has.
+RimZ sets `CLAUDE_CONFIG_DIR` or `CODEX_HOME` on each provider process from that agent's account. Every fresh launch takes the room's current account for its provider: human launches, loop tasks, and the children and peers an agent launches alike. A restart, resume, or fork reopens a session only on the account it started on ([switching](#change-a-rooms-account)). `rimz agents explain @coder` prints the account that agent launches under, as `claude@work`. Every other provider has only `default` and launches as it always has.
 
 ## What the account changes
 
-The sidebar's provider dashboard shows a block per account in use: the plan, the 5-hour and 7-day limit bars, and the credits all come from that account's home. A named account labels its block, as in `Claude · work`. After a switch, one room can show both the new account and the old account while its agents finish. The old block drops when its last agent ends. `rimz providers` prints the same picture as text, one table row per account ([reading the numbers](/docs/agents/insight#per-account-the-provider-dashboard)).
+The sidebar's provider dashboard shows one block per provider, for the account the room launches under: the plan, the 5-hour and 7-day limit bars, and the credits all come from that account's home. A named account labels its block, as in `Codex · team-1`. After `rimz accounts use`, the block shows the new account from the next refresh on. Agents still running on the old account keep running and keep their own cards, but the dashboard does not show that account. Right after a switch to an account no room has read yet, the provider has no block until RimZ reads that account, and an account that was never logged in shows none. `rimz providers` lists every account, one table row each ([reading the numbers](/docs/agents/insight#per-account-the-provider-dashboard)).
 
 A daily cap in the per-machine config's `[accounts.budget]` table applies to each account of that provider separately:
 
