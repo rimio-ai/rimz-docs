@@ -4,10 +4,10 @@ description: "You may pay for more than one Claude or Codex plan: a work subscri
 ---
 You may pay for more than one Claude or Codex plan: a work subscription and a personal one, or a second seat you move to when the first hits its weekly limit. Both CLIs already support this. Claude reads its credentials, settings, and transcripts from `CLAUDE_CONFIG_DIR` (default `~/.claude`), and Codex from `CODEX_HOME` (default `~/.codex`), so `CLAUDE_CONFIG_DIR=~/.claude-work claude` is a second, fully separate account: its own credentials, its own limits, its own transcripts.
 
-That works for one terminal. A fleet needs each agent, child, and restart to keep the correct home too: a session cannot resume under another account because its transcript lives in its original home. RimZ records an account on each agent and a default for future launches in the room. Declare each home once, pick the room's default, and switch it later without moving the agents already working.
+That works for one terminal. A fleet needs each agent, child, and restart to keep the correct home too: a session can resume only under an account that reads the same history, which a standalone account keeps in its own home. RimZ records an account on each agent and a default for future launches in the room. Declare each home once, pick the room's default, and switch it later without moving the agents already working.
 
 ```sh
-rimz accounts add claude work          # declare the home, share settings, install hooks
+rimz accounts add claude work          # declare the home, link it, install hooks
 rimz start --account claude=work       # a room whose Claude agents all run under `work`
 rimz reset --account claude=default    # rebuild the room on Claude's own home
 ```
@@ -18,7 +18,7 @@ rimz reset --account claude=default    # rebuild the room on Claude's own home
 
 ```console
 $ rimz accounts add claude work
-linked settings to /home/me/.claude: settings.json, settings.local.json, CLAUDE.md, skills, plugins, agents, commands, output-styles
+linked to /home/me/.claude: settings.json, settings.local.json, CLAUDE.md, skills, plugins, agents, commands, output-styles
 ✓ claude  installed 13 hooks → ~/.rimz/accounts/claude/work/settings.json  (new file)
 claude account `work` lives at ~/.rimz/accounts/claude/work
   log in once   CLAUDE_CONFIG_DIR=/home/me/.rimz/accounts/claude/work claude
@@ -31,15 +31,19 @@ What it does on your machine:
 
 1. Writes `[accounts.claude.work]` to the per-machine config, `~/.rimz/config.toml`.
 2. Creates the home directory, `~/.rimz/accounts/<kind>/<name>`.
-3. Links settings to the provider's own home, as `default` resolves it. Codex shares `config.toml` and `AGENTS.md`; Claude shares `settings.json`, `settings.local.json`, `CLAUDE.md`, `skills/`, `plugins/`, `agents/`, `commands/`, and `output-styles/`.
+3. Links the account home to the provider's own home, as `default` resolves it: every top-level entry of either home except the provider's credentials. The line above is a provider home that holds nothing yet; yours also lists what your own `~/.claude` holds, such as `projects`.
 4. Installs the RimZ reporting hooks through the links into the shared config, so the provider's own home gains the hooks too.
 5. Prints the account home, login command, and commands to select it.
 
 `--home <path>` adopts a directory you already keep, such as `~/.claude-work`, instead of creating one under `~/.rimz/accounts/`.
 
-RimZ writes no credentials. Run the printed login command once so the provider stores its own credentials in the new home. Credentials, sessions, and transcripts stay per account; settings, and for Claude skills and plugins, are shared with the provider's own home, so a change in any linked account applies to all. This includes permissions, `env`, and hook commands. Codex trusts hooks per account path, so run `/hooks` once in each account even though the config is shared.
+RimZ writes no credentials. Run the printed login command once so the provider stores its own credentials in the new home. Only the credentials stay per account: Claude's `.credentials.json` and `.claude.json`, and Codex's `auth.json`, `app-server-control`, `app-server-daemon`, and `packages`. Everything else is a link, so the account writes its sessions and transcripts into the provider's own home and reads the same settings, skills, and plugins. A change through any linked account applies to all of them, including permissions, `env`, and hook commands. A shared Codex account also launches with `CODEX_SQLITE_HOME` set to the provider's own home, unless you export that variable yourself, so its databases sit beside the sessions they index. Codex trusts hooks per account path, so run `/hooks` once in each account even though the config is shared. Claude keeps per-project trust and its MCP server list in `.claude.json`, so those stay with each account too.
 
-Rerunning `add` also migrates accounts you already declared: it leaves the config entry alone, creates the home if missing, links settings, and refreshes hooks. Existing files, directories, or links to another target move aside to `<name>.orig`, with each move printed; their settings are not merged, except Codex hook-trust entries. If a backup already exists, rename or remove it and rerun; no settings entries change on that refusal, though a first declaration remains in the config. Already-correct links stay in place and the output says `settings already shared`. If a Claude release saves settings by replacing a link, the next `rimz accounts add` moves the copy to `.orig`, relinks it, and says so.
+To keep an account's sessions and transcripts in its own home, declare it with `--history standalone`. A standalone account links only its settings: Codex shares `config.toml` and `AGENTS.md`; Claude shares `settings.json`, `settings.local.json`, `CLAUDE.md`, `skills/`, `plugins/`, `agents/`, `commands/`, and `output-styles/`. `rimz accounts add claude work --history standalone` on an account you already declared removes the other links and leaves what they pointed at in the provider's own home; `--history shared` links them again.
+
+Rerunning `add` also migrates accounts you already declared: it leaves the config entry alone, creates the home if missing, brings the links up to date, and refreshes hooks. Every agent launch on a named account brings them up to date the same way, so an entry the provider creates later is linked by the next launch. Nothing is deleted. An entry only the account has, such as the transcripts of an account you used before it was shared, moves into the provider's own home. An entry both homes have stays where the provider's own home keeps it, and the account's copy moves aside to `<account home>/.rimz-aside/<UTC timestamp>/<name>`, with each move printed; the two are not merged, except Codex hook-trust entries. Merge what you need out of `.rimz-aside` by hand: sessions in there cannot be resumed and are left out of `rimz stats`, the spend totals, and today's budget count until you move them. Already-correct links stay in place and the output says `already linked to <home>`. If a Claude release saves settings by replacing a link, the next `add` or launch moves the copy aside, relinks it, and says so. A session whose directory was set aside is no longer where the provider looks for it, so its first relaunch fails once at the provider; the launch warning names where the directory went, and the relaunch after that starts fresh.
+
+Moving a directory out from under an agent that is writing into it would split its session, so RimZ refuses to set a directory aside, or to remove the link to one after a switch to standalone, while any other agent runs on the account. The refusal names the fix: end those agents, or set the account's `history` back. A switch made with `rimz accounts add --history` that is refused leaves the account's mode as it was. An account home on another filesystem cannot have its entries moved; they stay in the account home with a warning. Its history then stays local too: no other account can resume it, and it is left out of the pool's spend totals and daily budget.
 
 The account named `default` is the provider's own home and is never declared. It is whatever the provider CLI resolves for itself: `~/.claude` or `~/.codex`, unless you export `CLAUDE_CONFIG_DIR` or `CODEX_HOME` in the shell you start the room from. When that variable points at any declared named account's home, `add` refuses before writing anything, including on a rerun inside a room. Unset it for the command, for example `env -u CODEX_HOME rimz accounts add codex work`. Do not export one that points at a named account's home in your login shell: `default` would then launch into that account too. Select the account with `rimz accounts use` instead. `rimz accounts add` refuses to declare the provider's own home, including a `--home` symlink to it, and `rimz doctor` flags an exported-home conflict.
 
@@ -47,12 +51,12 @@ The account named `default` is the provider's own home and is never declared. It
 
 ```console
 $ rimz accounts list
-   KIND    NAME      STATUS           DEFAULT FOR  AGENTS  HOME
-   claude  default   ready            -            -       ~/.claude
-●  claude  work      ready            new rooms    -       ~/.rimz/accounts/claude/work
+   KIND    NAME      STATUS           DEFAULT FOR  AGENTS  HISTORY  HOME
+   claude  default   ready            -            -       -        ~/.claude
+●  claude  work      ready            new rooms    -       shared   ~/.rimz/accounts/claude/work
 
-●  codex   default   hooks untrusted  new rooms    -       ~/.codex
-   codex   personal  hooks missing    -            -       ~/codex-me
+●  codex   default   hooks untrusted  new rooms    -       -        ~/.codex
+   codex   personal  hooks missing    -            -       shared   ~/codex-me
 RimZ hooks for codex account `default` at `/home/me/.codex` are untrusted (SessionStart, UserPromptSubmit, SubagentStart, SubagentStop, Stop, PermissionRequest, PreToolUse, PostToolUse, PreCompact, PostCompact); run /hooks inside codex and trust the RimZ hooks
 RimZ hooks are missing for codex account `personal` at `/home/me/codex-me`; run `rimz accounts add codex personal`
 ```
@@ -91,22 +95,22 @@ error: RimZ hooks are missing for claude account `work` at `/home/me/.rimz/accou
 
 A supervised launch (`rimz subagents`, `rimz agents -p`) checks only the account it launches under. A broken account of another provider never stops it; that account refuses when something launches under it.
 
-RimZ sets `CLAUDE_CONFIG_DIR` or `CODEX_HOME` on each provider process from that agent's account. Every fresh launch takes the room's current account for its provider: human launches, loop tasks, and the children and peers an agent launches alike. A restart, resume, or fork reopens a session only on the account it started on ([switching](#change-a-rooms-account)). `rimz agents explain @coder` prints the account that agent launches under, as `claude@work`. Every other provider has only `default` and launches as it always has.
+RimZ sets `CLAUDE_CONFIG_DIR` or `CODEX_HOME` on each provider process from that agent's account. Every fresh launch takes the room's current account for its provider: human launches, loop tasks, and the children and peers an agent launches alike. A restart, resume, or fork reopens a session on the room's current account, as long as that account shares the session's history ([switching](#change-a-rooms-account)). `rimz agents explain @coder` prints the account that agent launches under, as `claude@work`. Every other provider has only `default` and launches as it always has.
 
 ## What the account changes
 
 The sidebar's provider dashboard shows one block per provider, for the account the room launches under: the plan, the 5-hour and 7-day limit bars, and the credits all come from that account's home. A named account labels its block, as in `Codex · team-1`. After `rimz accounts use`, the block shows the new account from the next refresh on. Agents still running on the old account keep running and keep their own cards, but the dashboard does not show that account. Right after a switch to an account no room has read yet, the provider has no block until RimZ reads that account, and an account that was never logged in shows none. `rimz providers` lists every account, one table row each ([reading the numbers](/docs/agents/insight#per-account-the-provider-dashboard)).
 
-A daily cap in the per-machine config's `[accounts.budget]` table applies to each account of that provider separately:
+A daily cap in the per-machine config's `[accounts.budget]` table follows the history: `default` and the shared accounts of a provider spend against one cap, and each standalone account has its own:
 
 ```toml
 [accounts.budget]
 claude = "100/day"
 ```
 
-A room on `work` parks when `work` has spent $100 today, whatever `default` has spent. The caps and what lifts a park are in [budgets](/docs/agents/budget#cap-the-room-and-the-account).
+With `work` shared, a room on `work` parks when `default` and the shared accounts have spent $100 between them today. Declare `work` with `history = "standalone"` and it parks on its own $100, whatever `default` has spent. The caps and what lifts a park are in [budgets](/docs/agents/budget#cap-the-room-and-the-account).
 
-`rimz stats` and the spend totals walk every declared account home, so your spend history covers all of them whichever room you are standing in.
+`rimz stats` and the spend totals read the provider's own home and every standalone account home, so your spend history covers all of them whichever room you are standing in. `default` and the shared accounts of a provider are one history, so they are one spend figure: a shared account's dashboard block shows that shared spend beside the account's own plan, limits, and credits.
 
 ## Change a room's account
 
@@ -118,7 +122,7 @@ rimz accounts use claude work
 
 The command checks the selected home's hooks, then changes only that provider's launch default in the room record. It leaves machine and project configuration alone and reports how many running agents keep the prior account. Reverse it with `rimz accounts use claude default`. Its output confirms the switch immediately; sidebar account information follows on the next refresh. Outside a room the command refuses and names `--global`, which sets the machine selection for new rooms instead.
 
-Every new launch uses the room's current account for its provider, including children and peers launched by existing agents and team members. Resuming, restarting, or forking a session also runs on the room's current account, so RimZ refuses to reopen a session that started on another one: the conversation lives in that account's home. The refusal names both accounts and the fix, for example `rimz accounts use claude default` to resume the session, then switch back. Recovery after a crash skips such sessions and lists each as `different account`. Keep an account declared to resume its sessions. A running [remote-control host](/docs/agents/remote#answer-asks-from-your-phone) keeps its account until its next spawn.
+Every new launch uses the room's current account for its provider, including children and peers launched by existing agents and team members. Resuming, restarting, or forking a session also runs on the room's current account. `default` and every shared account of a provider read one history, so a session moves between them: switch the room to another shared account, resume, and the conversation continues there, with the agent recorded on the account it now runs on. A standalone account keeps its history in its own home, so RimZ refuses to reopen a session across that boundary, in either direction. The refusal names both accounts and the fix, for example `rimz accounts use claude default` to resume the session, then switch back. Recovery after a crash skips such sessions and lists each as `different account`. Keep an account declared to resume its sessions. A running [remote-control host](/docs/agents/remote#answer-asks-from-your-phone) keeps its account until its next spawn.
 
 Inside a room that is already running, `rimz start --account` refuses and points at `rimz accounts use`. `rimz reset --account` remains available when you want to tear down and rebuild the room instead.
 
