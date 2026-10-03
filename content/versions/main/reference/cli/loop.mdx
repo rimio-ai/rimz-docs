@@ -90,7 +90,7 @@ Expressions accept `!`, `&&`, `||`, and parentheses, in that precedence order. A
 | --- | --- | --- |
 | `team.stage` | `Done` and stages declared by any team in the effective configuration, case-sensitive | The scoped checkout's `blackboard.md` Stage line. |
 | `ci` | `passed`, `failed`, `pending` | The room sidebar's last-known CI result. A live runnable condition keeps its checkout in the sidebar's probe set, with or without a pane; removing the task releases it. Without a fresh sidebar it is unknown, including under the external timer. |
-| `window.5h.left`, `window.7d.left` | A comparison with a whole percent, `0` to `100` | Percent left in the task provider's 5-hour or 7-day window: `100` minus the cached usage, projected to the tick, so a window whose reset has passed reads `100`. A limit the provider has lifted reads `100`. Unknown without a cached reading of that window. The provider is the kind `--agent` or `--wait` resolves to at add, recorded as `provider` on the row. |
+| `window.5h.left`, `window.7d.left` | A comparison with a whole percent, `0` to `100` | Percent left in the task provider's 5-hour or 7-day window: `100` minus the cached usage, projected to the tick, so a window whose reset has passed reads `100`. A limit the provider has lifted reads `100`. Unknown without a cached reading of that window. The provider is the kind `--agent` or `--wait` resolves to at add, recorded as `provider` on the row. The account is the room's current one for that provider, or the task's `--account`, whose reading is the last one stored for it: a room refreshes only its current account for the provider and the accounts its agents run on. |
 
 An unknown reading makes its term false, but `!` is boolean NOT: `!ci=failed` is true when CI is unknown. Use `ci=passed,pending` for known and not failed. A failed CI probe leaves the sidebar's last-known reading in place.
 
@@ -119,6 +119,7 @@ The receipt adds `trigger: when <expression>, for <duration>`, `scope: <checkout
 | `--worktree <NAME>` | `--agent`, `--wait` | Channel or worktree that hosts the transient pane, or that resolves the `--wait` address. |
 | `--mode auto\|ask\|yolo` | `--agent` | Permission posture for the turn. |
 | `--effort <EFFORT>` | `--agent` | Reasoning effort passed to the agent. |
+| `--account <NAME>` | `--agent` | Named account of the agent's provider that every fire runs on; see [the account pin](#the-account-pin). |
 | `--system-prompt-file <PATH>` | `--agent` | Replace the agent's base system prompt with a file's contents. |
 | `--budget <AMOUNT[/day]>` | `--agent` | Dollar cap for each spawned run. |
 | `--budget-per-day <AMOUNT>` | `--agent` with `--budget` | Daily dollar cap for the task; see [budgets](#budgets). |
@@ -126,7 +127,26 @@ The receipt adds `trigger: when <expression>, for <duration>`, `scope: <checkout
 | `--root <PATH>` | all | Project whose room hosts the task. Default `.`. |
 | `--project` | `--agent`, check-only | Write the task to the project's `.rimz/config.toml`; see [project tasks](#project-tasks). |
 
-`--mode`, `--effort`, `--system-prompt-file`, `--budget`, and `--budget-per-day` are refused on `--wait` and check-only tasks, and `--worktree` on check-only tasks.
+`--mode`, `--effort`, `--account`, `--system-prompt-file`, `--budget`, and `--budget-per-day` are refused on `--wait` and check-only tasks, and `--worktree` on check-only tasks.
+
+### The account pin
+
+Without `--account`, each fire takes the room's current account for the agent's provider, so `rimz accounts use` moves the task with the room. `--account <NAME>` holds the task on one [named account](/docs/reference/cli/accounts) whatever the room selects: the fire launches on it, and its hooks preflight, daily caps, surplus gate, and window triggers read it. `--account default` pins the provider's own home.
+
+The flag takes a bare name, where `rimz start --account` takes `KIND=NAME`: a task has one agent, so the provider is the one its `--agent` spec resolves to. Add refuses a name that provider does not declare, a provider without named accounts, and an account whose home is missing or unhooked, each with the `rimz accounts` fix. The row stores the name alone as `account`. A tier-routed spec that lands on another provider at fire time resolves the name against that provider, and runs on that provider's account of the same name when it declares one.
+
+A pinned fire never falls back to the room's account. When the account cannot run, the fire records `account skipped` with the reason and its fix, launches nothing, and adds no strike:
+
+| The pinned account | Recorded fix |
+| --- | --- |
+| is no longer declared for the provider | `rimz accounts add <kind> <name>` |
+| belongs to a provider without named accounts | remove `account` from the task |
+| has a home that is not a directory | `rimz accounts add <kind> <name>` |
+| has a stored logged-out status | the provider's login command, with the account's home set |
+
+The launch resolves the name once more, for the provider its routing lands on; a name that provider does not declare, or a provider without named accounts, records the same skip there. The logged-out skip needs a stored status, which a room writes only for its current account and the accounts its agents run on. A `default` pin has no account home to miss, so a missing provider home fails as it does on an unpinned task, as an `error`. An account with no stored status launches, and a login the provider then rejects fails that run. Hooks missing or untrusted in the account's home stay an `error`, as on any account, so they count a strike.
+
+The receipt's action line names the pin, as ``launches a fresh claude pane on account `work` in &lt;root>``; `rimz loop show` and `rimz loop list` name it beside the agent, as `claude · account work`.
 
 ### The receipt
 
@@ -285,7 +305,7 @@ After `--max-strikes` consecutive strikes (default `3`), the task disables itsel
 | `completed`, `delivered` otherwise | Resets the count. |
 | `skipped` after a passing check | Resets the count. |
 | `skipped` after a failing check, or a sibling signal | Neutral. |
-| `budget skipped`, `surplus skipped`, `overlapped`, `canceled`, `expired`, `target gone` | Neutral. |
+| `budget skipped`, `surplus skipped`, `account skipped`, `overlapped`, `canceled`, `expired`, `target gone` | Neutral. |
 | `start failed` — the fire left no run behind, so the occurrence is spent without one: either the runner was never spawned, or it exited before it could record anything | Neutral. Shown as a failure, but a fire that ran nothing never auto-disables the task. |
 
 ### Timeouts
