@@ -88,7 +88,7 @@ rimz agents show @calm-fox       # one child's activity, context, and recent tra
 rimz transcript @calm-fox        # its conversation, after the pane has closed too
 ```
 
-`list` from a shell outside any channel shows every child in the room. Channel and `@all` transcript views leave children out, so read a child by its handle.
+`list` from a shell outside any channel shows every child in the room. A child parked on a provider usage limit reads `paused` there, with the provider's message under its row, while its `RUN` column still says `running`: nothing has ended, and the child can still resume before its deadline. A reset alone does not guarantee continuation; automatic continuation depends on the configured [resume policy](/docs/harness/loops). Channel and `@all` transcript views leave children out, so read a child by its handle.
 
 A child runs one prompt and is not built to read messages mid-run. To change what a child is doing, stop it and let the parent relaunch.
 
@@ -119,6 +119,8 @@ A parent that is itself a supervised run (`rimz agents -p`, or a scheduled task)
 ## Deadlines, stopping, and cleanup
 
 Every child has a work deadline: 30 minutes unless the parent passes `--timeout`, and the defaults are yours to change ([subagent launches](/docs/customization/configuration#subagent-launches)). Supported providers receive warnings six and three minutes before it, so they can finish what is in flight instead of starting another investigation. At the deadline RimZ asks the child to stop and report. Three minutes later, a child still running is stopped and reports as `timed out`, with its last available assistant text marked as a partial response. The room enforces that limit whether or not anyone is waiting. Warning and stop delivery depend on the provider's hooks; the [deadline reference](/docs/reference/cli/subagents#configure-the-deadline-ladder) lists support and overrides.
+
+A child that stops on a provider usage limit is not finished and has not failed. It reads `paused` in `rimz subagents list`, its run stays open until the deadline, and its parent gets one `SUBAGENT_PAUSED` message naming the child and the provider's error, so the parent can wait for the reset, stop the child, or relaunch the task on another provider ([reference](/docs/reference/cli/subagents#a-child-paused-on-a-provider-limit)).
 
 To stop a child yourself, stop it like any agent. The parent's report lists it as `canceled`:
 

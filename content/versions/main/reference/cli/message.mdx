@@ -148,7 +148,10 @@ Read plan.md when the planner finishes.
 | `SUBAGENT_REPORT` | The status digest sent once all of an agent's [subagents](/docs/reference/cli/subagents) settle | `@rimz` |
 | `AGENT_REPORT` | The status digest for a fleet containing solo agents, including background runs and interactive peers | `@rimz` |
 | `TEAM_REPORT` | The leader's final response, sent to the agent that launched a [team](/docs/reference/cli/teams#team-reports) when its board reaches `Done` or the cohort ends before `Done` | `@rimz` |
+| `SUBAGENT_PAUSED` | A [subagent stopped on a provider limit](/docs/reference/cli/subagents#a-child-paused-on-a-provider-limit), sent to its parent once per stop | `@rimz` |
+| `DEADLINE` | A [deadline](/docs/reference/cli/subagents#configure-the-deadline-ladder) warning or stop request, sent to the subagent | `@rimz` |
 | `WAIT` | A [`rimz wait`](/docs/reference/cli/wait) delivery, or a loop `--wait` delivery not triggered by a signal | `@rimz` |
+| `CACHE_KEEPALIVE` | A facts-only prompt-cache ping for a sleeping agent | `@rimz` |
 | `SIGNAL` | A [signal-triggered loop](/docs/reference/cli/loop#signals) delivery | `@rimz` |
 | `STAGE` | A [team stage](/docs/reference/cli/teams) opening | `@rimz` |
 
