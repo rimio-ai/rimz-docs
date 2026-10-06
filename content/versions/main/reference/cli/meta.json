@@ -19,7 +19,6 @@
     "stats",
     "budget",
     "providers",
-    "channel",
     "worktree",
     "loop",
     "lsp",
