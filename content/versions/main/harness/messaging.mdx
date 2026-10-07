@@ -18,6 +18,8 @@ rimz message @all "freeze new work; I'm cutting a release"        # everyone in 
 
 The same command serves you, your scripts, and the agents themselves: a running agent hands work to a teammate with the line you would have typed. `rimz msg` is a shorter spelling of it, and of every subcommand below.
 
+If you leave the target off a send, RimZ refuses it and shows the command to use instead. Bare `rimz message` still reads your lane's messages; put inbox flags after `list`, as in `rimz message list --json`, rather than on the send form.
+
 When an agent messages a [peer it launched](/docs/agents/fleet#manage-a-running-room), the new turn reports its result back automatically. A steer into an already-running turn opens no separate report. Text you type during a launcher-requested turn becomes part of that turn's final answer; if the peer was waiting for its own children, your turn can finish that pending request too. A provider that omits prompt text from its turn-start hook cannot start a new report from that message; use `--wait` for a message-correlated reply instead.
 
 ## Address an agent
@@ -75,6 +77,8 @@ sent to @planner#auth (msg_06gc05nhj9q2b4t7)
 ```
 
 Nothing is locked in until it lands: `rimz message cancel msg_06gc05m0d327d1d0` stops a message still waiting, and `rimz message steer msg_06gc05m0d327d1d0` promotes that exact record past its gate.
+
+Other receipts name the opening time, the first unmet `--after` or `--when` condition, the blocking message id, or the missing live pane. A resumed provider gets a receipt saying it is starting. When a prompt owns the input, the receipt says your text will not be read until that prompt is answered and points to `rimz asks show @coder` and `rimz answer @coder <choice>`. `message show` gives the same pair of commands for that blocker.
 
 **Steer the live turn.** `--steer` writes into the live turn now, the way typing into its pane would, so you can redirect it mid-thought. If RimZ is already writing a command, message, or answer to that pane, steer waits up to 30 seconds for that write to finish, its submit key included, rather than inserting text halfway through it.
 
@@ -181,7 +185,7 @@ Give a percentage of the window (`70%`) or an occupied-token count (`120000`, `1
 
 ## Ask and wait for the reply
 
-`--wait` turns a send into a question: RimZ delivers the text, waits through the reply turn, and prints the agent's final message on stdout. One shell command, one answer, no pane to read.
+`--wait` turns a send into a question: RimZ delivers the text, waits through the reply turn, and prints the agent's final message on stdout. Each target's send receipt and message id appear immediately on stderr, even with `--json`, leaving stdout for the answer.
 
 ```sh
 rimz message @coder --wait "did the migration land? one line"    # the reply alone on stdout
@@ -192,6 +196,8 @@ rimz message --steer @claude --wait "answer from this turn"      # the live turn
 ```
 
 A fan-out wait gathers every reply from the agents' existing contexts and streams them under `@handle:` lines in completion order, while a failed target writes its forensics to stderr and the others keep gathering. `--json` buffers one uniform map instead, whether you asked one agent or twenty. The command exits 0 only when every reply turn completed, and a deadline exits 124 with the unfinished targets marked `timed_out`; the full exit-code table is in [cli/message.md](/docs/reference/cli/message#wait-for-replies).
+
+A deadline does not withdraw queued text: it will still deliver unless you cancel its id with `rimz message cancel`. The timeout hints distinguish that queued text from text already typed into a pane (do not resend) and a delivered message still being worked on. Use `rimz agents logs @coder` to read the reply later. The same hints appear on stderr with `--json`.
 
 Every target must be a running agent with installed and trusted [hooks](/docs/getting-started/setup#install-agent-hooks), since hooks are what report the turn's end. `--wait` conflicts with `--create`, `--schedule`, and `--no-enter`, and `--json` and `--any` each require it.
 
@@ -213,6 +219,8 @@ git diff main | rimz message @reviewer --stdin "review this"
 ## Read and steer the queue
 
 Bare `rimz message` opens the current channel's inbox. Every send is a record you can read back and act on after the fact:
+
+An empty inbox can still have messages elsewhere. Without a target or status filter, RimZ tells you how many messages are in other lanes and how many have not yet delivered, with a command to inspect them. It never mixes their rows into your lane. Use `rimz message list '@coder#auth'` to select an agent and its lane; a misspelled explicit lane lists the known names instead of showing an empty inbox. `(text no longer kept)` means a row remains after its text's retention period.
 
 ```sh
 rimz message list                       # this channel's inbox, newest first
