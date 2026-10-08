@@ -13,10 +13,10 @@ rimz                       # open this project's room and attach
 | Need | Command |
 | --- | --- |
 | Open the current project's room | `rimz` |
-| Open or reattach the room for a path | `rimz start [PATH]` |
-| Attach to a room by session name | `rimz attach [SESSION]` |
-| Pick, create, and enter rooms interactively | `rimz sessions` |
-| List known rooms and the backend running each | `rimz list` |
+| Open a directory's room and attach; first run asks setup questions | `rimz start [PATH]` |
+| Enter a room by name; no first-run questions | `rimz attach [SESSION]` |
+| Full-screen picker: live rooms, their agents, and who needs you | `rimz sessions` |
+| List rooms: running, or stopped within 24h | `rimz list`, `rimz ls` |
 | Report the machine and write default config | `rimz setup` |
 | Diagnose backend, hooks, trust, and room health | `rimz doctor` |
 
@@ -34,8 +34,8 @@ Bare `rimz` is `rimz start .`. `rimz start [PATH]` resolves the room for `PATH` 
 
 | Launch option | Effect |
 | --- | --- |
-| `--attach` | Attach to the session even when RimZ would print the attach command. |
-| `--no-attach`, `--print` | Print the attach command on stdout instead of attaching. |
+| `--attach` | Enter the room after opening it, where RimZ would otherwise only print the attach command. |
+| `--no-attach`, `--print` | Open the room, then print the attach command instead of entering it. |
 | `--no-resume` | Bring a reborn room up empty, without recovering its prior agents. See [Resume on rebirth](#resume-on-rebirth). |
 | `--refresh-ms <MS>` | Sidebar render cadence in milliseconds for sidebars this launch creates, clamped to 16 through 1000. The persistent setting is `refresh_ms` under [`[theme.display]`](/docs/customization/theme#display). |
 | `--account <KIND=NAME>` | `start` only, repeatable. Launch that provider's agents under a named account. See [Accounts](#accounts). |
@@ -44,29 +44,54 @@ Bare `rimz` is `rimz start .`. `rimz start [PATH]` resolves the room for `PATH` 
 
 ### Attach or print
 
-Without `--attach` or `--print`, RimZ attaches only when both stdin and stdout are terminals and you are not already inside the selected backend. Otherwise it prints the attach command on stdout, which is what a script or shell wrapper wants. When RimZ attaches, it exits with the multiplexer client's exit code once you detach.
+Without an explicit attach flag, RimZ attaches only when both stdin and stdout are terminals and you are not already inside the selected backend. Outside that backend, a missing terminal makes it print the attach command on stdout, which is what a script or shell wrapper wants. Inside the selected backend, `rimz` and `rimz start` report the room situation instead, without opening a room or writing its state. When RimZ attaches, it exits with the multiplexer client's exit code once you detach.
 
 | Situation | `rimz` and `rimz start` | `rimz attach` |
 | --- | --- | --- |
 | Terminal, outside the backend | Attach | Attach |
-| stdin or stdout is not a terminal | Print the attach command | Print the attach command |
-| Inside a session of the selected backend | Report this directory's room on stderr and exit 0 | Print the attach command |
+| Outside the backend, stdin or stdout is not a terminal | Print the attach command | Print the attach command |
+| Inside a session of the selected backend | Report the room situation on stderr and exit 0 | Print the attach command |
 | `--attach` | Attach | Attach |
 | `--no-attach` or `--print` | Print the attach command | Print the attach command |
 
-The report from inside a session names the room instead of nesting one session in another:
+Already in this directory's own room:
 
 ```console
 $ rimz
-You're already inside a zellij session, which can't host a nested room.
-This directory's room is `rimz-f89e`. Detach to (re)launch it, or run `rimz` from outside the session.
+You're already in this directory's room (`rimz-f89e`, zellij).
 ```
+
+This directory's room is running elsewhere:
+
+```console
+$ rimz
+This directory's room `rimz-f89e` is running in another zellij session.
+Detach from this session, then run `rimz` here to enter it.
+```
+
+This directory's room is not running:
+
+```console
+$ rimz
+This directory's room isn't running, and zellij can't start one inside this session.
+Detach and run `rimz` here, or run it from another terminal.
+```
+
+For tmux, the same messages name `tmux` instead of `zellij`.
 
 Inside a session, `rimz start --account` fails instead, because accounts apply only when a room is born.
 
 ### Attach by session name
 
-`rimz attach` with no `SESSION` opens the current directory's room, creating it if needed. Unlike `start`, it skips the first-run, hook, and trust prompts below, takes no `--account`, and does not start the browser daemon. `rimz attach <SESSION>` takes an exact session name, the `SESSION` column of [`rimz list`](#list-rooms). When RimZ has a workspace record for that session, it restores the room's sidebar and reconciles parked recovery state before attaching. An attach to a running room asks nothing and leaves recovery candidates parked. A session RimZ has no record for is attached, or printed, as a plain multiplexer session.
+`rimz attach` with no `SESSION` opens the current directory's room, creating it if needed. Unlike `start`, it skips the first-run, hook, and trust prompts below, takes no `--account`, and does not start the browser daemon. `rimz attach <SESSION>` takes an exact session name from [`rimz list`](#list-rooms). When RimZ has a workspace record for that session, it restores the room's sidebar and reconciles parked recovery state before attaching, creating the session if it is stopped. An attach to a running room asks nothing and leaves recovery candidates parked. A live session RimZ has no record for is attached, or printed, as a plain multiplexer session. With neither a record nor a live session, RimZ refuses instead of creating an empty session, and suggests at most one nearby recorded name:
+
+```console
+$ rimz --mux zellij attach agnts-72ff
+error: no room or zellij session named `agnts-72ff`
+  did you mean `agents-72ff`?   all rooms: rimz list --all
+```
+
+Without a nearby name, the second line is `  all rooms: rimz list --all`.
 
 `rimz start` goes through the same health check on the way in, so either command is the way back into a room whose sidebar was closed or whose session came back wrong after a reboot.
 
@@ -128,17 +153,25 @@ rimz sessions
 
 `rimz sessions` opens a full-screen manager of every live RimZ room on the machine. Each room is a two-line card: the repository name and path, then live agent counts by kind (`claude ×2`), a `●` count of agents that need attention, and the session, token, and spend totals of the sidebar's headline window ([`spend_window`](/docs/customization/configuration#sidebar-rendering)). Rooms with a prompt in the last 24 hours come first, newest prompt first; the rest follow by the time RimZ last wrote the workspace record, then by repository name and project path. A narrow terminal drops the card's right-hand metrics rather than wrapping them: the token total goes first, then the session count. The dollar figure always stays. Detaching from a room you entered returns you to the manager.
 
-| Key (room list) | Action |
+| Key (room list, filter closed) | Action |
 | --- | --- |
 | `↑` `↓`, `k` `j`, scroll wheel | Move the selection |
 | `Enter`, or click the selected card | Attach to the selected room |
-| Any other printable key | Add to the filter on repository name and path |
-| `Backspace` | Delete the last filter character |
 | `n` | Open the new-session selector |
-| `Esc` | Clear the filter; with an empty filter, quit |
+| `/` | Open the filter on repository name and path |
+| `Esc` | Quit |
 | `Ctrl-C` | Quit |
 
-The filter cannot contain `j`, `k`, or `n`, because those keys act first.
+| Key (filter open) | Action |
+| --- | --- |
+| Any printable key, including `j`, `k`, `n`, and `/` | Add to the filter |
+| `Backspace` | Delete the last filter character |
+| `↑` `↓`, scroll wheel | Move the selection |
+| `Enter`, or click the selected card | Attach to the selected room |
+| `Esc` | Close the filter, keeping its text applied and visible |
+| `Ctrl-C` | Quit |
+
+The filter line stays visible. Its cursor appears only while the filter is open; reopen it with `/` to edit or backspace away the text.
 
 The new-session selector lists dormant known workspaces, then the current directory, then its non-hidden subdirectories, starting at `$HOME`. Typing filters the list.
 
@@ -150,7 +183,7 @@ The new-session selector lists dormant known workspaces, then the current direct
 | `Enter` | Create the room for the selected path and attach |
 | `Esc` | Return to the room list |
 
-An unreadable directory shows an empty directory list with a notice. `rimz sessions` refuses to run inside Zellij or tmux and points at `rimz attach`. Without a terminal on stdin and stdout, it prints the live sessions in its error message and exits 1.
+An unreadable directory shows an empty directory list with a notice. `rimz sessions` refuses to run inside Zellij or tmux and points at `rimz attach`. Without a terminal on stdin and stdout, it prints the live sessions in its error message, ends with `for a list, run: rimz list`, and exits 1.
 
 The browser's room picker is the same manager ([web guide](/docs/agents/web)).
 
@@ -160,15 +193,16 @@ The browser's room picker is the same manager ([web guide](/docs/agents/web)).
 rimz list [-a | --all] [--json]
 ```
 
-`rimz list` joins RimZ's workspace records with the live Zellij and tmux sessions, matched by session name. By default it shows running rooms and rooms active in the last 24 hours; `--all` adds dormant ones. Running rooms sort first, then by most recent activity. It reads records only and changes no room. With no rows, it prints nothing.
+`rimz list` (alias `rimz ls`) joins RimZ's workspace records with the live Zellij and tmux sessions, matched by session name. By default it shows running rooms and rooms active in the last 24 hours; `--all` adds dormant ones. Running rooms sort first, then by most recent activity. It reads records only and changes no room.
 
 | Column | Content |
 | --- | --- |
-| `WORKSPACE` | Workspace id (`ws_...`). |
-| `SESSION` | Multiplexer session name, the argument to `rimz attach`. |
-| `PROJECT_ROOT` | Absolute project root. |
-| `RUNNING` | `zellij`, `tmux`, or `-` when no session is live. |
-| `LAST_SEEN` | Last activity as `YYYY-MM-DD HH:MM`. A stopped room whose last session died shows the death instead, such as `crashed · 16 agents · 2026-07-02 17:37` or `rebooted · 1 agent · ...`. |
+| `ROOM` | Multiplexer session name, the argument to `rimz attach`. The current room has `(here)` after its name. |
+| `PROJECT` | Project root, abbreviated with `~` under your home directory. |
+| `MUX` | `zellij`, `tmux`, or `-` when no session is live. |
+| `LAST ACTIVE` | Relative age of the last activity, such as `5h ago`. A stopped room whose last session died shows the death instead, such as `crashed · 16 agents · 2h ago` or `rebooted · 1 agent · 2h ago`. |
+
+With no rows, human output leaves stdout empty and prints a hint on stderr. If the default view hides dormant rooms, the hint gives their count and names `rimz list --all`. With no known rooms, it says to run `rimz` in a project. Both exit 0. An empty JSON view prints `[]` on stdout and nothing on stderr.
 
 `--json` prints an array with one object per row:
 
@@ -179,21 +213,23 @@ rimz list [-a | --all] [--json]
 | `session_name` | string |
 | `running_on` | `"zellij"`, `"tmux"`, or `null` |
 | `last_activity` | RFC 3339 timestamp or `null` |
-| `last_death` | the `LAST_SEEN` death summary string, or `null` |
+| `last_death` | death summary with a UTC `YYYY-MM-DD HH:MM` time, such as `crashed · 16 agents · 2026-07-02 17:37`, or `null` |
+| `current` | boolean: whether this is the calling pane's verified room |
+| `last_death_detail` | object with `cause` (`"crash"` or `"reboot"`), `at` (RFC 3339 timestamp), and `lost_agents` (array of objects with `kind`, `agent_id`, and optional `name`), or `null` |
 
 ## Set up the machine
 
 ```sh
-rimz setup [--yes]
+rimz setup [--config-only]
 ```
 
-`rimz setup` prints a report (multiplexer and version, project root and root class, trust state, config path and whether it exists, and each agent's binary location and hook status) and then acts according to how it was run:
+`rimz setup` prints a report (multiplexer and version, project path and its kind, project trust, config path and whether it exists, and hooks grouped into installed, not installed, and not on PATH) and then acts according to how it was run. Paths under your home use `~`. Installed hooks with a newer version available carry `(upgrade available)` after the agent name. Empty hook groups are omitted; agents found without hook-install support are omitted too. Agents with blocked hook installation stay under `not installed`, but are excluded from the `rimz hooks install` hint.
 
 | Run | What it changes |
 | --- | --- |
 | From a terminal | If config exists, asks `Keep your current config?` (default yes): yes merges it against the current templates, no overwrites it with fresh templates. Then repairs `~/.rimz` fragments, writes a missing `remote.toml` template, offers one hook install or refresh for detected agents, and asks the truecolor, Nerd Font, pet, and hands-off automation questions; the automation question lists one row per behavior and takes `y`, `n`, or `choose`. |
-| `--yes` | Merges config against the templates, repairs `~/.rimz` fragments, and writes missing files. Installs no hooks, grants no trust, and changes no appearance or automation setting. |
-| Without a terminal and without `--yes` | Nothing. Prints the report and `No terminal input is available; setup changed nothing.` |
+| `--config-only` | Merges config against the templates, repairs `~/.rimz` fragments, and writes missing files, including the remote template and built-in consensus copy. Installs no hooks, grants no trust, and changes no appearance or automation setting. `--yes` remains an accepted hidden alias. |
+| Without a terminal and without `--config-only` | Nothing. Prints the report and `Setup changed nothing: there is no terminal to ask from.` Then names `rimz setup --config-only` for config and, only when agents lack hooks, `rimz hooks install` with their count. |
 
 A merge names every file it wrote, merged, or left untouched. An unparseable file is left as it is, and interactive setup stops at that point until you fix it. What a merge keeps and removes is defined in the [configuration guide](/docs/customization/configuration#generate-and-refresh-the-files). The hook summary points at `rimz hooks install --dry-run` for the exact diffs. [`rimz config init --force`](/docs/reference/cli/config#write-the-templates) is the clean reset. The walkthrough is the [setup guide](/docs/getting-started/setup).
 
