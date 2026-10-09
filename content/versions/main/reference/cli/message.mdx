@@ -158,11 +158,20 @@ Read plan.md when the planner finishes.
 | `TEAM_REPORT` | The leader's final response, sent to the agent that launched a [team](/docs/reference/cli/teams#team-reports) when its board reaches `Done` or the cohort ends before `Done` | `@rimz` |
 | `SUBAGENT_PAUSED` | A [subagent stopped on a provider limit](/docs/reference/cli/subagents#a-child-paused-on-a-provider-limit), sent to its parent once per stop | `@rimz` |
 | `SUBAGENT_STALLED` | A [subagent silent past the stall window](/docs/reference/cli/subagents#a-child-silent-past-the-stall-window), sent to its parent once per run | `@rimz` |
+| `MESSAGE_UNDELIVERED` | An agent-sent message ended without delivery, sent once to its live sender | `@rimz` |
+| `MESSAGE_QUEUED` | An agent-sent message remains queued past five minutes with a receiver not working, or twenty minutes with a busy receiver, sent once to its live sender | `@rimz` |
 | `DEADLINE` | A [deadline](/docs/reference/cli/subagents#configure-the-deadline-ladder) warning or stop request, sent to the subagent | `@rimz` |
 | `WAIT` | A [`rimz wait`](/docs/reference/cli/wait) delivery, or a loop `--wait` delivery not triggered by a signal | `@rimz` |
 | `CACHE_KEEPALIVE` | A facts-only prompt-cache ping for a sleeping agent | `@rimz` |
 | `SIGNAL` | A [signal-triggered loop](/docs/reference/cli/loop#signals) delivery | `@rimz` |
 | `STAGE` | A [team stage](/docs/reference/cli/teams) opening | `@rimz` |
+
+Agent senders receive at most one `MESSAGE_UNDELIVERED` and one `MESSAGE_QUEUED` notice per message. `--wait` senders get neither; the wait reports failures directly. A queued notice does not expire or resend the message. Unmet `--schedule`, `--after`, and `--when` conditions suppress queued notices. Notices go to the sender's live card and appear in `rimz message list --system`.
+
+| Environment variable | Default | Controls |
+| --- | --- | --- |
+| `RIMZ_MESSAGE_QUEUED_NOTICE_IDLE_MS` | `300000` (5 min) | Queued-notice delay when the receiver is not working, in milliseconds |
+| `RIMZ_MESSAGE_QUEUED_NOTICE_BUSY_MS` | `1200000` (20 min) | Queued-notice delay when the receiver is busy in a turn or compacting, in milliseconds |
 
 `rimz transcript` hides `@rimz` deliveries from its human view; `rimz transcript --json` keeps them.
 
