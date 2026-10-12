@@ -21,6 +21,8 @@ The target is `[user@]host:<session-or-path>`, spelled like an `scp` destination
 
 A connect that fails prints its own fix on stderr: a missing `rimz` on the host names the `rimz remote setup` command to run, and a path that does not exist names the target to correct.
 
+If stdin or stdout is not a terminal, RimZ prints an SSH command instead and tells you that nothing was connected. Run the printed command in a terminal, or pass `--attach` to connect anyway. To inspect the command deliberately without that notice, use `--print` ([attach flags](/docs/reference/cli/remote#connect-to-a-remote-room)).
+
 Because you attach to the session the host is already running, everything you left is there: every agent in its `#channel` tab, every question still waiting in the sidebar, plus whatever finished while you were gone.
 
 ### Install rimz on the host
@@ -33,9 +35,9 @@ rimz remote setup agent@prod-box:/srv/query-engine
 rimz remote setup dev                           # a saved alias
 ```
 
-It takes a saved alias, a raw target, or a bare `[user@]host`, and needs nothing but `ssh` locally. Over that connection it reads the host's OS and architecture with `uname`, downloads the matching release archive and its `SHA256SUMS` from the project's latest GitHub release, checks the archive against them, and installs the binary at `~/.local/bin/rimz`. That directory is on the `PATH` `remote connect` hands the host's `rimz`, so the next attach finds it. Prebuilt releases cover Linux x86_64 and macOS on arm64 and x86_64; any other platform stops with `no prebuilt for <os>/<arch>` and points at the [installation guide](/docs/getting-started/installation).
+It takes a saved alias, a raw target, or a bare `[user@]host`, and needs nothing but `ssh` locally. Over that connection it reads the host's OS and architecture with `uname`, downloads this client's release archive and its `SHA256SUMS` from GitHub, checks the archive against them, and installs the binary at `~/.local/bin/rimz`. That directory is on the `PATH` `remote connect` hands the host's `rimz`, so the next attach finds it. Prebuilt releases cover Linux x86_64 and macOS on arm64 and x86_64; any other platform stops with `no prebuilt for <os>/<arch>` and points at the [installation guide](/docs/getting-started/installation).
 
-Running `setup` again installs the latest release over the old binary, which is also the fix when the two ends disagree on version. RimZ compares them before entering the room: a patch difference warns and proceeds, a minor one refuses until you upgrade the older side or pass `--force-version` for that one attach, and a major one refuses outright ([version checks](/docs/reference/cli/remote#version-checks)). To take RimZ off a host again, delete `~/.local/bin/rimz` and the `~/.rimz/` directory there.
+Running `setup` again matches the host to your client's release, dropping any development suffix from the version. To install the newest release instead, pass `--latest`; an unreleased development version's download error names that option. Setup announces the requested version before connecting and the installed version on success. RimZ compares versions before entering the room: a patch difference warns and proceeds, a minor one refuses until you upgrade the older side or pass `--force-version` for that one attach, and a major one refuses outright ([version checks](/docs/reference/cli/remote#version-checks)). To take RimZ off a host again, delete `~/.local/bin/rimz` and the `~/.rimz/` directory there.
 
 ### Save the target as an alias
 
@@ -45,12 +47,12 @@ Save the target once and the trip is one word. An alias carries the target and i
 rimz remote add dev dev-box:~/code/query-engine   # save the target as `dev`
 rimz remote connect dev                           # open it, reconnecting link and all
 rimz remote list                                  # every saved alias (alias: ls)
-rimz remote update dev dev-box:~/code/api         # replace one alias's target and settings
+rimz remote update dev dev-box:~/code/api         # change the target, keep saved settings
 rimz remote rename dev devbox                     # rename one
 rimz remote rm devbox                             # forget one
 ```
 
-Aliases live on your machine in `~/.rimz/remote.toml`, and none of these commands contacts the host. `rimz remote list` groups them under their SSH destination, so the same host under two users reads as two groups, and prints each alias's full target and its settings; `--json` prints one flat array instead. `update` rewrites the whole record, so a setting you leave off returns to its default. The field table is in the [alias reference](/docs/reference/cli/remote#saved-aliases).
+Aliases live on your machine in `~/.rimz/remote.toml`, and none of these commands contacts the host. `rimz remote list` groups them under their SSH destination, so the same host under two users reads as two groups, and prints each alias's full target and only its non-default settings; `--json` prints one flat array instead. `update` changes only the target and settings you pass and keeps the rest. The field table is in the [alias reference](/docs/reference/cli/remote#saved-aliases).
 
 ## A link that heals itself
 
@@ -70,10 +72,10 @@ Two flags tune the posture:
 
 ```sh
 rimz remote connect dev --no-reconnect   # one ssh run, no supervisor, no health probe
-rimz remote connect dev --reset          # a room born by this connect comes up empty
+rimz remote connect dev --no-resume      # no prior agents on birth; end parked agents in a running room
 ```
 
-`rimz remote reset dev` is the shorthand for the second. Save either choice on an alias with `rimz remote add ... --no-reconnect`, or with `--no-resume`, which is the alias spelling of `--reset`.
+Save either choice with the same flags on `rimz remote add` or `rimz remote update`. `--resume`, `--reconnect`, and `--auto-forward` turn a saved opt-out back on for a connect; the last flag in each pair wins. With `--no-resume`, the host reports how many parked agents it ended, or says the running room had none.
 
 ## Reading the link badge
 
