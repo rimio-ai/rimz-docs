@@ -319,6 +319,8 @@ rimz agents astra --resume                           # the newest root session o
 
 Scope follows the worktree. `-w NAME` resumes that worktree's cohort; bare `-w`, or no flag while you stand in a worktree, scopes to the current worktree; from the project root, the newest match anywhere in the room wins.
 
+Before opening a pane or taking over the current one, stdout starts with `resuming <spec> in #<lane>`. When several places match, it reads `resuming <spec> in #<lane> (newest of N; others: run rimz agents resume from the project root)`. `N` counts distinct matching closed lanes (worktree and channel pairs), including the selected one, not sessions. One worktree can hold several matching channels, so run the suggested listing from the project root. The usual per-member receipts follow unchanged.
+
 A matched member that is still live refuses the command, so an address is never duplicated. `rimz agents resume @<ref>` can reopen an older closed solo session even when the newest matching root is live. Cleanly closed members still match while their worktree exists, and a cell with no resumable member launches fresh in the cohort's directory and channel. A spec that matches nothing fails and names the specs the same scope can resume.
 
 A single-cell resume run from the cohort's own directory takes over the current pane, so the hint an exiting team member leaves (`resume with rimz agents forge.coder --resume`) works from the shell it dropped into. An agent caller or `--bg` makes that a split instead, under the [focus rule](#channel-worktree-and-placement). Run from anywhere else, a lane-scoped resume opens its own tab.
@@ -345,6 +347,10 @@ rimz agents resume                # in a worktree: that lane; at the project roo
 `SCOPE` takes a `#channel`, worktree name, branch, directory name, or path, as `agents list` does. An `@ref` instead selects [one closed session](#resume-one-closed-session). `--from-pr <NUMBER|URL>` finds the worktree by its recorded pull-request provenance, then by the name `pr-<N>`. Resolution is local: no network request, no worktree creation.
 
 Members are root sessions: subagent children never come back through resume; their parent relaunches what it still needs. The durable lane listing's `MEMBERS` and `LIVE` counts exclude children.
+
+At the project root, the listing shows only lanes with closed members, in columns `LANE MEMBERS LIVE CLOSED LAST ACTIVE`. It ends with `resume one: rimz agents resume '#docs'`, using the first listed lane's quoted label. With no lanes it prints `nothing to resume`; when every lane is already live it prints `nothing to resume: every lane's agents are live (rimz agents list --all)`. Both exit 0.
+
+Before opening any pane or tab, resume announces `resuming N closed agent(s) in '<lane>'` for a partial restore, or `resuming N agent(s) in '<lane>'` for a full restore (`relaunching` with `--fresh`). Any `skipped live <label>` lines precede the announcement. There is no second receipt after opening; a failed open still reports its error.
 
 When rebuilding a team tab, a member the lane cannot resume comes back as a fresh seat; its old session ends `rimz.seat-refilled` when the tab opens.
 
@@ -575,6 +581,10 @@ When the agent's temp directory exists, `show` prints its host path (`tmp:`) and
 
 #### `logs`
 
+Read messages to and from one agent, including `@me` from an agent's own pane. For its live screen instead, use `rimz agents show --capture`.
+
+A live agent with no messages exits 0 and prints `@handle has no messages yet (launched 37s ago, no turn opened)` on stderr. The age uses its recorded launch time, and `no turn opened` disappears once a turn has opened. Without a recorded launch time, it prints only `@handle has no messages yet`. The handle includes its channel when needed. An agent whose recorded entries are all RimZ automation traffic, hidden from this view, reads `@handle shows only RimZ traffic: N entries hidden (--json shows them)` instead.
+
 `rimz agents logs <TARGET>` shows the same view as [`rimz transcript <agent>`](/docs/reference/cli/transcript). It resolves live agents first and historical sessions only after a live miss; ambiguity refuses with addresses to retype rather than choosing a session. Like `transcript`, it requires an existing room and refuses outside one with `no room at <root>: run \`rimz start\` there, or pass --root <room>`. Human output hides subagent digests, waits, and `rimz`-authored prompts along with the output of the turns they open; JSON keeps them. Unlike `transcript`, `logs` prints no prior-session note and has no `-w` or `--flat` flag.
 
 | Flag | Effect |
@@ -590,14 +600,16 @@ When the agent's temp directory exists, `show` prints its host path (`tmp:`) and
 
 ```console
 $ rimz agents history @coder -n 3
-START             DUR  TOKENS       COST     OUTCOME  PROMPT
-2026-07-08 15:12   8m  ↘4k ↗510     $0.4210  done     implement refresh-token rotation
-2026-07-08 15:38   3m  ↘1k ↗284     $0.2870  done     add coverage for expiry edge cases
-2026-07-08 15:44  12s  ↘320 ↗0      $0.0310  open     run the focused integration tests
-3 turns · 54k tokens · $0.7390
+START  DUR     FRESH     COST  OUTCOME  FROM      PROMPT
+15:12   8m  ↘4k ↗510  $0.4210  done     user      implement refresh-token rotation
+15:38   3m  ↘1k ↗284  $0.2870  done     @planner  add coverage for expiry edge cases
+15:44  12s   ↘320 ↗0  $0.0310  open     wait      run the focused integration tests
+3 turns · 6k fresh + 48k cached tokens · $0.7390
 ```
 
-`TOKENS` shows fresh input and output. `OUTCOME` is best-effort: `done` means an assistant reply closed the turn, `open` is the live final turn, and `cut` means the turn or session ended without a reply. A response repeated under the same message and request id counts once. `-n, --tail <N>` keeps the newest `N` turns, and `--json` emits full records, adding cache-read tokens, cache-write tokens, and the API-call count.
+`FRESH` shows fresh input and output. The footer separates their sum from cached tokens (cache reads plus writes). `OUTCOME` is best-effort: `done` means an assistant reply was observed, `open` is the final turn of a running, waiting, or paused session that has not ended and whose process is not known to be dead, and `-` means the outcome is unknown, not an interruption. `FROM` shows the envelope sender, a harness kind such as `wait`, or `user` for plain text. `PROMPT` shows the envelope body; batched deliveries show the first section. `START` omits the date only when every displayed row is today in the configured time zone.
+
+A response repeated under the same message and request id counts once. `-n, --tail <N>` keeps the newest `N` turns, and `--json` emits full records, adding cache-read tokens, cache-write tokens, and the API-call count. JSON keeps the raw delivered `prompt` and uses `done`, `open`, and `unknown` for `outcome`.
 
 A stopped agent's history stays readable while its provider transcript exists. Per-turn history needs an adapter with normalized transcript and spend coverage; [agent support](/docs/reference/agent-support) lists which have it.
 

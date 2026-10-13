@@ -163,20 +163,20 @@ after your turn, add coverage for the expiry edge cases
 Added tests/auth/refresh_expiry.rs covering sliding and hard expiry.
 ```
 
-`-f` keeps following new lines across an agent restart, and `--all` reaches back into the agent's earlier sessions. The [logs reference](/docs/reference/cli/agents#logs) covers ordering and tail selection.
+`-f` keeps following new lines across an agent restart, and `--all` reaches back into the agent's earlier sessions. An agent can read its own conversation with `rimz agents logs @me`. A newly launched agent with nothing to show reads `@coder has no messages yet`, followed by its launch age when known and `no turn opened` if it has not started a turn. For the live screen rather than messages, use `rimz agents show @coder --capture`. The [logs reference](/docs/reference/cli/agents#logs) covers ordering and tail selection.
 
 **Read what each turn cost.** `rimz agents history` joins the conversation's user turns to the provider's token and price records, so you can see which request consumed the session without leaving the agent view. `-n` keeps the newest rows and `--json` returns the same records to a script:
 
 ```console
 $ rimz agents history @coder -n 3
-START             DUR    TOKENS     COST  OUTCOME  PROMPT
-2026-07-08 15:12   8m  ↘4k ↗510  $0.4210  done     implement refresh-token rotation
-2026-07-08 15:38   3m  ↘1k ↗284  $0.2870  done     add coverage for the expiry edge cases
-2026-07-08 15:44  12s   ↘320 ↗0  $0.0310  open     run the focused integration tests
-3 turns · 54k tokens · $0.7390
+START  DUR     FRESH     COST  OUTCOME  FROM      PROMPT
+15:12   8m  ↘4k ↗510  $0.4210  done     user      implement refresh-token rotation
+15:38   3m  ↘1k ↗284  $0.2870  done     @planner  add coverage for the expiry edge cases
+15:44  12s   ↘320 ↗0  $0.0310  open     wait      run the focused integration tests
+3 turns · 6k fresh + 48k cached tokens · $0.7390
 ```
 
-`↘` is the fresh input the turn sent and `↗` the tokens it produced; the `TOKENS` total on the last line counts cache reads and writes too, which is why it dwarfs the rows.
+`↘` is the fresh input the turn sent and `↗` the tokens it produced; the footer sums these as `fresh` and counts cache reads and writes separately as `cached`. `FROM` tells you who sent the prompt, without burying its text in a delivery header. An unknown outcome reads `-`, not an interruption. Dates disappear when every shown turn started today.
 
 **Credit the people and models behind the change.** A pull request usually opens after the first teammate has already exited, so live agent cards cannot supply a complete byline. `rimz agents attribution` reads the lane's audit records and provider transcripts instead:
 
@@ -236,11 +236,11 @@ rimz agents stop @claude --all  # close every Claude in scope
 
 `stop` closes the agent's pane, which ends the CLI process with it, and stops any supervised children that agent launched. Sessions stay on disk in the provider's own format. To reopen one stopped solo agent, use [`rimz agents resume @swift-otter`](/docs/reference/cli/agents#resume-one-closed-session). Its exit hint names that exact handle: `resume with rimz agents resume @swift-otter`. Run it from the recorded directory to take over the current pane again; from elsewhere it opens a tab. Team members keep their team-role resume command.
 
-To keep the conversation but change how it runs, [`rimz agents <spec> --resume`](/docs/reference/cli/agents#resume-a-cohort) accepts overrides that become its saved launch settings. A prompt can ride along: `rimz agents claude --resume --model sonnet 'Continue the review'` reopens the conversation and queues your instruction for the agent. Later resumes keep that model. An in-session `/model` switch is not carried; restate it with `--model` on resume to keep it.
+To keep the conversation but change how it runs, [`rimz agents <spec> --resume`](/docs/reference/cli/agents#resume-a-cohort) accepts overrides that become its saved launch settings. Before opening anything, it names the selected channel or worktree; when several places match, it points to the project-root listing. A prompt can ride along: `rimz agents claude --resume --model sonnet 'Continue the review'` reopens the conversation and queues your instruction for the agent. Later resumes keep that model. An in-session `/model` switch is not carried; restate it with `--model` on resume to keep it.
 
 Agent-initiated launches, forks, resumes, and restarts leave your focus alone, so another agent's handoff does not interrupt your typing. An in-place launch becomes a split instead. Shell commands keep their usual focus behavior; `--bg` also leaves already-live agents where they are. See the [focus rule and Zellij version caveat](/docs/reference/cli/agents#channel-worktree-and-placement).
 
-**Restore a lane by place.** `rimz agents resume '#auth-refresh'` focuses the lane when every member is live (unless an agent calls it or you pass `--bg`), adds only the closed members when part of it remains live, and rebuilds the saved team and stray panes when all are closed. To pick up from the board and notes instead of old conversations, add [`--fresh`](/docs/reference/cli/agents#resume-a-lane-by-place): closed teams get new sessions in the same lane, while standalone roots are skipped with relaunch commands. Use `--from-pr 42` for a locally developed pull-request lane; bare `resume` targets the current worktree, or lists the resumable lanes when you run it at the project root.
+**Restore a channel or worktree by place.** `rimz agents resume '#auth-refresh'` focuses the channel when every member is live (unless an agent calls it or you pass `--bg`), adds only the closed members when part of it remains live, and rebuilds the saved team and stray panes when all are closed. It announces how many agents it is resuming before opening panes. To pick up from the board and notes instead of old conversations, add [`--fresh`](/docs/reference/cli/agents#resume-a-lane-by-place): closed teams get new sessions in the same place, while standalone roots are skipped with relaunch commands. Use `--from-pr 42` for a locally developed pull-request worktree; bare `resume` targets the current worktree. At the project root it lists only groups with closed agents and prints a command to resume the first one, or says there is nothing to resume.
 
 **Bounce an agent in place.** `rimz agents restart @coder` from your shell focuses the agent, replaces its pane in the same layout position, and resumes the provider session with the original profile, role, team, channel, and permission mode. The profile is rendered from the current Markdown definitions, so an edit takes effect on the bounce. When the provider has no resumable conversation, restart launches fresh and prints the replacement handle rather than hiding a rename.
 
