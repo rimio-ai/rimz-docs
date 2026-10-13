@@ -63,7 +63,7 @@ rimz agents claude:planner,codex:coder -w feat-x   # ad-hoc role handles, no sav
 rimz agents claude,codex "Draft the API shape."    # the prompt lands on the first cell, Claude
 ```
 
-Each cell is an agent kind, a `<kind>-<mode>` cell ([permission modes](#set-a-permission-mode)), a [profile](#profiles-shape-an-agent-for-one-job), a command you configured, any executable on your `PATH`, or `term` for a plain shell; a configured command or profile wins over a same-named binary. Suffix an agent cell with `:role` and it answers to `@role` for this launch, without a saved team.
+Each cell is an agent kind, a `<kind>-<mode>` cell ([permission modes](#set-a-permission-mode)), a `-fast` cell such as `claude-fast` ([fast cells](/docs/reference/cli/agents#fast-cells)), a [profile](#profiles-shape-an-agent-for-one-job), a command you configured, any executable on your `PATH`, or `term` for a plain shell; a configured command or profile wins over a same-named binary. Suffix an agent cell with `:role` and it answers to `@role` for this launch, without a saved team.
 
 A trailing prompt goes to exactly one agent: the leader when you launched a named team, and the first agent cell otherwise. Give a repeated first cell an inline role to make that target unambiguous, and use `rimz message @all` after launch when every agent needs the same text.
 
@@ -306,7 +306,7 @@ rimz agents planner --model opus --effort high --budget 5
 rimz agents planner --append-system-prompt-file ./local.md --append-system-prompt-file ./task.md
 ```
 
-A repeated `--append-system-prompt-file` keeps command-line order and replaces the profile's entire fragment list for that launch; fragments need a base `system-prompt-file`. `--effort` is passed to the provider's own effort flag without validation, so the levels are whatever that CLI accepts. `--budget 5` parks the agent when its session cost reaches $5 and `--budget 20/day` caps each local calendar day instead; the same dollar-cap model scales up to loop tasks, the room, and a provider account in the [budgets guide](/docs/agents/budget).
+A repeated `--append-system-prompt-file` keeps command-line order and replaces the profile's entire fragment list for that launch; fragments need a base `system-prompt-file`. `--effort` is passed to the provider's own effort flag without validation, so the levels are whatever that CLI accepts. `--fast` asks Claude, Codex, or Amp for its fast mode, which answers sooner at a higher price, and `--no-fast` drops a profile's `fast` for one agent; the agent keeps either choice across restart and resume. `--budget 5` parks the agent when its session cost reaches $5 and `--budget 20/day` caps each local calendar day instead; the same dollar-cap model scales up to loop tasks, the room, and a provider account in the [budgets guide](/docs/agents/budget).
 
 To try a profile on a different provider without changing it, add `--agent`:
 
