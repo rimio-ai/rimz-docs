@@ -2,7 +2,20 @@
 title: "Agent control CLI"
 description: "rimz agents launches agents into panes and reads and drives the agents already running in the room."
 ---
-`rimz agents` launches agents into panes and reads and drives the agents already running in the room. `rimz agents list` lists the current channel's agent cards; `rimz agents <SPEC> [PROMPT]` launches; bare `rimz agents`, with no verb and no spec, refuses with exit 2 and prints the `list` command to run; each subcommand below acts on launches, lanes, or one agent. Run these commands from inside the room, or from any directory that resolves to the same workspace ([which room a command reaches](/docs/reference/cli#which-room-a-command-reaches)). `rimz agents <subcommand> --help` prints every flag.
+`rimz agents` launches agents into panes and reads and drives the agents already running in the room. `rimz agents list` lists the current channel's agent cards; `rimz agents <SPEC> [PROMPT]` launches; bare `rimz agents`, with no verb and no spec, refuses with exit 2, prints the `list` command to run, and follows it with the orientation below; each subcommand below acts on launches, lanes, or one agent. Run these commands from inside the room, or from any directory that resolves to the same workspace ([which room a command reaches](/docs/reference/cli#which-room-a-command-reaches)). `rimz agents --help` prints the same orientation; `rimz agents launch --help` prints the launch flags, and `rimz agents <subcommand> --help` every flag of one verb.
+
+```console
+$ rimz agents
+error: `rimz agents` needs a verb or a launch spec; to list agents, run `rimz agents list`
+
+    rimz agents list ['#lane']     agent cards (this lane; --all for the room)
+    rimz agents <SPEC> [PROMPT]    launch (same as `rimz agents launch`)
+
+  See:     list  show  logs  history  top  attribution
+  Drive:   focus  wait  stop  restart  compact  refresh  fork  budget
+  Start:   launch  resume  profiles  explain
+  Define:  validate  register  check
+```
 
 Why you would launch through RimZ instead of the bare CLI is the [agents guide](/docs/agents/fleet). Profiles, commands, and teams are configured in the [configuration guide](/docs/customization/configuration#agent-profiles-commands-and-teams), and the launch machinery is [fleet.md](https://github.com/rimio-ai/rimz/blob/main/docs/internals/harness/fleet.md?ref=docs).
 
@@ -66,7 +79,7 @@ An ambiguity lists up to eight addresses you can retype, the full match count, a
 
 A fan-out message is prefixed with the addressed handle (`@all,`, `@claude,`) so receivers read it as a group message. A human-sent `@all` reaches every match. An agent-sent `@all` skips the sender and fails when no other agent remains; an explicit `--all @claude` from an agent keeps every match. The [message reference](/docs/reference/cli/message) owns delivery.
 
-`message` requires the `@` sigil, which also keeps a target from being read as a launch spec. `show`, `logs`, `history`, `fork`, `wait`, `stop`, `restart`, and `refresh` also accept a bare selector (`swift-otter`), and `wait` and `stop` (like `rimz transcript`) also accept a supervised run id. `rimz agents @coder` is refused with a hint to use `rimz agents show @coder`.
+`message` requires the `@` sigil, which also keeps a target from being read as a launch spec. `show`, `logs`, `history`, `fork`, `wait`, `stop`, `restart`, and `refresh` also accept a bare selector (`swift-otter`), and `wait` and `stop` (like `rimz transcript`) also accept a supervised run id. `rimz agents @coder` is refused with exit 2 and a hint to use `rimz agents show @coder`.
 
 ## Launch agents
 
@@ -96,9 +109,16 @@ A spec is one of three things:
 
 Each inline cell is `term` (a plain shell), an agent kind, a [permission-mode cell](#permission-mode-cells) such as `claude-plan`, a configured profile, a configured command, or any executable on your `PATH`. Add `:<role>` to an agent cell for an ad-hoc role handle. Quote a spec that contains `+`, a space, or anything else your shell expands. The full grammar and how cells compile to panes are in [fleet.md → The layout IR](https://github.com/rimio-ai/rimz/blob/main/docs/internals/harness/fleet.md?ref=docs#the-layout-ir).
 
-The optional `PROMPT` goes to exactly one leader: the team's configured `leader` role, else its first declared role, else the first agent cell. When the first cell repeats (`claude,claude`), give it a role so the target is unambiguous. To send every agent the same text, launch without a prompt and use `rimz message @all`. A second positional that is itself a cell (`rimz agents claude codex`) is refused with a `rimz agents a,b` hint, and a scope such as `rimz agents '#auth'` in the SPEC slot is refused with exit 2 and the `rimz agents list '#auth'` command, prompt or not.
+The optional `PROMPT` goes to exactly one leader: the team's configured `leader` role, else its first declared role, else the first agent cell. When the first cell repeats (`claude,claude`), give it a role so the target is unambiguous. To send every agent the same text, launch without a prompt and use `rimz message @all`. A second positional that is itself a cell (`rimz agents claude codex`) is refused with a `rimz agents a,b` hint, and a scope such as `rimz agents '#auth'` in the SPEC slot is refused with exit 2 and the `rimz agents list '#auth'` command, prompt or not. A lone word with no prompt and no launch flag that is also the role, explicit name, profile, or pet name of a live agent in your current lane, or anywhere when you stand outside every lane, is refused with exit 2, since you more likely meant that agent: the refusal prints a runnable `rimz agents show` for the most recently active match and the `rimz agents launch <word>` that launches anyway. A kind such as `claude` or `codex` is exempt, and a prompt, any launch flag, or `rimz agents launch` launches as before. That includes a bare role inside its team lane while that role is live (`rimz agents planner` in `#forge` with `@planner` running); once its seat is closed, the bare role re-adds it.
 
-A launch that opens a new pane or tab prints a receipt: the checkout path, then each member's handle, provider, and resolved model (`-` when unset). When you gave a prompt, a shortened echo names its recipient, and non-team launches add copy-ready `Reach` and `Wait` commands for the leader. A launch that creates a launch-prompt run (below) prints the peer receipt in their place. The receipt records what was launched; the agents start asynchronously. A named team prints the [team receipt](/docs/reference/cli/teams#launch-a-team) instead, and a launch that takes over the current pane prints none.
+```console
+$ rimz agents coder
+error: `coder` names a live agent (@coder#auth) as well as a launch spec
+    inspect: rimz agents show '@coder#auth'
+    launch:  rimz agents launch coder
+```
+
+A launch that opens a new pane or tab prints a receipt: the checkout path, then each member's handle, provider, and resolved model (`-` when unset). The handle is the one [`list`](#list) shows for that agent, with the pet name beside it whenever the two differ: a `coder` profile launch reads `launched @coder (round-binder) in #auth (…)`, and a second `coder` in the same lane is named by its pet name. When you gave a prompt, a shortened echo names its recipient, and non-team launches add copy-ready `Reach` and `Wait` commands for the leader, all under the same handle. A launch that creates a launch-prompt run (below) prints the peer receipt in their place. The receipt records what was launched; the agents start asynchronously. A named team prints the [team receipt](/docs/reference/cli/teams#launch-a-team) instead, and a launch that takes over the current pane prints none.
 
 A freshly launched agent whose CLI exits with an error before its session opens is relaunched in the same pane. RimZ prints `rimz: codex exited with code 1 before its session opened; relaunching in 3s (1 of 3, Ctrl-C cancels)`, waits, and starts the same command again, up to three times by default ([startup relaunches](/docs/customization/configuration#startup-relaunches)). When the last relaunch dies the same way, RimZ says it is not relaunching again and reports the failure as it would have the first. A session opened with `--resume` or [`fork`](#fork) is never relaunched.
 
@@ -498,7 +518,7 @@ rimz agents compact @coder               # compact context at the next turn boun
 
 #### `list`
 
-`rimz agents list [SCOPE]` prints the room's pane-backed root agents as cards in attention order, scoped to the current channel. `SCOPE` (`#channel`, worktree, branch, or directory name) or `-w, --worktree` selects one lane, and `--all` covers every channel; the three conflict. Listing needs the verb: bare `rimz agents` and `rimz agents '#auth'` refuse with exit 2 and print the `list` command that would run, carrying over `--all`, `--json`, `-w NAME`, and the scope. It needs a live room: enter one with `rimz start` or `rimz attach`.
+`rimz agents list [SCOPE]` prints the room's pane-backed root agents as cards in attention order, scoped to the current channel. `SCOPE` (`#channel`, worktree, branch, or directory name) or `-w, --worktree` selects one lane, and `--all` covers every channel; the three conflict. Listing needs the verb: bare `rimz agents` and `rimz agents '#auth'` refuse with exit 2 and print the `list` command that would run, carrying over `--all`, `--json`, `-w NAME`, and the scope; bare `rimz agents` follows it with the [orientation](#agent-control-cli). It needs a live room: enter one with `rimz start` or `rimz attach`. When nothing live matches, `list` says why instead of printing an empty table: a named scope that is no lane at all (by the rule [`resume`](#resume-a-lane-by-place) uses) fails with exit 1 and `no lane '#x' in this workspace; lanes: …`, naming up to eight known lanes freshest first, while a real lane with no live agent, including the current channel, prints `no live agents in '#x'; reopen closed ones with rimz agents resume '#x'`, and `--all` prints `no live agents in this room`, both with exit 0. With `--json` an unknown lane prints only the error, and an empty one prints `{"schema": 1, "agents": []}`.
 
 ```console
 $ rimz agents list
