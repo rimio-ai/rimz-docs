@@ -93,10 +93,11 @@ These are the gaps you will notice, per agent, beyond what the matrix and `rimz 
 
 ### Copilot
 
+- With RimZ's hooks installed, launches refuse when effective `disableAllHooks` is true. Explicit ask launches also refuse a local non-manual `defaultPermissionMode`; the error names the settings file and fix. RimZ takes each key from the first file that sets it: `.github/copilot/settings.local.json`, then `.github/copilot/settings.json`, then your user `settings.json`.
 - The wrapped statusline supplies the resolved model, effort, context tokens, and cumulative session tokens. The live dollar figure comes from the session's AI credits at $0.01 per credit, or is an estimate at that model when credits are absent; when the statusline is missing or replaced, RimZ falls back to OpenTelemetry metadata.
 - That fallback needs a local telemetry file. An OTLP exporter configured in the environment sends the telemetry elsewhere, so RimZ warns `Copilot direct-launch enrichment is unavailable because an OTLP exporter is configured; set COPILOT_OTEL_FILE_EXPORTER_PATH to retain a file source` and the card keeps lifecycle alone. Point `COPILOT_OTEL_FILE_EXPORTER_PATH` at a file to keep both.
 - History adds per-model tokens and credit-metered dollars (local estimates where credits are absent) to `rimz stats` and the provider dashboard. These are not an account billing ledger.
-- Questions raise Waiting and clear as soon as the tool that asked completes.
+- Tool questions and elicitation dialogs raise Waiting. Tool questions clear when the tool completes; elicitation waits clear on subsequent lifecycle activity.
 - Children appear with their model when they start, show their tool activity, and report their exact token total when they finish. A child's permission prompt arrives on the parent session, so the parent card waits. An approved shell command clears it when the child's command finishes; a denied or non-shell request clears at the parent's next hook.
 - The account shows the plan and the monthly `cr`, `cht`, and `prm` windows. There are no 5-hour or weekly windows, and IDE completions, extra credits, account dollars, and remote control are unsupported.
 
@@ -187,7 +188,7 @@ A permission mode comes from the `mode` profile field, the `--ask` and `--yolo` 
 | Pi | none | none | none | none |
 | OpenCode | none | none | none | `--auto` |
 | Antigravity | none | `--mode accept-edits` | `--mode plan` | `--dangerously-skip-permissions --mode accept-edits` |
-| Copilot | none | `--autopilot` | `--plan` | `--allow-all` |
+| Copilot | `--mode interactive` | `--autopilot` | `--plan` | `--allow-all` |
 | Droid | none | `--auto medium` | `--use-spec` | none |
 | Cursor | none | `--auto-review` | `--mode=plan` | `--force --sandbox disabled` |
 | Amp | none | none | none | none |
@@ -227,7 +228,7 @@ Grok Plan adds no arguments because Grok's `/plan` is an interactive command, an
 | Pi | `--model <model>` | `--thinking <level>` |
 | OpenCode | refused | refused |
 | Antigravity | `--model <model>` | `--effort <level>` |
-| Copilot | `--model <model>` | `--effort <level>` |
+| Copilot | `--model <model>` | `--reasoning-effort <level>` |
 | Droid | refused | refused |
 | Cursor | `--model <model>` | refused |
 | Amp | `--mode <model>` | refused |
