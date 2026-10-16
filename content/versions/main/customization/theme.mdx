@@ -125,7 +125,7 @@ caution = "yellow" # a palette role tracks the active [colors] table
 
 Two rules keep the palette honest: `alarm` red marks danger, and one warm `caution` amber means "hot or costly" everywhere. The [expired context meter](/docs/agents/sidebar) wears a fixed greyed red, `alarm` blended halfway to `muted`, not another tunable slot.
 
-The four health slots also form a ramp, `good → warn → caution → alarm`, green through gold and orange to red, and the live meters slide along it. The context meter, the remote link badge, and the draining provider budget bar ride the whole ramp. Gauges that should stay quiet while healthy ride only the warm tail: the card age clock rests neutral and warms once it leaves its calm zone, and the reset-countdown pace does the same, with a cool green tail of its own once spending runs well under pace.
+The four health slots also form a ramp, `good → warn → caution → alarm`, green through gold and orange to red, and the live meters slide along it. The context meter, the remote link badge, and the draining provider budget bar ride the whole ramp. The card age clock stays neutral until the last ten minutes before its known cache lifetime, then warms from amber to red (over the whole lifetime when shorter); with no known lifetime it never heats. The reset-countdown pace uses the warm tail, with a cool green tail of its own once spending runs well under pace.
 
 An override joins the ramp when it is a hex color or an xterm index of 16 or above. A flat ANSI index of 0 to 15 is terminal-defined, so RimZ cannot know its RGB value: that slot wears your override while the ramp keeps the scheme's derived tone. Money figures sit outside the slots altogether, on a fixed dollar green (`#85bb65`), as does each provider's [brand color](#provider-styling).
 
@@ -220,6 +220,7 @@ An unread card also rests on a soft wash, the selection blue lifted a step, the 
 | `max_percent` | `50` | maximum sidebar share, including widths you set with keys or dragging; clamped to 10 through 90. The 24-column minimum wins on narrow views |
 | `scrollbar` | `auto` | `auto` shows the overflow indicator only while the view moves; `always` and `never` pin it |
 | `card_density` | `auto` | `auto` keeps the standard card; `expanded` keeps the stats line on every engaged card and opens every card's subagents and waits; `compact` trims resting cards |
+| `stale_after_secs` | `86400` | Read idle and done cards quiet past this many seconds shrink to one line; `0` disables it, and `expanded` density never shrinks cards |
 | `recent_subagent_secs` | `900` | how long, in seconds, a finished subagent stays in a card's recent list before it moves behind `+K older`. `0` moves every finished child there at once, though a card with nothing newer to show lists them directly |
 | `max_recent_subagents` | `5` | how many finished subagents the recent list holds, newest first. Running children are never capped |
 | `provider_tabs` | `auto` | how the dashboard picks between stacked provider blocks and a tab rail: `auto` tabs at three providers or more, `always` at more than one, `never` not at all |
