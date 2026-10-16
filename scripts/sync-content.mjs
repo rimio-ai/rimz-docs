@@ -2,7 +2,15 @@
 
 import assert from 'node:assert/strict';
 import { copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
+import { remarkGfm } from 'fumadocs-core/mdx-plugins/remark-gfm';
+
+const requireMdx = createRequire(import.meta.resolve('fumadocs-mdx'));
+const { createProcessor } = await import(requireMdx.resolve('@mdx-js/mdx'));
+const markdownParser = createProcessor({ format: 'md' }).use(remarkGfm);
+// MDX parses HTML as JSX and does not support indented code. Treat those as prose here so placeholders cannot hide code spans or suppress escaping.
+markdownParser.data('micromarkExtensions', [{ disable: { null: ['htmlFlow', 'htmlText', 'codeIndented'] } }]);
 
 const repoRoot = process.cwd();
 const rimzRoot = path.resolve(process.env.RIMZ_SRC ?? path.join(repoRoot, '..', 'rimz'));
@@ -138,7 +146,7 @@ const srcToRoute = new Map(
   mappings.map(([src, dest]) => [cleanPath(src), routeForDestination(dest)]),
 );
 
-await main();
+if (import.meta.main) await main();
 
 async function main() {
   selfCheck();
@@ -631,57 +639,48 @@ function isExternal(href) {
   return /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('/');
 }
 
-function escapeMdxText(markdown) {
-  let inFence = false;
+export function escapeMdxText(markdown) {
+  const codeEnds = new Map();
 
-  return markdown
-    .split('\n')
-    .map((line) => {
-      if (/^\s*(```|~~~)/.test(line)) {
-        inFence = !inFence;
-        return line;
-      }
-      if (inFence) return line;
-      return escapeMdxLine(line);
-    })
-    .join('\n');
-}
+  function collectCode(node) {
+    if (node.type === 'inlineCode' || node.type === 'code') {
+      codeEnds.set(node.position.start.offset, node.position.end.offset);
+    }
+    for (const child of node.children ?? []) collectCode(child);
+  }
 
-function escapeMdxLine(line) {
+  collectCode(markdownParser.parse(markdown));
+
   let out = '';
-  let inlineBackticks = 0;
 
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    if (char === '`') {
-      const length = countRun(line, index, '`');
-      inlineBackticks = inlineBackticks === length ? 0 : length;
-      out += '`'.repeat(length);
-      index += length - 1;
+  for (let index = 0; index < markdown.length; index += 1) {
+    const codeEnd = codeEnds.get(index);
+    if (codeEnd !== undefined) {
+      out += markdown.slice(index, codeEnd);
+      index = codeEnd - 1;
       continue;
     }
 
-    if (inlineBackticks === 0) {
-      if (char === '{' || char === '}') {
-        out += `\\${char}`;
+    const char = markdown[index];
+    if (char === '{' || char === '}') {
+      out += `\\${char}`;
+      continue;
+    }
+    if (char === '<' && !markdown.slice(index).startsWith('<http')) {
+      const voidTag = normalizeVoidHtmlTag(markdown.slice(index));
+      if (voidTag) {
+        out += voidTag.html;
+        index += voidTag.rawLength - 1;
         continue;
       }
-      if (char === '<' && !line.slice(index).startsWith('<http')) {
-        const voidTag = normalizeVoidHtmlTag(line.slice(index));
-        if (voidTag) {
-          out += voidTag.html;
-          index += voidTag.rawLength - 1;
-          continue;
-        }
-        const htmlTag = normalizePassthroughHtmlTag(line.slice(index));
-        if (htmlTag) {
-          out += htmlTag.html;
-          index += htmlTag.rawLength - 1;
-          continue;
-        }
-        out += '&lt;';
+      const htmlTag = normalizePassthroughHtmlTag(markdown.slice(index));
+      if (htmlTag) {
+        out += htmlTag.html;
+        index += htmlTag.rawLength - 1;
         continue;
       }
+      out += '&lt;';
+      continue;
     }
 
     out += char;
@@ -709,12 +708,6 @@ function normalizeVoidHtmlTag(fragment) {
     html: attributes ? `<${match[1]}${attributes}/>` : `<${match[1]}/>`,
     rawLength: match[0].length,
   };
-}
-
-function countRun(text, start, char) {
-  let count = 0;
-  while (text[start + count] === char) count += 1;
-  return count;
 }
 
 function routeForDestination(destination) {

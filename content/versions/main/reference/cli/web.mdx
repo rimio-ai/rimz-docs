@@ -120,7 +120,7 @@ A viewer URL whose room is not on the list, not known to RimZ, or not running sh
 
 | Form | Effect | Prints |
 | --- | --- | --- |
-| `unshare [PATH]` or `unshare --session <name>` | Removes that room. The room need not be running. Restarts the broadcast when rooms remain, otherwise stops it. | ``stopped sharing `<session>`; viewers of &lt;n> other shared rooms were disconnected and will reconnect`` (singular for 1), or ``stopped sharing `<session>`; the broadcast daemon is stopped`` for the last room. An unchanged list prints `` `<session>` was not shared ``. |
+| `unshare [PATH]` or `unshare --session <name>` | Removes that room. The room need not be running. Restarts the broadcast when rooms remain, otherwise stops it. | ``stopped sharing `<session>`; viewers of <n> other shared rooms were disconnected and will reconnect`` (singular for 1), or ``stopped sharing `<session>`; the broadcast daemon is stopped`` for the last room. An unchanged list prints `` `<session>` was not shared ``. |
 | `unshare --all` | Empties the list and stops the broadcast daemon. | `stopped sharing all rooms`, or `no rooms were shared`. |
 
 Removing one room stops the old broadcast process before checking the config, so an invalid `[web]` setting fails the command with viewers already disconnected and no broadcast daemon running.
@@ -138,7 +138,7 @@ Each token name is a Basic-auth username: 1-64 characters from `[A-Za-z0-9._-]`,
 | `token revoke <NAME>` | Removes one token and restarts the writable daemon, disconnecting its sessions; the last token stops it. | `revoked token <name> and restarted the writable daemon`, `revoked token <name> and stopped the writable daemon (no tokens remain)`, or `revoked token <name>; the writable daemon is offline`. |
 | `token revoke-all` | Removes all tokens and stops the writable daemon. | `revoked <n> tokens and stopped the writable daemon`, `revoked <n> tokens; the writable daemon is offline`, or `no tokens to revoke`. |
 
-A duplicate name fails with ``token `<name>` already exists; revoke it first or pick another name``. A missing name fails with ``token `<name>` does not exist; existing tokens: &lt;names>``, or `; no tokens exist`. These operations leave the broadcast daemon untouched and behave the same in trusted-header mode. Read-only viewing is a per-room broadcast: use `rimz web share`.
+A duplicate name fails with ``token `<name>` already exists; revoke it first or pick another name``. A missing name fails with ``token `<name>` does not exist; existing tokens: <names>``, or `; no tokens exist`. These operations leave the broadcast daemon untouched and behave the same in trusted-header mode. Read-only viewing is a per-room broadcast: use `rimz web share`.
 
 An online token change stops the writable daemon before attempting its replacement. If restart fails, the token change still succeeds, the daemon stays stopped, and stderr reports the cause. Revocation then reports `revoked token <name> and stopped the writable daemon (restart failed)` instead of claiming that no tokens remain. Fix the reported problem and run `rimz web start` to restore access with the remaining tokens.
 

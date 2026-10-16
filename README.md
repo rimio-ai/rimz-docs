@@ -36,7 +36,11 @@ NEXT_PUBLIC_BASE_PATH=/REPO NEXT_PUBLIC_SITE_URL=https://USER.github.io/REPO pnp
 
 Every push to `main` deploys the static export to GitHub Pages at <https://rimz.rimio.ai> through [the deploy workflow](./.github/workflows/deploy.yml).
 
+In the repository's **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**, not **Deploy from a branch**. Publishing the repository root from `main` runs Jekyll on this README instead of serving the built site in `out/`.
+
 [The sync workflow](./.github/workflows/sync.yml) rebuilds the documentation from RimZ `main` and every stable `v*` release tag after a README or docs update, when a release is published, and once per day as a backstop. A successful sync commits the generated files to `main` and invokes the deploy workflow directly.
+
+Before committing generated content, sync runs the content checks, a full production build (including MDX compilation), and the static-output checks. A failed build leaves `main` unchanged.
 
 The site publishes several documentation sets, chosen with the version dropdown at the top of the docs sidebar:
 

@@ -129,7 +129,7 @@ The two shorthands write the full key: `rimz config set theme <name>` sets `them
 | Profile or team definition keys | Refused with the Markdown source path; edit that file and run `rimz agents validate`. |
 | A key RimZ does not know | `` unknown config key `KEY` `` |
 | A whole table, such as `theme.display` or `loop.tasks.<name>` | `` unknown config key `KEY` ``. Set one field inside it, or edit the table in the file. |
-| `notifications.handler` and its fields | `` config key `KEY` is an array of tables; edit &lt;path to config.toml> `` |
+| `notifications.handler` and its fields | `` config key `KEY` is an array of tables; edit <path to config.toml> `` |
 | A value of the wrong type or format | `` invalid value VALUE for `KEY`: ... ``, or a key-specific message such as `harness.idle_compact must be off, on, or a duration such as 25m` |
 | Any key, when the owning file already has a TOML or validation error | `` cannot set `KEY`: the existing config is invalid `` (or `cannot edit <path> — the file has a TOML error`). Fix the file first. |
 

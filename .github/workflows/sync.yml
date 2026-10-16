@@ -24,8 +24,25 @@ jobs:
           repository: rimio-ai/rimz
           path: rimz
           fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
       - run: RIMZ_SRC=rimz node scripts/sync-versions.mjs
+      # The site type-checks **/*.ts; upstream plugins belong to RimZ, not
+      # this application, and must be outside that scope before building.
+      - name: Remove temporary upstream checkout
+        run: rm -rf rimz
       - run: node scripts/check-content.mjs
+      # Content checks do not compile MDX. Reject invalid imports before they
+      # reach main, rather than discovering them in the deployment build.
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://rimz.rimio.ai
+      - run: pnpm check:output
       - id: commit
         run: |
           git add content public
