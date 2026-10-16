@@ -51,7 +51,7 @@ The top block reads the whole room in four lines:
 - The first line names the workspace and its path, so a glance confirms which project this room is.
 - The second counts the agent sessions that have run in the configured spend window, with the room's token breakdown pinned right: total, input, output, and cache-read.
 - The third counts the agents alive right now, and adds an unread count like `(2)`, the worktrees where results or questions await you (a team with several unread agents counts once), and the open-PR count `⑃ N`, stacked PRs included. The room's dollar spend pins right, rolling up live as agents work, and the PR count turns red for failing CI, amber while CI runs, green when every known lane passes, and stays its plain self when CI is unknown.
-- The fourth is the make-up line, the fleet by state. `? 3  ! 1  ⏸ 0  ✓ 8` counts who asked you something, who failed, who is parked on a provider limit, and who holds a finished result, with the calm states (`⢿` working, `☾` sleeping, `○` idle) on the right.
+- The fourth is the make-up line, the fleet by state. `? 3  ! 1  ⏸ 0  ✓ 8` counts who asked you something, who failed, who is parked on a provider limit, and who holds a finished result on work that has not landed, with the calm states (`⢿` working, `☾` sleeping, `○` idle) on the right. A landed group revived by a working or blocked member still counts its done cards. The other buckets and the live-agent count cover the whole room.
 
 A row of zeros with no unread count means nothing needs you, so you can skip the scan entirely. Every non-zero bucket is a click target that filters the cards to that state in every tab of the room; clearing or replacing the filter in one tab updates them all. The unread count and `⑃ N` filter the same way. When the card that most needs you scrolls out of view, an `↑ N need you` banner appears; click it to bring that card back.
 
@@ -67,7 +67,7 @@ The group header names the work and carries its git story on the right: commits 
 
 A team that hands work along declared stages keeps its progress on a board in the worktree ([teams](/docs/harness/teams#hand-off-with-one-command)), and the sidebar draws that board as a pipeline line directly below the group header: the team name first, then green `●` for passed stages, `◉` followed by the current stage name and its duration, and muted `○` for those ahead. The run total alone pins right, so `Implement 4h12m` beside `4h51m` separates the stage from the whole run. Both durations are plain and muted: one unit below an hour, two from an hour up. The stage time accumulates across visits, resuming when a flip returns to it; a yellow hollow dot marks a stage the team was sent back from; at `Done` only the frozen run total remains. Click the line to reach the stage owner. It is progress, not another request for attention, so it never raises `!`, marks anything unread, or sends a notification.
 
-A line of work is finished when its pull request merged or closed, or the trunk already contains it, and nobody in it is working or blocked on you. A finished group of several agents collapses to its header and a two-line receipt: who worked and what they cost in dollars, then the tokens that went into it. Clicking the header toggles the cards open and shut, and clicking the receipt opens them. A group with one agent, and a group with only process rows, stay open. The receipt's shape is drawn in [the interface reference](https://github.com/rimio-ai/rimz/blob/main/docs/interface/sidebar.md?ref=docs#row-cap-and-finished-groups), and its cost and tokens cover the sessions of this worktree's current life, counted the way [Token Insight](/docs/agents/insight#how-the-numbers-are-calculated) explains.
+A line of work is finished when its pull request merged or closed, or the trunk already contains it, its tree is clean, and nobody in it is working or blocked. Finished groups gather behind `↓ N landed ↓`, closed at first; click the line to show their receipts, and click `↑ N landed ↑` to hide them again. Every finished group with an agent collapses to its header and a two-line receipt: who worked and what they cost in dollars, then the tokens that went into it. A single agent reads as its status and handle, with its cost on the right. Clicking the header toggles the cards open and shut, and clicking the receipt opens them. A group with only process rows stays open, as does a group whose cards you have focused or opened. A filter or search hides the landed line and shows matching cards directly; `s` excludes finished groups. The receipt's shape is drawn in [the interface reference](https://github.com/rimio-ai/rimz/blob/main/docs/interface/sidebar.md?ref=docs#row-cap-and-finished-groups), and its cost and tokens cover the sessions of this worktree's current life, counted the way [Token Insight](/docs/agents/insight#how-the-numbers-are-calculated) explains; until those totals arrive, the receipt shows the current sessions' costs.
 
 Panes outside every project checkout fold into a dim `external` divider at the very bottom, which keeps its own `? n` and `! n` tally so an ask from outside the project still surfaces.
 
@@ -208,12 +208,12 @@ The third is the one no status dump answers, because a zombie run wears the same
 
 Every row carries a weight from its state, and time scales it. By weight, heaviest first:
 
-1. Asks (`?`) and failures (`!`) are blocked on you, and together they are your work queue. Every minute an ask waits idles a loaded context, a whole team's when the asker leads one, so they carry the most weight and climb as they age.
+1. Asks (`?`) and failures (`!`) are blocked on you, and together they are your work queue. Every minute an ask waits idles a loaded context, a whole team's when the asker leads one, so they carry the most weight, climb for the first hour, then hold at the top until answered or the agent stops.
 2. A parked card (`⏸`) is blocked on the provider rather than on you. There is nothing to answer until the limit recovers, and with [auto-continue](/docs/harness/loops#keep-the-fleet-moving) on, nothing to do at all.
 3. A `done` card has delivered and waits on your verdict, so it leads the calm cards in its line of work: your review queue. That queue rots while it waits, because the trunk moves on and the group header's behind count (`⇣`) climbs, so the header tells you when a delivered branch is getting more expensive to land.
 4. A running card is in flight and healthy. It needs nothing and wants a stable position so your eyes can track it, so it keeps a flat weight and holds its place, with live cost and last-activity age as the cheap progress cues.
 5. An idle card is spare capacity, relevant only when you have work to hand out. It reads last, and a freshly launched agent appends at the bottom instead of reshuffling the list.
-6. A merged or closed line of work wants zero attention, so it archives immediately.
+6. A merged or closed line of work with nobody running or blocked follows every unfinished group, even one that has archived with age, and folds behind the `landed` line.
 
 These are weights rather than fixed tiers, and time scales them, so an hour-old park can outrank an ask from a minute ago.
 
@@ -222,10 +222,12 @@ These are weights rather than fixed tiers, and time scales them, so an hour-old 
 Time is measured from each card's last activity, in three windows.
 
 1. **Inside the first hour, blocked work climbs.** An ask, failure, or park grows more urgent the longer it waits, so blocked work reads roughly oldest-first, the cheapest order to clear, and a failure overdue fifty minutes outranks an ask from two minutes ago. Calm work keeps a flat weight, so live agents hold their place while they run. The hour is the default because a prompt after that much quiet usually re-reads the whole context uncached: answer inside it and the agent resumes warm.
-2. **Between one hour and twenty-four, everything cools.** Urgency decays with age instead of climbing, and the whole window sinks beneath anything currently hot. Recency starts to matter more than state here, so yesterday's unanswered question can read below a result delivered an hour ago, and neither competes with the agent blocked right now.
-3. **Past twenty-four hours, a card archives.** It parks at the back, keeping only its state order, so an archived ask still reads above an archived idle agent. This band is about age; it is unrelated to an agent sleeping on a wait.
+2. **Between one hour and twenty-four, calm and parked cards cool.** Their weight decays with age instead of climbing, and the whole window sinks beneath anything currently hot. Recency starts to matter more than state here.
+3. **Past twenty-four hours, a calm or parked card archives.** It parks at the back, keeping only its state order. This band is about age; it is unrelated to an agent sleeping on a wait.
 
-A finished line of work with nobody running or blocked skips the clock and archives at once; a new run, ask, failure, or park revives it into the activity-ranked bands.
+Asks and failures are exempt from cooling and archiving while the agent is alive: an unanswered question still leads fresh running or idle work tomorrow.
+
+A finished line of work with nobody running or blocked skips the clock and follows all unfinished work; a new run, ask, failure, or park revives it into the activity-ranked bands.
 
 ### Teams read as one
 
@@ -237,16 +239,17 @@ Attention always outranks git: a git-backed group with a blocked agent leads wha
 
 ### What never moves
 
-Two partitions hold regardless of any score, so the column keeps one stable outline:
+Three partitions hold regardless of any score, so the column keeps one stable outline:
 
 - Agent cards lead their worktree and process rows form the tail, because shells, builds, and servers are context.
+- Finished project groups follow every unfinished project group, behind the `landed` line. Like `+K more`, that line toggles by mouse only, and its open or closed choice belongs to this sidebar view.
 - Project worktrees lead and out-of-project panes tail, so the `external` divider always sorts last whatever it holds.
 
-Inside a group, the six-row cap folds idle cards and process rows behind `+K more`; an agent card that is working, blocked, parked, finished, unread, or selected is never folded. After you jump or browse, the column holds the order it last painted for a few seconds, so a glance back finds the cards where they were.
+Inside an unfinished group, the six-row cap folds idle cards and process rows behind `+K more`; an agent card that is working, blocked, parked, finished, unread, or selected is never folded. After you jump or browse, the column holds the order it last painted for a few seconds, so a glance back finds the cards where they were.
 
 ## Tuning
 
-Five `[agents.attention]` knobs move the boundaries: `stalled_after_secs` (a silent agent, native and launched children included, escalates to `!`, 30 minutes), `tool_repeat_warn_after` (an identical-tool run gains `⟲`, 3 calls), `tool_repeat_attention_after` (that run escalates to `!`, 20 calls), `inactive_after_secs` (hot work ends, one hour), and `archive_after_secs` (a card archives, 24 hours). Details in [configuration](/docs/customization/configuration#sidebar-rendering).
+Five `[agents.attention]` knobs move the boundaries: `stalled_after_secs` (a silent agent, native and launched children included, escalates to `!`, 30 minutes), `tool_repeat_warn_after` (an identical-tool run gains `⟲`, 3 calls), `tool_repeat_attention_after` (that run escalates to `!`, 20 calls), `inactive_after_secs` (calm and parked cards cool, one hour), and `archive_after_secs` (those cards archive, 24 hours). Details in [configuration](/docs/customization/configuration#sidebar-rendering).
 
 ## See also
 
